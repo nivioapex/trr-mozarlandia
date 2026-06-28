@@ -6,6 +6,8 @@
 <title>Painel TRR Mozarlândia</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root{--bg:#f4f6f8;--card:#fff;--hdr:#10243e;--txt:#1c2733;--muted:#6b7785;--acc:#e0762c;--grn:#1c7c54;--gap:16px;--r:10px;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -117,6 +119,43 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .btn-sm.off:hover{background:#fff5f5;}
 .btn-sm.on{border-color:#b7dfca;color:#1c7c54;}
 .btn-sm.on:hover{background:#e2f3ea;}
+
+/* ===== TABS ===== */
+.tab-nav{display:flex;gap:2px;margin-bottom:var(--gap);border-bottom:2px solid #dde2e8;}
+.tab-btn{padding:10px 22px;border:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13.5px;font-weight:600;background:transparent;color:var(--muted);transition:all .18s;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tab-btn.active{color:var(--acc);border-bottom-color:var(--acc);background:rgba(224,118,44,.06);}
+.tab-btn:hover:not(.active){background:#edf0f3;color:var(--txt);}
+
+/* ===== MAPA ===== */
+#mapa-section{padding-top:2px;}
+.map-stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:var(--gap);margin-bottom:var(--gap);}
+.map-kpi{background:var(--card);border-radius:var(--r);padding:14px 20px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-top:3px solid var(--acc);text-align:center;}
+.map-kpi .mk-val{font-size:24px;font-weight:700;}
+.map-kpi .mk-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:4px;}
+.map-toolbar{background:var(--card);border-radius:var(--r);padding:13px 18px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:var(--gap);display:flex;align-items:center;flex-wrap:wrap;gap:14px;}
+.map-toolbar-title{font-size:12.5px;font-weight:600;color:var(--muted);flex-shrink:0;text-transform:uppercase;letter-spacing:.4px;}
+.view-mode{display:flex;gap:3px;background:#f0f2f4;border-radius:20px;padding:3px;}
+.view-btn{padding:6px 16px;border:none;border-radius:16px;cursor:pointer;font-size:12.5px;font-weight:600;background:transparent;color:var(--muted);transition:all .2s;}
+.view-btn.active{background:var(--card);color:var(--acc);box-shadow:0 1px 4px rgba(0,0,0,.16);}
+.map-legend{display:flex;gap:12px;flex-wrap:wrap;margin-left:auto;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);}
+.leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+#leaflet-map{height:580px;border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:var(--gap);}
+.map-loading{text-align:center;padding:20px;font-size:13px;color:var(--muted);}
+
+/* Leaflet popup */
+.leaflet-popup-content{max-height:340px;overflow-y:auto;padding:2px;}
+.lp-h{margin:0 0 7px;font-size:14px;font-weight:700;color:#10243e;}
+.lp-meta{font-size:12px;color:#6b7785;margin-bottom:10px;line-height:1.65;}
+.lp-prop{padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;overflow:hidden;}
+.lp-prop:last-child{border-bottom:none;}
+.lp-pn{font-weight:600;color:#10243e;display:block;margin-right:52px;}
+.lp-pm{color:#6b7785;font-size:11px;margin-top:2px;display:block;margin-right:52px;}
+.lp-bd{display:inline-block;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700;float:right;margin-top:-34px;}
+.lp-bd.g{background:#e2f3ea;color:#1c7c54;}
+.lp-bd.n{background:#f0f0f0;color:#999;}
+.lp-more{font-size:11px;color:#aaa;margin-top:8px;text-align:center;}
+.lp-spin{color:#aaa;font-size:12px;padding:6px 0;}
 </style>
 </head>
 <body>
@@ -206,6 +245,15 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   </div>
 </header>
 <div id="errs"></div>
+
+<!-- TABS -->
+<div class="tab-nav">
+  <button class="tab-btn active" id="tab-btn-painel" onclick="switchTab('painel')">📊 Painel</button>
+  <button class="tab-btn" id="tab-btn-mapa" onclick="switchTab('mapa')">🗺 Mapa de Clientes</button>
+</div>
+
+<!-- ===== PAINEL SECTION ===== -->
+<div id="painel-section">
 <section class="kpi-row">
   <div class="kpi"><div class="kpi-lbl">Propriedades</div><div class="kpi-val" id="kv-prop">–</div><div class="kpi-sub" id="kv-sub"></div></div>
   <div class="kpi"><div class="kpi-lbl">Clientes únicos</div><div class="kpi-val" id="kv-cli">–</div></div>
@@ -248,8 +296,31 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
     <button id="pg-n" onclick="changePg(1)">Próxima ›</button>
   </div>
 </div>
-<footer>Supabase · Prospecção TRR Mozarlândia · Apex Technology</footer>
+</div><!-- /painel-section -->
+
+<!-- ===== MAPA SECTION ===== -->
+<div id="mapa-section" style="display:none">
+<div class="map-stats-row">
+  <div class="map-kpi"><div class="mk-val" id="mk-prop">–</div><div class="mk-lbl">Propriedades</div></div>
+  <div class="map-kpi"><div class="mk-val" id="mk-cli">–</div><div class="mk-lbl">Clientes únicos</div></div>
+  <div class="map-kpi"><div class="mk-val" id="mk-mun">–</div><div class="mk-lbl">Municípios</div></div>
+  <div class="map-kpi"><div class="mk-val" id="mk-dist">–</div><div class="mk-lbl">Dist. média TRR</div></div>
+  <div class="map-kpi"><div class="mk-val" id="mk-ativas">–</div><div class="mk-lbl">Ativas / Total</div></div>
 </div>
+<div class="map-toolbar">
+  <span class="map-toolbar-title">Exibição</span>
+  <div class="view-mode">
+    <button class="view-btn active" id="vb-mun" onclick="setMapView('mun')">🏘 Por Município</button>
+    <button class="view-btn" id="vb-prop" onclick="setMapView('prop')">📍 Por Propriedade</button>
+  </div>
+  <div class="map-legend" id="map-legend"></div>
+</div>
+<div id="map-loading" class="map-loading" style="display:none">⏳ Carregando dados do mapa…</div>
+<div id="leaflet-map"></div>
+</div><!-- /mapa-section -->
+
+<footer>Supabase · Prospecção TRR Mozarlândia · Apex Technology</footer>
+</div><!-- /wrap -->
 
 <script>
 var SB=supabase.createClient(
@@ -382,8 +453,14 @@ document.getElementById('l-email').addEventListener('keydown',function(e){if(e.k
 document.getElementById('admin-modal').addEventListener('click',function(e){if(e.target===this)closeAdmin();});
 
 /* ===== DASHBOARD DATA ===== */
-var FAIXAS=['0-50 km','50-100 km','100-200 km','>200 km'];
-var FCOLS={'0-50 km':'#1c7c54','50-100 km':'#bfae00','100-200 km':'#e0762c','>200 km':'#a4243b'};
+var FAIXAS=['0-30 km','31-60 km','61-100 km','101-150 km','150+ km'];
+var FCOLS={
+  '0-30 km':   '#1c7c54',
+  '31-60 km':  '#52b788',
+  '61-100 km': '#f5a623',
+  '101-150 km':'#e0762c',
+  '150+ km':   '#a4243b'
+};
 var PAL=['#1c7c54','#e0762c','#2a6f97','#a4243b','#6a4c93','#bfae00','#c07d3f','#1a8fa0','#d44e2a','#2e6f40','#7b3fa8'];
 var PG=25;
 var charts={},munCoords={},carRows=[];
@@ -395,6 +472,7 @@ function setBadge(t){set$('badge',t);}
 function dc(k){if(charts[k]){charts[k].destroy();charts[k]=null;}}
 function addErr(msg){document.getElementById('errs').insertAdjacentHTML('beforeend','<div class="err-box">⚠️ '+msg+'</div>');}
 function fillSel(id,vals,vFn,lFn){var s=document.getElementById(id);while(s.options.length>1)s.remove(1);vals.forEach(function(v){var o=document.createElement('option');o.value=vFn(v);o.textContent=lFn(v);s.appendChild(o);});}
+function distToFaixa(d){d=Number(d);return d<30?'0-30 km':d<60?'31-60 km':d<100?'61-100 km':d<150?'101-150 km':'150+ km';}
 
 async function init(){
   setBadge('⏳ Iniciando…');
@@ -423,6 +501,16 @@ function getFilterParams(){
   return {p_uf:uf,p_mun:mun,p_ativ:ativ,p_faixa:faixa,p_ativa:ativa,p_srch:srch,p_page:detPage};
 }
 
+function getGeoFilterParams(){
+  var uf=document.getElementById('f-uf').value||null;
+  var mun=document.getElementById('f-mun').value||null;
+  var ativ=document.getElementById('f-ativ').value||null;
+  var faixa=document.getElementById('f-faixa').value||null;
+  var av=document.getElementById('f-ativa').value;
+  var ativa=av===''?null:av==='true';
+  return {p_uf:uf,p_mun:mun,p_ativ:ativ,p_faixa:faixa,p_ativa:ativa};
+}
+
 async function refresh(){
   setBadge('⏳ Atualizando…');
   document.getElementById('errs').innerHTML='';
@@ -438,6 +526,10 @@ async function refresh(){
     set$('kv-ativ',shortA(d.top_ativ||'–'));
     renderMap(d.map||[]);renderMun(d.muns||[]);renderAtiv(d.ativ||[]);renderFaixa(d.faixa||[]);
     totalDet=d.det_total||0;renderDetail(d.det||[]);setBadge('🟢 Ao vivo');
+    // Se aba do mapa está visível, recarregar dados geo
+    if(document.getElementById('mapa-section').style.display!=='none'){
+      geoData=null;loadGeoData();
+    }
   }catch(e){addErr('Erro: '+(e.message||JSON.stringify(e)));setBadge('🔴 Erro');}
 }
 
@@ -451,8 +543,7 @@ function renderMap(data){
   var byF={};
   data.forEach(function(r){
     var c=munCoords[r.municipio];if(!c)return;
-    var d2=Number(r.avg_dist);
-    var f=d2<50?'0-50 km':d2<100?'50-100 km':d2<200?'100-200 km':'>200 km';
+    var f=distToFaixa(Number(r.avg_dist));
     if(!byF[f])byF[f]=[];
     byF[f].push({x:c.lon,y:c.lat,r:Math.max(4,Math.sqrt(Number(r.cnt))*2.5),municipio:r.municipio,cnt:Number(r.cnt),avgD:r.avg_dist});
   });
@@ -501,7 +592,222 @@ function renderDetail(rows){
   document.getElementById('det-wrap').innerHTML='<table class="dt"><thead><tr><th>#</th><th>Cliente</th><th>Propriedade</th><th>Município</th><th>UF</th><th>Atividade</th><th>Dist. TRR</th><th>Faixa</th><th>Status</th></tr></thead><tbody>'+trs+'</tbody></table>';
 }
 
-window.addEventListener('load',checkSession);
+/* ===== TABS ===== */
+var currentTab = 'painel';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tab-btn-' + tab).classList.add('active');
+  document.getElementById('painel-section').style.display = tab === 'painel' ? '' : 'none';
+  document.getElementById('mapa-section').style.display = tab === 'mapa' ? '' : 'none';
+  if (tab === 'mapa') {
+    initLeafMap();
+    if (!geoData) loadGeoData();
+    else renderMapMarkers();
+  }
+}
+
+/* ===== LEAFLET MAP ===== */
+var leafMap = null;
+var mapLayers = null;
+var mapView = 'mun';   // 'mun' | 'prop'
+var geoData = null;
+
+function initLeafMap() {
+  if (leafMap) {
+    setTimeout(function() { leafMap.invalidateSize(); }, 120);
+    return;
+  }
+  leafMap = L.map('leaflet-map', { zoomControl: true }).setView([-14.2, -50.2], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 18
+  }).addTo(leafMap);
+  mapLayers = L.layerGroup().addTo(leafMap);
+  renderMapLegend();
+}
+
+function renderMapLegend() {
+  var html = FAIXAS.map(function(f) {
+    return '<div class="leg-item"><div class="leg-dot" style="background:' + FCOLS[f] + '"></div>' + f + '</div>';
+  }).join('');
+  html += '<div class="leg-item"><div class="leg-dot" style="background:#10243e;border:2px solid #f5a623;width:14px;height:14px"></div>TRR</div>';
+  var el = document.getElementById('map-legend');
+  if (el) el.innerHTML = html;
+}
+
+function setMapView(v) {
+  mapView = v;
+  document.getElementById('vb-mun').classList.toggle('active', v === 'mun');
+  document.getElementById('vb-prop').classList.toggle('active', v === 'prop');
+  renderMapMarkers();
+}
+
+async function loadGeoData() {
+  if (!leafMap) return;
+  document.getElementById('map-loading').style.display = '';
+  try {
+    var res = await SB.rpc('trr_geo_all', getGeoFilterParams());
+    if (res.error) { console.error('trr_geo_all error:', res.error); return; }
+    geoData = res.data;
+    renderMapMarkers();
+    updateMapKpis();
+  } catch(e) { console.error(e); }
+  finally { document.getElementById('map-loading').style.display = 'none'; }
+}
+
+function updateMapKpis() {
+  if (!geoData) return;
+  var props = geoData.props || [];
+  var muns  = geoData.muns  || [];
+  var cliSet = {};
+  var ativos = 0;
+  var totalDist = 0;
+  props.forEach(function(p) {
+    cliSet[p.cli] = 1;
+    if (p.ativa === true || p.ativa === 'true') ativos++;
+    totalDist += Number(p.dist) || 0;
+  });
+  var avgD = props.length ? totalDist / props.length : 0;
+  set$('mk-prop', props.length.toLocaleString('pt-BR'));
+  set$('mk-cli', Object.keys(cliSet).length.toLocaleString('pt-BR'));
+  set$('mk-mun', muns.length.toLocaleString('pt-BR'));
+  set$('mk-dist', avgD.toFixed(1).replace('.', ',') + ' km');
+  set$('mk-ativas', ativos + ' / ' + props.length);
+}
+
+function mkSafeId(s) { return 'lp_' + s.replace(/[^a-zA-Z0-9]/g, '_'); }
+
+function renderMapMarkers() {
+  if (!leafMap || !mapLayers) return;
+  mapLayers.clearLayers();
+
+  // TRR headquarters marker
+  var trrIcon = L.divIcon({
+    html: '<div style="background:#10243e;color:#f5a623;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;border:2px solid #f5a623;box-shadow:0 2px 8px rgba(0,0,0,.5);letter-spacing:0;line-height:1.1;text-align:center">TRR</div>',
+    iconSize: [30, 30], iconAnchor: [15, 15], className: ''
+  });
+  L.marker([-14.7483, -50.5803], { icon: trrIcon, zIndexOffset: 1000 })
+    .bindTooltip('<b>TRR Mozarlândia</b><br>Ponto de referência', { sticky: true })
+    .bindPopup('<h4 class="lp-h">TRR Mozarlândia</h4><div class="lp-meta">GO-164, KM 166, Zona Urbana<br>Mozarlândia - GO · CEP 76700-000<br>Distribuidora de Combustíveis</div>', { maxWidth: 260 })
+    .addTo(mapLayers);
+
+  if (!geoData) return;
+
+  if (mapView === 'mun') {
+    renderMunMarkers();
+  } else {
+    renderPropMarkers();
+  }
+}
+
+function renderMunMarkers() {
+  var muns = geoData.muns || [];
+  var props = geoData.props || [];
+
+  muns.forEach(function(m) {
+    if (!m.lat || !m.lon) return;
+    var faixa = distToFaixa(m.avg_d);
+    var color  = FCOLS[faixa] || '#999';
+    var radius = Math.max(9, Math.sqrt(m.cnt) * 4.5);
+
+    var circle = L.circleMarker([m.lat, m.lon], {
+      radius: radius,
+      fillColor: color,
+      color: '#fff',
+      weight: 1.5,
+      opacity: 1,
+      fillOpacity: 0.72
+    }).addTo(mapLayers);
+
+    circle.bindTooltip(
+      '<b>' + m.mun + ' (' + m.uf + ')</b><br>' +
+      m.cnt + ' propriedades · ' + (m.clis || '?') + ' clientes<br>' +
+      'Dist. média: ' + Number(m.avg_d).toFixed(0) + ' km · ' + faixa,
+      { sticky: true, className: '' }
+    );
+
+    var safeId = mkSafeId(m.mun);
+
+    circle.on('click', function() {
+      var munProps = props.filter(function(p) { return p.mun === m.mun; });
+      var propHtml;
+      if (!munProps.length) {
+        propHtml = '<div style="color:#aaa;font-size:12px;padding:4px 0">Sem propriedades na seleção atual</div>';
+      } else {
+        var shown = munProps.slice(0, 30);
+        propHtml = shown.map(function(p) {
+          var av = p.ativa === true || p.ativa === 'true';
+          return '<div class="lp-prop">' +
+            '<span class="lp-bd ' + (av ? 'g' : 'n') + '">' + (av ? 'Ativa' : 'Inativa') + '</span>' +
+            '<span class="lp-pn">' + esc(p.prop || '–') + '</span>' +
+            '<span class="lp-pm">' + esc(p.cli || '–') + ' · ' + Number(p.dist).toFixed(0) + ' km</span>' +
+            '</div>';
+        }).join('');
+        if (munProps.length > 30) {
+          propHtml += '<div class="lp-more">+ ' + (munProps.length - 30) + ' mais propriedades</div>';
+        }
+      }
+
+      var content =
+        '<h4 class="lp-h">' + esc(m.mun) + ' <span style="font-weight:400;color:#aaa;font-size:12px">(' + m.uf + ')</span></h4>' +
+        '<div class="lp-meta">' +
+          m.cnt + ' propriedades · ' + (m.clis || '?') + ' clientes únicos<br>' +
+          'Distância média ao TRR: <b>' + Number(m.avg_d).toFixed(0) + ' km</b> · Faixa: ' + faixa + '<br>' +
+          'Ativas: <span style="color:#1c7c54">' + m.ativos + '</span> · Inativas: <span style="color:#c53030">' + m.inativos + '</span>' +
+        '</div>' +
+        '<div style="border-top:1px solid #eee;padding-top:8px;margin-top:4px">' + propHtml + '</div>';
+
+      circle.bindPopup(content, { maxWidth: 340, minWidth: 280, maxHeight: 400 }).openPopup();
+    });
+  });
+}
+
+function renderPropMarkers() {
+  var props = geoData.props || [];
+
+  props.forEach(function(p) {
+    if (!p.lat || !p.lon) return;
+    var color = FCOLS[p.faixa] || '#999';
+    var av = p.ativa === true || p.ativa === 'true';
+
+    var circle = L.circleMarker([p.lat, p.lon], {
+      radius: 7,
+      fillColor: color,
+      color: '#fff',
+      weight: 1,
+      opacity: 1,
+      fillOpacity: av ? 0.8 : 0.3
+    }).addTo(mapLayers);
+
+    circle.bindTooltip(
+      '<b>' + esc(p.prop || '–') + '</b><br>' +
+      esc(p.cli || '–') + '<br>' +
+      p.mun + ' · ' + Number(p.dist).toFixed(0) + ' km',
+      { sticky: true }
+    );
+
+    circle.bindPopup(
+      '<h4 class="lp-h">' + esc(p.prop || '–') + '</h4>' +
+      '<div class="lp-meta">' +
+        'Cliente: <b>' + esc(p.cli || '–') + '</b><br>' +
+        'Município: ' + esc(p.mun) + ' (' + (p.uf || '–') + ')<br>' +
+        'Atividade: ' + shortA(p.ativ || '–') + '<br>' +
+        'Dist. ao TRR: <b>' + Number(p.dist).toFixed(0) + ' km</b> · ' + (p.faixa || '–') + '<br>' +
+        'Produtor rural: ' + (p.prod ? 'Sim' : 'Não') + '<br>' +
+        'Status: <span class="lp-bd ' + (av ? 'g' : 'n') + '" style="float:none;display:inline-block">' + (av ? 'Ativa' : 'Inativa') + '</span>' +
+      '</div>',
+      { maxWidth: 300 }
+    );
+  });
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+window.addEventListener('load', checkSession);
 </script>
 </body>
 </html>

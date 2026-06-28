@@ -1789,7 +1789,7 @@ async function fetchAndRenderDetail(p) {
   html += '<div class="pdp-section">';
   html += '<div class="pdp-section-title">🔗 Consultar Diretamente</div>';
   html += link('🌿', 'SICAR — Consulta Pública CAR', 'Código: ' + esc((p.cod||'').substring(0,22)) + '…',
-    'https://consultapublica.car.gov.br/publico/imoveis/index');
+    'https://car.gov.br/#/consultar/');
   if (p.lat && p.lon) {
     html += link('🛰️', 'Google Maps — Satélite',
       Number(p.lat).toFixed(5) + ', ' + Number(p.lon).toFixed(5),

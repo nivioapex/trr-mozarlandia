@@ -196,6 +196,33 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .car-toggle{padding:6px 14px;border:1.5px dashed #2a6f97;border-radius:16px;cursor:pointer;font-size:12.5px;font-weight:600;background:transparent;color:#2a6f97;transition:all .2s;}
 .car-toggle.on{background:#2a6f97;color:#fff;border-style:solid;}
 .car-toggle:hover:not(.on){background:rgba(42,111,151,.08);}
+/* ===== PAINEL DETALHE PROPRIEDADE ===== */
+#pdp-overlay{display:none;position:fixed;inset:0;z-index:19998;background:rgba(0,0,0,.32);}
+#pdp-overlay.open{display:block;}
+#prosp-detail-panel{position:fixed;top:0;right:-440px;width:400px;max-width:96vw;height:100vh;background:#fff;box-shadow:-6px 0 32px rgba(0,0,0,.18);z-index:19999;transition:right .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column;}
+#prosp-detail-panel.open{right:0;}
+.pdp-hdr{background:var(--hdr);color:#fff;padding:16px 20px;display:flex;align-items:flex-start;gap:12px;flex-shrink:0;}
+.pdp-hdr-txt{flex:1;min-width:0;}
+.pdp-hdr-title{font-size:15px;font-weight:700;line-height:1.3;word-break:break-word;}
+.pdp-hdr-sub{font-size:12px;opacity:.78;margin-top:3px;}
+.pdp-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;opacity:.8;}
+.pdp-close:hover{opacity:1;}
+.pdp-body{padding:16px 20px;flex:1;}
+.pdp-section{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #eef0f3;}
+.pdp-section:last-child{border-bottom:none;margin-bottom:0;}
+.pdp-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px;}
+.pdp-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:13px;margin-bottom:5px;}
+.pdp-row .lbl{color:var(--muted);white-space:nowrap;}
+.pdp-row .val{font-weight:600;text-align:right;word-break:break-word;max-width:65%;}
+.pdp-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid #e0e6ef;border-radius:8px;text-decoration:none;color:var(--txt);font-size:13px;margin-bottom:7px;transition:background .15s,border-color .15s;}
+.pdp-link:hover{background:#f4f6f8;border-color:#c8d2de;}
+.pdp-link-ico{font-size:17px;flex-shrink:0;}
+.pdp-link-txt{flex:1;min-width:0;}
+.pdp-link-lbl{font-weight:600;line-height:1.3;}
+.pdp-link-sub{font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pdp-lgpd{background:#fffbeb;border:1px solid #f5d76e;border-radius:8px;padding:10px 14px;font-size:12px;color:#78500a;line-height:1.55;}
+.pdp-loading{text-align:center;padding:32px 20px;color:var(--muted);}
+.pdp-ibge-tag{display:inline-block;background:#e8f4fd;color:#1a4a7a;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;margin-bottom:4px;}
 /* CAR popup colors */
 .lp-pct-r{color:#a4243b;font-weight:700;}
 .lp-pct-o{color:#e0762c;font-weight:700;}
@@ -1503,6 +1530,9 @@ async function drillProspMun(mun) {
 
     imoveis.forEach(function(p) {
       if (!p.lat || !p.lon) return;
+      // Cache para o painel de detalhe
+      prospProps[p.id] = p;
+
       var col = pScoreColor(p.score);
       var r   = 5 + Math.min(8, Math.round((p.area || 0) / 200));
       var c = L.circleMarker([p.lat, p.lon], {
@@ -1519,13 +1549,12 @@ async function drillProspMun(mun) {
         '<h4 class="lp-h">🎯 ' + esc(p.nome || 'Sem nome') + '</h4>' +
         '<div class="lp-meta">' +
         '<b>Município:</b> ' + esc(p.mun) + '<br>' +
-        '<b>Cód. CAR:</b> <span style="font-size:10.5px;word-break:break-all">' + esc(p.cod || '–') + '</span><br>' +
         '<b>Tipo de imóvel:</b> ' + (tipoLbl[p.tipo] || p.tipo || '–') + '<br>' +
         (p.area ? '<b>Área:</b> ' + Number(p.area).toLocaleString('pt-BR') + ' ha<br>' : '') +
         '<b>Dist. ao TRR:</b> ' + (p.dist_trr || '–') + ' km<br>' +
-        '<b>Clientes TRR no município:</b> ' + (p.cli_mun || 0) + '<br>' +
         '<b>Score:</b> <span style="color:' + col + ';font-weight:800">' + p.score + '</span> — ' + pScoreLbl(p.score) +
-        '</div>',
+        '</div>' +
+        '<button onclick="openPropDetail(' + p.id + ')" style="margin-top:10px;width:100%;padding:7px 12px;background:var(--hdr);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">🔍 Buscar Dados nas Fontes Públicas</button>',
         { maxWidth: 300 }
       );
     });
@@ -1539,11 +1568,12 @@ async function drillProspMun(mun) {
       return '<tr>' +
         '<td style="color:var(--muted);font-size:11px">' + (i + 1) + '</td>' +
         '<td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis" title="' + esc(p.nome || '') + '">' + esc(p.nome || 'Sem nome') + '</td>' +
-        '<td style="font-size:10px;max-width:160px;word-break:break-all;color:var(--muted)">' + esc(p.cod || '–') + '</td>' +
+        '<td style="font-size:10px;max-width:130px;word-break:break-all;color:var(--muted)">' + esc(p.cod || '–') + '</td>' +
         '<td>' + (tipoLbl[p.tipo] || p.tipo || '–') + '</td>' +
         '<td style="text-align:right">' + (p.area ? Number(p.area).toLocaleString('pt-BR') + ' ha' : '–') + '</td>' +
         '<td style="text-align:right">' + (p.dist_trr || '–') + ' km</td>' +
         '<td><span class="score-pill ' + pScorePill(p.score) + '">' + p.score + '</span></td>' +
+        '<td><button class="drill-btn" onclick="openPropDetail(' + p.id + ')">🔍</button></td>' +
       '</tr>';
     }).join('');
     document.getElementById('prosp-tbl-wrap').innerHTML =
@@ -1551,7 +1581,7 @@ async function drillProspMun(mun) {
       '<th>#</th><th>Nome da Propriedade</th><th>Cód. CAR</th><th>Tipo</th>' +
       '<th style="text-align:right">Área</th>' +
       '<th style="text-align:right">Dist. TRR</th>' +
-      '<th>Score</th>' +
+      '<th>Score</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   } catch(e) { console.error('drillProspMun error:', e); }
   finally { document.getElementById('prosp-loading').classList.remove('visible'); }
@@ -1569,6 +1599,147 @@ function backToMuns() {
     renderProspTable((prospData.municipios)||[]);
   }
 }
+
+/* ===== PROP DETAIL PANEL JS ===== */
+var prospProps = {}; // cache: id -> property object
+
+function openPropDetail(propId) {
+  var p = prospProps[propId];
+  if (!p) return;
+  var panel  = document.getElementById('prosp-detail-panel');
+  var overlay = document.getElementById('pdp-overlay');
+  document.getElementById('pdp-hdr-title').textContent = p.nome || 'Sem nome';
+  document.getElementById('pdp-hdr-sub').textContent   = (p.mun || '') + ' · ' + (p.uf || 'GO') + (p.area ? ' · ' + Number(p.area).toLocaleString('pt-BR') + ' ha' : '');
+  document.getElementById('pdp-body').innerHTML = '<div class="pdp-loading"><div class="ml-spinner" style="margin:0 auto 12px"></div>Buscando dados nas fontes públicas…</div>';
+  panel.classList.add('open');
+  overlay.classList.add('open');
+  fetchAndRenderDetail(p);
+}
+
+function closePropDetail() {
+  document.getElementById('prosp-detail-panel').classList.remove('open');
+  document.getElementById('pdp-overlay').classList.remove('open');
+}
+
+async function fetchAndRenderDetail(p) {
+  var body = document.getElementById('pdp-body');
+  var tipoLbl = { IRU:'Imóvel Rural Único', AST:'Assentamento', PCT:'Parcelamento Coletivo' };
+  var ibge    = null;
+
+  // 1. IBGE Localidades (API pública, sem auth, sem CAPTCHA)
+  try {
+    var r = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?nome=' + encodeURIComponent(p.mun));
+    var muns = await r.json();
+    if (Array.isArray(muns) && muns.length) {
+      var uf = (p.uf || 'GO').trim().toUpperCase();
+      ibge = muns.find(function(m) {
+        return m.microrregiao && m.microrregiao.mesorregiao &&
+               m.microrregiao.mesorregiao.UF && m.microrregiao.mesorregiao.UF.sigla === uf;
+      }) || muns[0];
+    }
+  } catch(e) { /* IBGE indisponível */ }
+
+  var html = '';
+
+  /* --- Dados CAR --- */
+  html += '<div class="pdp-section">';
+  html += '<div class="pdp-section-title">📋 Dados do Imóvel (CAR/SICAR)</div>';
+  html += row('Nome', p.nome || 'Sem nome');
+  html += row('Tipo', tipoLbl[p.tipo] || p.tipo || '–');
+  if (p.area) html += row('Área', Number(p.area).toLocaleString('pt-BR') + ' ha');
+  html += row('Dist. ao TRR', (p.dist_trr || '–') + ' km');
+  html += row('Score Prospecção', '<span style="font-weight:800;color:' + pScoreColor(p.score) + '">' + p.score + ' — ' + pScoreLbl(p.score) + '</span>');
+  html += '<div class="pdp-row"><span class="lbl">Cód. CAR</span><span class="val" style="font-size:10.5px;font-family:monospace">' + esc(p.cod || '–') + '</span></div>';
+  html += '</div>';
+
+  /* --- IBGE Geográfico --- */
+  html += '<div class="pdp-section">';
+  html += '<div class="pdp-section-title">🗺️ Contexto Geográfico (IBGE)</div>';
+  if (ibge) {
+    html += row('Município', ibge.nome);
+    if (ibge.microrregiao)           html += row('Microrregião', ibge.microrregiao.nome);
+    if (ibge.microrregiao && ibge.microrregiao.mesorregiao) html += row('Mesorregião', ibge.microrregiao.mesorregiao.nome);
+    if (ibge.microrregiao && ibge.microrregiao.mesorregiao && ibge.microrregiao.mesorregiao.UF)
+      html += row('Estado', ibge.microrregiao.mesorregiao.UF.nome + ' (' + ibge.microrregiao.mesorregiao.UF.sigla + ')');
+    html += row('Código IBGE', ibge.id);
+  } else {
+    html += '<div style="font-size:13px;color:var(--muted)">IBGE indisponível no momento.</div>';
+  }
+  html += '</div>';
+
+  /* --- Proprietário / LGPD --- */
+  html += '<div class="pdp-section">';
+  html += '<div class="pdp-section-title">👤 Dados do Proprietário</div>';
+  html += '<div class="pdp-lgpd">⚖️ <b>Restrição LGPD:</b> Nome, CPF e CNPJ do proprietário de imóvel rural são mascarados por lei em todas as consultas públicas brasileiras — SICAR, INCRA e Receita Federal não disponibilizam esses dados sem autorização judicial. Não existe fonte legítima de acesso público.</div>';
+  html += '</div>';
+
+  /* --- Links externos --- */
+  html += '<div class="pdp-section">';
+  html += '<div class="pdp-section-title">🔗 Consultar em Fontes Externas</div>';
+
+  // SICAR Portal
+  html += link('🌿', 'SICAR — Consulta Pública CAR',
+    'Buscar código: ' + (p.cod || '').substring(0, 24) + '…',
+    'https://consultapublica.car.gov.br/publico/imoveis/index');
+
+  // Google Maps Satélite
+  if (p.lat && p.lon) {
+    html += link('🛰️', 'Google Maps — Satélite',
+      'Coordenadas: ' + Number(p.lat).toFixed(5) + ', ' + Number(p.lon).toFixed(5),
+      'https://www.google.com/maps/@' + p.lat + ',' + p.lon + ',14z/data=!3m1!1e3');
+
+    html += link('🌍', 'Google Earth — Vista Aérea',
+      'Abrir localização no Google Earth Web',
+      'https://earth.google.com/web/@' + p.lat + ',' + p.lon + ',800a,2000d,35y,0h,0t,0r');
+  }
+
+  // Google Search
+  var nomeBusca = p.nome ? p.nome + ' ' + p.mun + ' GO imóvel rural' : p.cod + ' CAR imóvel rural';
+  html += link('🔍', 'Pesquisar no Google',
+    esc(p.nome || p.cod) + ' · ' + p.mun,
+    'https://www.google.com/search?q=' + encodeURIComponent(nomeBusca));
+
+  // IBGE Cidades
+  var ibgeId = ibge ? ibge.id : '';
+  if (ibge) {
+    html += link('📊', 'IBGE Cidades — Perfil Municipal',
+      'Atividade econômica, população, IDH de ' + p.mun,
+      'https://cidades.ibge.gov.br/brasil/' + (p.uf || 'go').toLowerCase() + '/' + encodeURIComponent(p.mun.toLowerCase().replace(/ /g,'-')) + '/panorama');
+  }
+
+  // INCRA SNCR
+  html += link('🏛️', 'INCRA SNCR — Registro Rural',
+    'Requer login — dados de proprietário e área fiscal',
+    'https://sncr.serpro.gov.br/sncr/faces/common/jsf/home.jsp');
+
+  html += '</div>';
+
+  body.innerHTML = html;
+}
+
+function row(lbl, val) {
+  return '<div class="pdp-row"><span class="lbl">' + lbl + '</span><span class="val">' + val + '</span></div>';
+}
+function link(ico, lbl, sub, href) {
+  return '<a class="pdp-link" href="' + href + '" target="_blank" rel="noopener">' +
+    '<span class="pdp-link-ico">' + ico + '</span>' +
+    '<span class="pdp-link-txt"><div class="pdp-link-lbl">' + lbl + '</div><div class="pdp-link-sub">' + sub + '</div></span>' +
+    '</a>';
+}
 </script>
+
+<!-- Painel lateral de detalhe de propriedade -->
+<div id="pdp-overlay" onclick="closePropDetail()"></div>
+<div id="prosp-detail-panel">
+  <div class="pdp-hdr">
+    <div class="pdp-hdr-txt">
+      <div class="pdp-hdr-title" id="pdp-hdr-title">Propriedade</div>
+      <div class="pdp-hdr-sub"  id="pdp-hdr-sub"></div>
+    </div>
+    <button class="pdp-close" onclick="closePropDetail()">✕</button>
+  </div>
+  <div class="pdp-body" id="pdp-body"></div>
+</div>
+
 </body>
 </html>

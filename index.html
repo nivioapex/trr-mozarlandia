@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel TRR Mozarlândia</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" crossorigin="anonymous"></script>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--hdr:#10243e;--txt:#1c2733;--muted:#6b7785;--acc:#e0762c;--grn:#1c7c54;--gap:16px;--r:10px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;}
+.wrap{max-width:1480px;margin:0 auto;padding:var(--gap);}
+.hdr{background:linear-gradient(135deg,var(--hdr),#1a3a5c);color:#fff;padding:22px 26px;border-radius:var(--r);margin-bottom:var(--gap);}
+.hdr h1{font-size:21px;font-weight:700;}
+.hdr .sub{font-size:13px;opacity:.85;margin-top:4px;}
+.hdr-bot{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:14px;}
+.filters{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+.fg{display:flex;flex-direction:column;gap:4px;min-width:140px;}
+.fg label{font-size:11px;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.4px;}
+.fg select{padding:7px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(255,255,255,.12);color:#fff;font-size:13px;}
+.fg select option{background:#10243e;color:#fff;}
+.btn-rst{padding:8px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;cursor:pointer;font-size:13px;}
+.btn-rst:hover{background:rgba(255,255,255,.15);}
+.badge-live{font-size:12px;background:rgba(255,255,255,.15);padding:5px 14px;border-radius:20px;white-space:nowrap;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--gap);margin-bottom:var(--gap);}
+.kpi{background:var(--card);border-radius:var(--r);padding:18px 22px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid var(--acc);}
+.kpi-lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.kpi-val{font-size:26px;font-weight:700;}
+.kpi-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.cr{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:var(--gap);margin-bottom:var(--gap);}
+.cc{background:var(--card);border-radius:var(--r);padding:18px 22px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.cc h3{font-size:14px;font-weight:600;margin-bottom:4px;}
+.hint{font-size:11.5px;color:var(--muted);margin-bottom:12px;}
+.ch-h{position:relative;height:320px;}
+.ch-h.tall{height:440px;}
+.ts{background:var(--card);border-radius:var(--r);padding:18px 22px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:var(--gap);overflow-x:auto;}
+.ts h3{font-size:14px;font-weight:600;margin-bottom:8px;}
+.tb-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+.tb-bar input{padding:8px 12px;border:1px solid #dfe3e8;border-radius:6px;font-size:13px;min-width:240px;}
+.dt{width:100%;border-collapse:collapse;font-size:12.5px;}
+.dt thead th{text-align:left;padding:9px 10px;border-bottom:2px solid #dee2e6;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+.dt tbody td{padding:8px 10px;border-bottom:1px solid #f0f0f0;white-space:nowrap;}
+.dt tbody tr:hover{background:#f8f9fa;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.badge.g{background:#e2f3ea;color:#1c7c54;}.badge.n{background:#eceef0;color:#6b7785;}
+.pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px;font-size:12.5px;color:var(--muted);}
+.pager button{padding:5px 10px;border:1px solid #dfe3e8;background:#fff;border-radius:5px;cursor:pointer;font-size:12px;}
+.pager button:disabled{opacity:.4;cursor:default;}
+.pb{display:inline-flex;align-items:center;gap:6px;}
+.pb-t{width:60px;height:7px;background:#e2e8f0;border-radius:4px;overflow:hidden;}
+.pb-f{height:100%;background:linear-gradient(90deg,#1c7c54,#e0762c);border-radius:4px;}
+.spin{padding:40px;text-align:center;color:var(--muted);font-size:14px;}
+.err-box{padding:12px 16px;background:#fff5f5;color:#c53030;border-radius:8px;font-size:13px;margin-bottom:12px;border:1px solid #fed7d7;}
+footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;}
+@media(max-width:768px){.kpi-row{grid-template-columns:repeat(2,1fr);}.cr{grid-template-columns:1fr;}.filters{flex-direction:column;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hdr">
+  <h1>&#x26FD; Painel de Clientes - Combustíveis, Óleos, Adubos e Produtos em Geral</h1>
+  <div class="sub">TRR Mozarlândia · GO-164, KM 166, Zona Urbana, Mozarlândia - GO, CEP 76700-000 | Base atual de clientes do ramo de combustíveis</div>
+  <div class="hdr-bot">
+    <div class="filters">
+      <div class="fg"><label>UF</label><select id="f-uf" onchange="onFilter()"><option value="">Todas</option></select></div>
+      <div class="fg"><label>Município</label><select id="f-mun" onchange="onFilter()"><option value="">Todos</option></select></div>
+      <div class="fg"><label>Atividade (CNAE)</label><select id="f-ativ" onchange="onFilter()"><option value="">Todas</option></select></div>
+      <div class="fg"><label>Faixa dist. ao TRR</label><select id="f-faixa" onchange="onFilter()"><option value="">Todas</option></select></div>
+      <div class="fg"><label>Status</label><select id="f-ativa" onchange="onFilter()"><option value="">Todos</option><option value="true">Ativa</option><option value="false">Inativa</option></select></div>
+      <button class="btn-rst" onclick="resetFilters()">Limpar filtros</button>
+    </div>
+    <div class="badge-live" id="badge">⏳ Iniciando…</div>
+  </div>
+</header>
+<div id="errs"></div>
+<section class="kpi-row">
+  <div class="kpi"><div class="kpi-lbl">Propriedades</div><div class="kpi-val" id="kv-prop">–</div><div class="kpi-sub" id="kv-sub"></div></div>
+  <div class="kpi"><div class="kpi-lbl">Clientes únicos</div><div class="kpi-val" id="kv-cli">–</div></div>
+  <div class="kpi"><div class="kpi-lbl">Municípios atendidos</div><div class="kpi-val" id="kv-mun">–</div></div>
+  <div class="kpi"><div class="kpi-lbl">Dist. média ao TRR</div><div class="kpi-val" id="kv-dist">–</div></div>
+  <div class="kpi"><div class="kpi-lbl">Atividade predominante</div><div class="kpi-val" id="kv-ativ" style="font-size:16px">–</div></div>
+</section>
+<section class="cr">
+  <div class="cc" style="grid-column:span 2">
+    <h3>🗺 Mapa relativo de propriedades (sem base cartográfica)</h3>
+    <div class="hint">Cada bolha = 1 município · tamanho = nº de propriedades · cor = faixa de distância média até o TRR · ★ = TRR (Mozarlândia)</div>
+    <div class="ch-h tall"><canvas id="ch-map"></canvas></div>
+  </div>
+  <div class="cc"><h3>Top municípios por nº de propriedades</h3><div class="hint">Atualiza conforme filtros aplicados</div><div class="ch-h"><canvas id="ch-mun"></canvas></div></div>
+  <div class="cc"><h3>Atividade econômica (CNAE)</h3><div class="hint">Distribuição das propriedades filtradas</div><div class="ch-h"><canvas id="ch-ativ"></canvas></div></div>
+  <div class="cc"><h3>Distribuição por faixa de distância ao TRR</h3><div class="hint">Distância em linha reta (Haversine), não rodoviária</div><div class="ch-h"><canvas id="ch-faixa"></canvas></div></div>
+</section>
+<section class="cr">
+  <div class="cc" style="grid-column:span 2">
+    <h3>📊 Potencial de mercado por município – dados reais do CAR (SICAR)</h3>
+    <div class="hint">Eixo X = distância ao TRR · Eixo Y = imóveis CAR ainda não clientes (potencial líquido) · tamanho = nº imóveis CAR · cor = % penetração atual</div>
+    <div class="ch-h tall"><canvas id="ch-car"></canvas></div>
+  </div>
+</section>
+<div class="ts">
+  <h3>Tabela: Imóveis CAR × clientes atendidos, por município</h3>
+  <div class="hint" style="margin-bottom:12px">25 municípios prioritários com contagem real de imóveis CAR confirmada.</div>
+  <div id="car-wrap"><div class="spin">Carregando…</div></div>
+</div>
+<div class="ts">
+  <h3>Base detalhada de clientes e propriedades</h3>
+  <div class="tb-bar">
+    <input type="text" id="srch" placeholder="Buscar cliente, propriedade, município…" oninput="onSearch()">
+    <span id="tbl-info" style="font-size:12.5px;color:var(--muted)"></span>
+  </div>
+  <div id="det-wrap"><div class="spin">Carregando…</div></div>
+  <div class="pager">
+    <button id="pg-p" onclick="changePg(-1)" disabled>‹ Anterior</button>
+    <span id="pg-info" style="font-size:12.5px;color:var(--muted)"></span>
+    <button id="pg-n" onclick="changePg(1)">Próxima ›</button>
+  </div>
+</div>
+<footer>Supabase · Prospecção TRR Mozarlândia · Apex Technology</footer>
+</div>
+<script>
+var SB = supabase.createClient(
+  'https://keeqkmguljsddfmrqlld.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ'
+);
+var FAIXAS=['0-50 km','50-100 km','100-200 km','>200 km'];
+var FCOLS={'0-50 km':'#1c7c54','50-100 km':'#bfae00','100-200 km':'#e0762c','>200 km':'#a4243b'};
+var PAL=['#1c7c54','#e0762c','#2a6f97','#a4243b','#6a4c93','#bfae00','#c07d3f','#1a8fa0','#d44e2a','#2e6f40','#7b3fa8'];
+var PG=25;
+var charts={},munCoords={},carRows=[];
+var totalAll=0,totalDet=0,detPage=1,srchTimer=null;
+
+function shortA(s){s=s||'';return s.replace('Pecuária - ','').replace('Agricultura - ','').replace(' (cria/recria/engorda)','').replace('Outra atividade (CNAE diverso)','Outra').replace('Lavouras permanentes (outras)','Lav. permanentes');}
+function set$(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+function setBadge(t){set$('badge',t);}
+function dc(k){if(charts[k]){charts[k].destroy();charts[k]=null;}}
+function addErr(msg){document.getElementById('errs').insertAdjacentHTML('beforeend','<div class="err-box">⚠️ '+msg+'</div>');}
+function fillSel(id,vals,vFn,lFn){var s=document.getElementById(id);while(s.options.length>1)s.remove(1);vals.forEach(function(v){var o=document.createElement('option');o.value=vFn(v);o.textContent=lFn(v);s.appendChild(o);});}
+
+async function init(){
+  setBadge('⏳ Iniciando…');
+  try{
+    var res=await SB.rpc('trr_init');
+    if(res.error) throw res.error;
+    var d=res.data;
+    totalAll=d.total||0;
+    carRows=d.car||[];
+    (d.coords||[]).forEach(function(c){munCoords[c.municipio]={lat:+c.lat,lon:+c.lon};});
+    fillSel('f-uf',d.ufs||[],function(v){return v;},function(v){return v;});
+    fillSel('f-mun',d.muns||[],function(v){return v;},function(v){return v;});
+    fillSel('f-ativ',d.ativs||[],function(v){return v;},function(v){return shortA(v);});
+    fillSel('f-faixa',FAIXAS,function(v){return v;},function(v){return v;});
+    renderCarTable();
+    renderCarChart();
+    await refresh();
+  }catch(e){
+    addErr('Erro na inicialização: '+(e.message||JSON.stringify(e)));
+    setBadge('🔴 Erro');
+  }
+}
+
+function getFilterParams(){
+  var uf=document.getElementById('f-uf').value||null;
+  var mun=document.getElementById('f-mun').value||null;
+  var ativ=document.getElementById('f-ativ').value||null;
+  var faixa=document.getElementById('f-faixa').value||null;
+  var av=document.getElementById('f-ativa').value;
+  var ativa=av===''?null:av==='true';
+  var srch=document.getElementById('srch').value||null;
+  return {p_uf:uf,p_mun:mun,p_ativ:ativ,p_faixa:faixa,p_ativa:ativa,p_srch:srch,p_page:detPage};
+}
+
+async function refresh(){
+  setBadge('⏳ Atualizando…');
+  document.getElementById('errs').innerHTML='';
+  try{
+    var res=await SB.rpc('trr_data',getFilterParams());
+    if(res.error) throw res.error;
+    var d=res.data;
+    var k=d.kpi||{};
+    set$('kv-prop',Number(k.prop||0).toLocaleString('pt-BR'));
+    set$('kv-sub','de '+Number(totalAll).toLocaleString('pt-BR')+' no total');
+    set$('kv-cli',Number(k.cli||0).toLocaleString('pt-BR'));
+    set$('kv-mun',Number(k.mun||0).toLocaleString('pt-BR'));
+    set$('kv-dist',Number(k.avg_dist||0).toFixed(1).replace('.',',')+' km');
+    set$('kv-ativ',shortA(d.top_ativ||'–'));
+    renderMap(d.map||[]);
+    renderMun(d.muns||[]);
+    renderAtiv(d.ativ||[]);
+    renderFaixa(d.faixa||[]);
+    totalDet=d.det_total||0;
+    renderDetail(d.det||[]);
+    setBadge('🟢 Ao vivo');
+  }catch(e){
+    addErr('Erro: '+(e.message||JSON.stringify(e)));
+    setBadge('🔴 Erro');
+  }
+}
+
+function onFilter(){detPage=1;refresh();}
+function resetFilters(){['f-uf','f-mun','f-ativ','f-faixa','f-ativa'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('srch').value='';detPage=1;refresh();}
+function onSearch(){clearTimeout(srchTimer);detPage=1;srchTimer=setTimeout(refresh,400);}
+function changePg(d){detPage+=d;refresh();}
+
+function renderMap(data){
+  dc('map');if(!data||!data.length)return;
+  var byF={};
+  data.forEach(function(r){
+    var c=munCoords[r.municipio];if(!c)return;
+    var d2=Number(r.avg_dist);
+    var f=d2<50?'0-50 km':d2<100?'50-100 km':d2<200?'100-200 km':'>200 km';
+    if(!byF[f])byF[f]=[];
+    byF[f].push({x:c.lon,y:c.lat,r:Math.max(4,Math.sqrt(Number(r.cnt))*2.5),municipio:r.municipio,cnt:Number(r.cnt),avgD:r.avg_dist});
+  });
+  var ds=FAIXAS.filter(function(f){return byF[f];}).map(function(f){return{label:f,data:byF[f],backgroundColor:FCOLS[f]+'bb',borderColor:FCOLS[f],borderWidth:1};});
+  ds.push({label:'★ TRR (Mozarlândia)',data:[{x:-50.5803,y:-14.7483,r:9}],backgroundColor:'#fff',borderColor:'#10243e',borderWidth:2.5});
+  charts.map=new Chart(document.getElementById('ch-map'),{type:'bubble',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,padding:8}},tooltip:{callbacks:{label:function(c){var d=c.raw;return d.municipio?(d.municipio+': '+d.cnt+' prop. · '+d.avgD+' km'):'★ TRR – Mozarlândia';}}}},scales:{x:{title:{display:true,text:'Longitude (Leste →)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}},y:{title:{display:true,text:'Latitude (Sul ↓)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}}}}});
+}
+
+function renderMun(data){
+  dc('mun');if(!data||!data.length)return;
+  charts.mun=new Chart(document.getElementById('ch-mun'),{type:'bar',data:{labels:data.map(function(r){return r.municipio;}),datasets:[{data:data.map(function(r){return Number(r.cnt);}),backgroundColor:'#e0762c',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#f0f0f0'},ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}}}});
+}
+
+function renderAtiv(data){
+  dc('ativ');if(!data||!data.length)return;
+  charts.ativ=new Chart(document.getElementById('ch-ativ'),{type:'doughnut',data:{labels:data.map(function(r){return shortA(r.atividade_principal);}),datasets:[{data:data.map(function(r){return Number(r.cnt);}),backgroundColor:PAL.slice(0,data.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:12,padding:6}}}}});
+}
+
+function renderFaixa(data){
+  dc('faixa');if(!data||!data.length)return;
+  var ord=FAIXAS.filter(function(f){return data.some(function(r){return r.faixa_dist_trr===f;});});
+  charts.faixa=new Chart(document.getElementById('ch-faixa'),{type:'doughnut',data:{labels:ord,datasets:[{data:ord.map(function(f){var r=data.find(function(x){return x.faixa_dist_trr===f;});return r?Number(r.cnt):0;}),backgroundColor:ord.map(function(f){return FCOLS[f];}),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12,padding:8}}}}});
+}
+
+function renderCarChart(){
+  dc('car');if(!carRows.length)return;
+  charts.car=new Chart(document.getElementById('ch-car'),{type:'bubble',data:{datasets:[{label:'Municípios',data:carRows.map(function(r){return{x:Number(r.dist_media_trr_km),y:Number(r.potencial_liquido),r:Math.max(5,Math.sqrt(Number(r.car_imoveis))*1.3),municipio:r.municipio,car:Number(r.car_imoveis),pct:Number(r.penetracao_pct),pot:Number(r.potencial_liquido)};}),backgroundColor:carRows.map(function(r){var p=Number(r.penetracao_pct);return p<1?'#a4243b99':p<5?'#e0762c99':'#1c7c5499';}),borderColor:carRows.map(function(r){var p=Number(r.penetracao_pct);return p<1?'#a4243b':p<5?'#e0762c':'#1c7c54';}),borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){var d=c.raw;return[d.municipio,'CAR: '+d.car.toLocaleString('pt-BR')+' imóveis','Potencial: '+d.pot.toLocaleString('pt-BR'),'Penetração: '+d.pct.toFixed(1)+'%','Dist. TRR: '+Number(c.raw.x).toFixed(0)+' km'];}}}},scales:{x:{title:{display:true,text:'Distância ao TRR (km)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}},y:{title:{display:true,text:'Potencial líquido (imóveis CAR)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}}}}});
+}
+
+function renderCarTable(){
+  var el=document.getElementById('car-wrap');
+  if(!carRows.length){el.innerHTML='<div class="spin">Sem dados CAR</div>';return;}
+  var rows=carRows.map(function(r){
+    var pct=Number(r.penetracao_pct),fill=Math.min(pct*5,100);
+    return '<tr><td>'+r.municipio+'</td><td>'+r.uf+'</td><td style="text-align:right">'+Number(r.car_imoveis).toLocaleString('pt-BR')+'</td><td style="text-align:right">'+r.propriedades+'</td><td style="text-align:right">'+r.clientes+'</td><td><div class="pb"><div class="pb-t"><div class="pb-f" style="width:'+fill+'%"></div></div><span style="font-size:11px;min-width:38px">'+pct.toFixed(1)+'%</span></div></td><td style="text-align:right">'+Number(r.potencial_liquido).toLocaleString('pt-BR')+'</td><td style="text-align:right">'+parseFloat(r.dist_media_trr_km).toFixed(0)+' km</td></tr>';
+  }).join('');
+  el.innerHTML='<table class="dt"><thead><tr><th>Município</th><th>UF</th><th>Imóveis CAR</th><th>Prosp.</th><th>Clientes</th><th>Penetração</th><th>Potencial</th><th>Dist. TRR</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function renderDetail(rows){
+  var pages=Math.max(1,Math.ceil(totalDet/PG));
+  if(detPage>pages)detPage=pages;
+  set$('tbl-info',Number(totalDet).toLocaleString('pt-BR')+' registros');
+  set$('pg-info','Pág. '+detPage+' / '+pages);
+  document.getElementById('pg-p').disabled=detPage<=1;
+  document.getElementById('pg-n').disabled=detPage>=pages;
+  if(!rows||!rows.length){document.getElementById('det-wrap').innerHTML='<div class="spin">Nenhum resultado</div>';return;}
+  var trs=rows.map(function(r){
+    var av=r.propriedade_ativa===true||r.propriedade_ativa==='true'||r.propriedade_ativa==='t';
+    return '<tr><td style="color:var(--muted)">'+r.id_propriedade+'</td><td>'+(r.cliente||'–')+'</td><td>'+(r.propriedade||'–')+'</td><td>'+r.municipio+'</td><td>'+r.uf+'</td><td style="font-size:11px;max-width:150px;white-space:normal">'+shortA(r.atividade_principal||'–')+'</td><td style="text-align:right">'+Number(r.dist||0).toFixed(0)+' km</td><td>'+(r.faixa_dist_trr||'–')+'</td><td><span class="badge '+(av?'g':'n')+'">'+(av?'Ativa':'Inativa')+'</span></td></tr>';
+  }).join('');
+  document.getElementById('det-wrap').innerHTML='<table class="dt"><thead><tr><th>#</th><th>Cliente</th><th>Propriedade</th><th>Município</th><th>UF</th><th>Atividade</th><th>Dist. TRR</th><th>Faixa</th><th>Status</th></tr></thead><tbody>'+trs+'</tbody></table>';
+}
+
+window.addEventListener('load',init);
+</script>
+</body>
+</html>

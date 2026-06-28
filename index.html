@@ -1837,8 +1837,17 @@ async function fetchAndRenderDetail(p) {
   /* ── Links externos ─────────────────────────────────────────── */
   html += '<div class="pdp-section">';
   html += '<div class="pdp-section-title">🔗 Consultar Diretamente</div>';
-  html += link('🌿', 'SICAR — Consulta Pública CAR', 'Código: ' + esc((p.cod||'').substring(0,22)) + '…',
-    'https://car.gov.br/#/consultar/');
+  var carCod = p.cod || '';
+  html += '<a class="pdp-link" href="https://car.gov.br/#/consultar/" target="_blank" rel="noopener" '
+    + 'onclick="event.stopPropagation();navigator.clipboard.writeText(\'' + carCod.replace(/\'/g,"\\\'")
+    + '\').catch(function(){});var t=document.getElementById(\'sicar-tip-' + propId + '\');'
+    + 'if(t){t.style.display=\'inline\';setTimeout(function(){t.style.display=\'none\';},3000);}">'
+    + '<span class="pdp-link-ico">🌿</span>'
+    + '<span class="pdp-link-txt">'
+    + '<div class="pdp-link-lbl">SICAR — Consulta Pública CAR '
+    + '<span id="sicar-tip-' + propId + '" style="display:none;color:#1a6e42;font-size:11px;font-weight:700;margin-left:6px">✓ Código copiado!</span></div>'
+    + '<div class="pdp-link-sub">Clique para abrir — código CAR copiado automaticamente: <b>' + esc((carCod).substring(0,26)) + (carCod.length>26?'…':'') + '</b></div>'
+    + '</span></a>';
   if (p.lat && p.lon) {
     html += link('🛰️', 'Google Maps — Satélite',
       Number(p.lat).toFixed(5) + ', ' + Number(p.lon).toFixed(5),

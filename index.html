@@ -14,6 +14,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .hdr{background:linear-gradient(135deg,var(--hdr),#1a3a5c);color:#fff;padding:22px 26px;border-radius:var(--r);margin-bottom:var(--gap);}
 .hdr h1{font-size:21px;font-weight:700;}
 .hdr .sub{font-size:13px;opacity:.85;margin-top:4px;}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
 .hdr-bot{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:14px;}
 .filters{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
 .fg{display:flex;flex-direction:column;gap:4px;min-width:140px;}
@@ -54,13 +55,144 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .err-box{padding:12px 16px;background:#fff5f5;color:#c53030;border-radius:8px;font-size:13px;margin-bottom:12px;border:1px solid #fed7d7;}
 footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;}
 @media(max-width:768px){.kpi-row{grid-template-columns:repeat(2,1fr);}.cr{grid-template-columns:1fr;}.filters{flex-direction:column;}}
+
+/* ===== LOGIN ===== */
+#login-overlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(145deg,#040e1a 0%,#0d2244 55%,#071526 100%);display:flex;align-items:center;justify-content:center;}
+.login-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:48px 44px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,.55);}
+.login-logo{text-align:center;margin-bottom:32px;}
+.login-title{color:rgba(255,255,255,.6);font-size:13.5px;text-align:center;margin-bottom:28px;letter-spacing:.3px;}
+.lf{margin-bottom:18px;}
+.lf label{display:block;color:rgba(255,255,255,.55);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:600;}
+.lf input{width:100%;padding:12px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;color:#fff;font-size:14px;outline:none;transition:border-color .2s,background .2s;}
+.lf input:focus{border-color:#f5a623;background:rgba(255,255,255,.13);}
+.lf input::placeholder{color:rgba(255,255,255,.28);}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,#f5a623,#e08a10);color:#fff;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;transition:opacity .2s;margin-top:8px;letter-spacing:.3px;}
+.login-btn:hover{opacity:.9;}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-err{background:rgba(165,36,59,.2);color:#ff7676;border:1px solid rgba(165,36,59,.4);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none;}
+
+/* ===== HDR USER ===== */
+.hdr-user{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.user-info{font-size:12.5px;opacity:.85;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-admin{padding:7px 14px;background:#e0762c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;}
+.btn-admin:hover{background:#c96820;}
+.btn-logout{padding:7px 14px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;}
+.btn-logout:hover{background:rgba(255,255,255,.22);}
+
+/* ===== ADMIN MODAL ===== */
+#admin-modal{position:fixed;inset:0;z-index:8888;background:rgba(0,0,0,.72);display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;}
+#admin-modal.open{display:flex;}
+.admin-card{background:#fff;border-radius:14px;width:100%;max-width:820px;box-shadow:0 24px 64px rgba(0,0,0,.45);}
+.admin-hdr{background:linear-gradient(135deg,#10243e,#1a3a5c);color:#fff;padding:22px 28px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;}
+.admin-hdr h2{font-size:17px;font-weight:700;}
+.admin-close{background:none;border:none;color:rgba(255,255,255,.65);font-size:26px;cursor:pointer;line-height:1;padding:0 4px;}
+.admin-close:hover{color:#fff;}
+.admin-body{padding:28px;}
+.admin-sec{margin-bottom:32px;}
+.admin-sec h3{font-size:14px;font-weight:700;color:#10243e;margin-bottom:18px;padding-bottom:8px;border-bottom:2px solid #e0762c;}
+.admin-form{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.af{display:flex;flex-direction:column;gap:5px;}
+.af label{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#6b7785;font-weight:600;}
+.af input,.af select{padding:9px 12px;border:1px solid #dfe3e8;border-radius:6px;font-size:13px;background:#fff;outline:none;}
+.af input:focus,.af select:focus{border-color:#10243e;}
+.admin-submit{grid-column:span 2;padding:11px;background:#10243e;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:14px;font-weight:700;transition:background .2s;}
+.admin-submit:hover{background:#1a3a5c;}
+.admin-msg{grid-column:span 2;padding:10px 14px;border-radius:6px;font-size:13px;display:none;}
+.admin-msg.ok{background:#e2f3ea;color:#1c7c54;border:1px solid #b7dfca;}
+.admin-msg.err{background:#fff5f5;color:#c53030;border:1px solid #fed7d7;}
+.user-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.user-tbl th{text-align:left;padding:9px 10px;border-bottom:2px solid #dee2e6;color:#6b7785;font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
+.user-tbl td{padding:9px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+.user-tbl tr:last-child td{border-bottom:none;}
+.user-tbl tr:hover td{background:#fafbfc;}
+.br{padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;}
+.br.admin{background:#ede5f7;color:#6a1b9a;}
+.br.viewer{background:#e3f2fd;color:#1565c0;}
+.bs{padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600;}
+.bs.ativo{background:#e2f3ea;color:#1c7c54;}
+.bs.inativo{background:#fff0f0;color:#c53030;}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:5px;border:1px solid #dfe3e8;cursor:pointer;background:#fff;font-weight:600;transition:all .15s;}
+.btn-sm:hover{background:#f4f6f8;}
+.btn-sm.off{border-color:#fed7d7;color:#c53030;}
+.btn-sm.off:hover{background:#fff5f5;}
+.btn-sm.on{border-color:#b7dfca;color:#1c7c54;}
+.btn-sm.on:hover{background:#e2f3ea;}
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- ===== LOGIN ===== -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 260 80" xmlns="http://www.w3.org/2000/svg" style="height:72px;display:inline-block;">
+        <path d="M4,4 L4,76 L32,76 Q72,76 72,40 Q72,4 32,4 Z" fill="#091929"/>
+        <path d="M8,9 L8,71 L30,71 Q64,71 64,40 Q64,9 30,9 Z" fill="#0b1f3a"/>
+        <polygon points="14,22 48,40 14,58" fill="#f5a623" opacity="0.35"/>
+        <polygon points="20,25 54,40 20,55" fill="#ffc107" opacity="0.62"/>
+        <polygon points="26,29 60,40 26,51" fill="#ffd740" opacity="0.96"/>
+        <path d="M36,10 Q66,10 66,40 Q66,70 36,70" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="2"/>
+        <text x="84" y="38" font-family="'Arial Black','Arial',sans-serif" font-size="21" font-weight="900" font-style="italic" fill="white" letter-spacing="-0.5">Dinâmica</text>
+        <text x="84" y="64" font-family="'Arial Black','Arial',sans-serif" font-size="28" font-weight="900" fill="#f5a623" letter-spacing="4">TRR</text>
+        <line x1="84" y1="43" x2="258" y2="43" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+        <text x="84" y="75" font-family="Arial,sans-serif" font-size="8.5" fill="rgba(255,255,255,0.45)" letter-spacing="0.4">Distribuidora de Combustíveis</text>
+      </svg>
+    </div>
+    <p class="login-title">Acesso ao Painel de Clientes</p>
+    <div class="login-err" id="login-err"></div>
+    <div class="lf">
+      <label>E-mail</label>
+      <input type="email" id="l-email" placeholder="seu@email.com" autocomplete="username"/>
+    </div>
+    <div class="lf">
+      <label>Senha</label>
+      <input type="password" id="l-pwd" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- ===== ADMIN MODAL ===== -->
+<div id="admin-modal">
+  <div class="admin-card">
+    <div class="admin-hdr">
+      <h2>⚙️ Painel Administrativo</h2>
+      <button class="admin-close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="admin-body">
+      <div class="admin-sec">
+        <h3>Criar Novo Usuário</h3>
+        <div class="admin-form">
+          <div class="af"><label>Nome completo</label><input type="text" id="nu-nome" placeholder="Ex: João Silva"/></div>
+          <div class="af"><label>E-mail</label><input type="email" id="nu-email" placeholder="email@empresa.com"/></div>
+          <div class="af"><label>Senha</label><input type="password" id="nu-pwd" placeholder="Mínimo 6 caracteres"/></div>
+          <div class="af"><label>Perfil de acesso</label><select id="nu-role"><option value="viewer">Visualizador</option><option value="admin">Administrador</option></select></div>
+          <div class="admin-msg" id="nu-msg"></div>
+          <button class="admin-submit" onclick="createUser()">+ Criar Usuário</button>
+        </div>
+      </div>
+      <div class="admin-sec">
+        <h3>Usuários Cadastrados</h3>
+        <div id="admin-users-wrap"><div class="spin">Carregando…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="wrap" id="dashboard" style="display:none">
 <header class="hdr">
-  <h1>&#x26FD; Painel de Clientes - Combustíveis, Óleos, Adubos e Produtos em Geral</h1>
-  <div class="sub">TRR Mozarlândia · GO-164, KM 166, Zona Urbana, Mozarlândia - GO, CEP 76700-000 | Base atual de clientes do ramo de combustíveis</div>
+  <div class="hdr-top">
+    <div>
+      <h1>&#x26FD; Painel de Clientes - Combustíveis, Óleos, Adubos e Produtos em Geral</h1>
+      <div class="sub">TRR Mozarlândia · GO-164, KM 166, Zona Urbana, Mozarlândia - GO, CEP 76700-000 | Base atual de clientes do ramo de combustíveis</div>
+    </div>
+    <div class="hdr-user">
+      <span class="user-info" id="hdr-user-info"></span>
+      <button class="btn-admin" id="btn-admin" onclick="openAdmin()" style="display:none">⚙️ Admin</button>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
   <div class="hdr-bot">
     <div class="filters">
       <div class="fg"><label>UF</label><select id="f-uf" onchange="onFilter()"><option value="">Todas</option></select></div>
@@ -118,11 +250,138 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 </div>
 <footer>Supabase · Prospecção TRR Mozarlândia · Apex Technology</footer>
 </div>
+
 <script>
-var SB = supabase.createClient(
+var SB=supabase.createClient(
   'https://keeqkmguljsddfmrqlld.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ'
 );
+
+/* ===== AUTH ===== */
+var SESSION=null;
+function getToken(){return sessionStorage.getItem('dash_token');}
+function setToken(t){sessionStorage.setItem('dash_token',t);}
+function clearToken(){sessionStorage.removeItem('dash_token');}
+
+async function checkSession(){
+  var t=getToken();
+  if(!t){showLogin();return;}
+  try{
+    var res=await SB.rpc('dash_verify_session',{p_token:t});
+    if(res.error||!res.data||res.data.error){showLogin();return;}
+    SESSION=res.data;SESSION.token=t;showDashboard();
+  }catch(e){showLogin();}
+}
+
+function showLogin(){
+  document.getElementById('login-overlay').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+}
+
+function showDashboard(){
+  document.getElementById('login-overlay').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('hdr-user-info').textContent=(SESSION.nome||SESSION.email)+(SESSION.role==='admin'?' ★':'');
+  if(SESSION.role==='admin')document.getElementById('btn-admin').style.display='inline-block';
+  init();
+}
+
+async function doLogin(){
+  var email=document.getElementById('l-email').value.trim();
+  var pwd=document.getElementById('l-pwd').value;
+  var errEl=document.getElementById('login-err');
+  var btn=document.getElementById('login-btn');
+  errEl.style.display='none';
+  if(!email||!pwd){errEl.textContent='Preencha e-mail e senha.';errEl.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Verificando…';
+  try{
+    var res=await SB.rpc('dash_login',{p_email:email,p_pwd:pwd});
+    btn.disabled=false;btn.textContent='Entrar';
+    if(res.error){errEl.textContent=res.error.message||'Erro de conexão.';errEl.style.display='block';return;}
+    var d=res.data;
+    if(d&&d.error){errEl.textContent=d.error;errEl.style.display='block';return;}
+    setToken(d.token);SESSION=d;showDashboard();
+  }catch(e){
+    btn.disabled=false;btn.textContent='Entrar';
+    errEl.textContent='Erro de conexão. Tente novamente.';errEl.style.display='block';
+  }
+}
+
+async function doLogout(){
+  var t=getToken();
+  if(t)try{await SB.rpc('dash_logout',{p_token:t});}catch(e){}
+  clearToken();SESSION=null;
+  document.getElementById('btn-admin').style.display='none';
+  showLogin();
+}
+
+/* ===== ADMIN ===== */
+async function openAdmin(){
+  document.getElementById('admin-modal').classList.add('open');
+  await loadUsers();
+}
+function closeAdmin(){document.getElementById('admin-modal').classList.remove('open');}
+
+async function loadUsers(){
+  var wrap=document.getElementById('admin-users-wrap');
+  wrap.innerHTML='<div class="spin">Carregando…</div>';
+  try{
+    var res=await SB.rpc('dash_list_users',{p_token:SESSION.token});
+    if(res.error||!res.data){wrap.innerHTML='<div class="err-box">Erro ao carregar usuários</div>';return;}
+    if(res.data.error){wrap.innerHTML='<div class="err-box">'+res.data.error+'</div>';return;}
+    var users=res.data.users||[];
+    if(!users.length){wrap.innerHTML='<div class="spin">Nenhum usuário cadastrado</div>';return;}
+    var rows=users.map(function(u){
+      var dt=new Date(u.created_at).toLocaleDateString('pt-BR');
+      var rCls=u.role==='admin'?'admin':'viewer',rLbl=u.role==='admin'?'Admin':'Visualizador';
+      var sCls=u.ativo?'ativo':'inativo',sLbl=u.ativo?'Ativo':'Inativo';
+      var isSelf=SESSION.user_id===u.id;
+      var act=isSelf?'<span style="font-size:11px;color:#bbb">— você —</span>'
+        :'<button class="btn-sm '+(u.ativo?'off':'on')+'" onclick="toggleUser(\''+u.id+'\')">'+(u.ativo?'Desativar':'Reativar')+'</button>';
+      return '<tr><td>'+(u.nome||'—')+'</td><td style="color:#6b7785">'+u.email+'</td>'
+        +'<td><span class="br '+rCls+'">'+rLbl+'</span></td>'
+        +'<td><span class="bs '+sCls+'">'+sLbl+'</span></td>'
+        +'<td style="color:#aaa">'+dt+'</td><td>'+act+'</td></tr>';
+    }).join('');
+    wrap.innerHTML='<table class="user-tbl"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Criado em</th><th>Ação</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }catch(e){wrap.innerHTML='<div class="err-box">Erro de conexão</div>';}
+}
+
+async function createUser(){
+  var nome=document.getElementById('nu-nome').value.trim();
+  var email=document.getElementById('nu-email').value.trim();
+  var pwd=document.getElementById('nu-pwd').value;
+  var role=document.getElementById('nu-role').value;
+  var msg=document.getElementById('nu-msg');
+  msg.style.display='none';msg.className='admin-msg';
+  if(!email||!pwd){msg.textContent='E-mail e senha são obrigatórios.';msg.className='admin-msg err';msg.style.display='block';return;}
+  try{
+    var res=await SB.rpc('dash_create_user',{p_token:SESSION.token,p_email:email,p_pwd:pwd,p_nome:nome||null,p_role:role});
+    if(res.error||(res.data&&res.data.error)){
+      msg.textContent=(res.data&&res.data.error)||res.error.message||'Erro.';
+      msg.className='admin-msg err';msg.style.display='block';return;
+    }
+    msg.textContent='✔ Usuário criado com sucesso!';msg.className='admin-msg ok';msg.style.display='block';
+    document.getElementById('nu-nome').value='';
+    document.getElementById('nu-email').value='';
+    document.getElementById('nu-pwd').value='';
+    await loadUsers();
+  }catch(e){msg.textContent='Erro de conexão.';msg.className='admin-msg err';msg.style.display='block';}
+}
+
+async function toggleUser(uid){
+  try{
+    var res=await SB.rpc('dash_toggle_user',{p_token:SESSION.token,p_user_id:uid});
+    if(res.error||(res.data&&res.data.error)){alert((res.data&&res.data.error)||res.error.message||'Erro.');return;}
+    await loadUsers();
+  }catch(e){alert('Erro de conexão.');}
+}
+
+document.getElementById('l-pwd').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+document.getElementById('l-email').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('l-pwd').focus();});
+document.getElementById('admin-modal').addEventListener('click',function(e){if(e.target===this)closeAdmin();});
+
+/* ===== DASHBOARD DATA ===== */
 var FAIXAS=['0-50 km','50-100 km','100-200 km','>200 km'];
 var FCOLS={'0-50 km':'#1c7c54','50-100 km':'#bfae00','100-200 km':'#e0762c','>200 km':'#a4243b'};
 var PAL=['#1c7c54','#e0762c','#2a6f97','#a4243b','#6a4c93','#bfae00','#c07d3f','#1a8fa0','#d44e2a','#2e6f40','#7b3fa8'];
@@ -143,20 +402,14 @@ async function init(){
     var res=await SB.rpc('trr_init');
     if(res.error) throw res.error;
     var d=res.data;
-    totalAll=d.total||0;
-    carRows=d.car||[];
+    totalAll=d.total||0;carRows=d.car||[];
     (d.coords||[]).forEach(function(c){munCoords[c.municipio]={lat:+c.lat,lon:+c.lon};});
     fillSel('f-uf',d.ufs||[],function(v){return v;},function(v){return v;});
     fillSel('f-mun',d.muns||[],function(v){return v;},function(v){return v;});
     fillSel('f-ativ',d.ativs||[],function(v){return v;},function(v){return shortA(v);});
     fillSel('f-faixa',FAIXAS,function(v){return v;},function(v){return v;});
-    renderCarTable();
-    renderCarChart();
-    await refresh();
-  }catch(e){
-    addErr('Erro na inicialização: '+(e.message||JSON.stringify(e)));
-    setBadge('🔴 Erro');
-  }
+    renderCarTable();renderCarChart();await refresh();
+  }catch(e){addErr('Erro na inicialização: '+(e.message||JSON.stringify(e)));setBadge('🔴 Erro');}
 }
 
 function getFilterParams(){
@@ -176,25 +429,16 @@ async function refresh(){
   try{
     var res=await SB.rpc('trr_data',getFilterParams());
     if(res.error) throw res.error;
-    var d=res.data;
-    var k=d.kpi||{};
+    var d=res.data,k=d.kpi||{};
     set$('kv-prop',Number(k.prop||0).toLocaleString('pt-BR'));
     set$('kv-sub','de '+Number(totalAll).toLocaleString('pt-BR')+' no total');
     set$('kv-cli',Number(k.cli||0).toLocaleString('pt-BR'));
     set$('kv-mun',Number(k.mun||0).toLocaleString('pt-BR'));
     set$('kv-dist',Number(k.avg_dist||0).toFixed(1).replace('.',',')+' km');
     set$('kv-ativ',shortA(d.top_ativ||'–'));
-    renderMap(d.map||[]);
-    renderMun(d.muns||[]);
-    renderAtiv(d.ativ||[]);
-    renderFaixa(d.faixa||[]);
-    totalDet=d.det_total||0;
-    renderDetail(d.det||[]);
-    setBadge('🟢 Ao vivo');
-  }catch(e){
-    addErr('Erro: '+(e.message||JSON.stringify(e)));
-    setBadge('🔴 Erro');
-  }
+    renderMap(d.map||[]);renderMun(d.muns||[]);renderAtiv(d.ativ||[]);renderFaixa(d.faixa||[]);
+    totalDet=d.det_total||0;renderDetail(d.det||[]);setBadge('🟢 Ao vivo');
+  }catch(e){addErr('Erro: '+(e.message||JSON.stringify(e)));setBadge('🔴 Erro');}
 }
 
 function onFilter(){detPage=1;refresh();}
@@ -216,28 +460,23 @@ function renderMap(data){
   ds.push({label:'★ TRR (Mozarlândia)',data:[{x:-50.5803,y:-14.7483,r:9}],backgroundColor:'#fff',borderColor:'#10243e',borderWidth:2.5});
   charts.map=new Chart(document.getElementById('ch-map'),{type:'bubble',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,padding:8}},tooltip:{callbacks:{label:function(c){var d=c.raw;return d.municipio?(d.municipio+': '+d.cnt+' prop. · '+d.avgD+' km'):'★ TRR – Mozarlândia';}}}},scales:{x:{title:{display:true,text:'Longitude (Leste →)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}},y:{title:{display:true,text:'Latitude (Sul ↓)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}}}}});
 }
-
 function renderMun(data){
   dc('mun');if(!data||!data.length)return;
   charts.mun=new Chart(document.getElementById('ch-mun'),{type:'bar',data:{labels:data.map(function(r){return r.municipio;}),datasets:[{data:data.map(function(r){return Number(r.cnt);}),backgroundColor:'#e0762c',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#f0f0f0'},ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}}}});
 }
-
 function renderAtiv(data){
   dc('ativ');if(!data||!data.length)return;
   charts.ativ=new Chart(document.getElementById('ch-ativ'),{type:'doughnut',data:{labels:data.map(function(r){return shortA(r.atividade_principal);}),datasets:[{data:data.map(function(r){return Number(r.cnt);}),backgroundColor:PAL.slice(0,data.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:12,padding:6}}}}});
 }
-
 function renderFaixa(data){
   dc('faixa');if(!data||!data.length)return;
   var ord=FAIXAS.filter(function(f){return data.some(function(r){return r.faixa_dist_trr===f;});});
   charts.faixa=new Chart(document.getElementById('ch-faixa'),{type:'doughnut',data:{labels:ord,datasets:[{data:ord.map(function(f){var r=data.find(function(x){return x.faixa_dist_trr===f;});return r?Number(r.cnt):0;}),backgroundColor:ord.map(function(f){return FCOLS[f];}),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12,padding:8}}}}});
 }
-
 function renderCarChart(){
   dc('car');if(!carRows.length)return;
   charts.car=new Chart(document.getElementById('ch-car'),{type:'bubble',data:{datasets:[{label:'Municípios',data:carRows.map(function(r){return{x:Number(r.dist_media_trr_km),y:Number(r.potencial_liquido),r:Math.max(5,Math.sqrt(Number(r.car_imoveis))*1.3),municipio:r.municipio,car:Number(r.car_imoveis),pct:Number(r.penetracao_pct),pot:Number(r.potencial_liquido)};}),backgroundColor:carRows.map(function(r){var p=Number(r.penetracao_pct);return p<1?'#a4243b99':p<5?'#e0762c99':'#1c7c5499';}),borderColor:carRows.map(function(r){var p=Number(r.penetracao_pct);return p<1?'#a4243b':p<5?'#e0762c':'#1c7c54';}),borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){var d=c.raw;return[d.municipio,'CAR: '+d.car.toLocaleString('pt-BR')+' imóveis','Potencial: '+d.pot.toLocaleString('pt-BR'),'Penetração: '+d.pct.toFixed(1)+'%','Dist. TRR: '+Number(c.raw.x).toFixed(0)+' km'];}}}},scales:{x:{title:{display:true,text:'Distância ao TRR (km)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}},y:{title:{display:true,text:'Potencial líquido (imóveis CAR)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}}}}});
 }
-
 function renderCarTable(){
   var el=document.getElementById('car-wrap');
   if(!carRows.length){el.innerHTML='<div class="spin">Sem dados CAR</div>';return;}
@@ -247,7 +486,6 @@ function renderCarTable(){
   }).join('');
   el.innerHTML='<table class="dt"><thead><tr><th>Município</th><th>UF</th><th>Imóveis CAR</th><th>Prosp.</th><th>Clientes</th><th>Penetração</th><th>Potencial</th><th>Dist. TRR</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
-
 function renderDetail(rows){
   var pages=Math.max(1,Math.ceil(totalDet/PG));
   if(detPage>pages)detPage=pages;
@@ -263,7 +501,7 @@ function renderDetail(rows){
   document.getElementById('det-wrap').innerHTML='<table class="dt"><thead><tr><th>#</th><th>Cliente</th><th>Propriedade</th><th>Município</th><th>UF</th><th>Atividade</th><th>Dist. TRR</th><th>Faixa</th><th>Status</th></tr></thead><tbody>'+trs+'</tbody></table>';
 }
 
-window.addEventListener('load',init);
+window.addEventListener('load',checkSession);
 </script>
 </body>
 </html>

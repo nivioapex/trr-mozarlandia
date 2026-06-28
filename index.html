@@ -390,9 +390,15 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   <button class="car-toggle" id="car-toggle-btn" onclick="toggleCarLayer()" title="Exibe imóveis do CAR (SICAR) por município — potencial de mercado não convertido">
     📋 CAR por Município <span id="car-count-badge" style="font-size:10px;opacity:.75"></span>
   </button>
-  <button class="car-toggle" id="car-ind-btn" onclick="toggleCarIndLayer()" title="Exibe cada imóvel CAR como marcador individual (requer importação de dados do SICAR)">
+  <button class="car-toggle" id="car-ind-btn" onclick="toggleCarIndLayer()" title="Exibe cada imóvel CAR como marcador individual">
     🏡 CAR Individual <span id="car-ind-badge" style="font-size:10px;opacity:.75"></span>
   </button>
+  <select id="car-tipo-filter" onchange="onCarTipoFilter()" title="Filtrar por tipo de imóvel" style="display:none;padding:5px 10px;border:1px solid #dde2e8;border-radius:12px;font-size:12.5px;color:var(--text);background:var(--card);cursor:pointer;">
+    <option value="">Todos os tipos</option>
+    <option value="IRU">Imóvel Rural Único</option>
+    <option value="AST">Assentamento</option>
+    <option value="PCT">Parcelamento Coletivo</option>
+  </select>
   <div class="map-legend" id="map-legend"></div>
 </div>
 <!-- Notificação de estado vazio do CAR individual -->
@@ -952,14 +958,21 @@ function toggleCarIndLayer() {
   var notice  = document.getElementById('car-ind-notice');
   btn.classList.toggle('on', showCarInd);
 
+  var tipoSel = document.getElementById('car-tipo-filter');
   if (showCarInd) {
     if (!carIndLayer) carIndLayer = L.layerGroup();
     carIndLayer.addTo(leafMap);
+    if (tipoSel) tipoSel.style.display = '';
     loadCarIndData();
   } else {
     if (carIndLayer) carIndLayer.remove();
     if (notice) notice.style.display = 'none';
+    if (tipoSel) { tipoSel.style.display = 'none'; tipoSel.value = ''; }
   }
+}
+
+function onCarTipoFilter() {
+  if (carIndData && carIndData.props) renderCarIndMarkers(carIndData.props);
 }
 
 async function loadCarIndData() {
@@ -991,45 +1004,97 @@ function renderCarIndMarkers(props) {
   carIndLayer.clearLayers();
   if (!props || !props.length) return;
 
-  // Color by status_car
+  // Filtro por tipo ativo
+  var tipoFiltro = document.getElementById('car-tipo-filter') ? document.getElementById('car-tipo-filter').value : '';
+  var propsFilt = tipoFiltro ? props.filter(function(p){ return p.tipo === tipoFiltro; }) : props;
+
   var statusColor = { 'AT': '#1c7c54', 'PE': '#f5a623', 'CA': '#a4243b' };
   var statusLabel = { 'AT': 'Ativo', 'PE': 'Pendente', 'CA': 'Cancelado' };
 
-  props.forEach(function(p) {
+  // Decodificação tipo de imóvel CAR
+  var tipoLabel = {
+    'IRU': 'Imóvel Rural Único',
+    'AST': 'Assentamento',
+    'PCT': 'Parcelamento Coletivo',
+    'POD': 'Posseiro',
+    'REC': 'Reconhecimento'
+  };
+
+  // Ícone de atividade por categoria
+  function ativIcon(ativ) {
+    if (!ativ) return '';
+    if (ativ.indexOf('Pecuária') >= 0) return '🐄 ';
+    if (ativ.indexOf('Soja') >= 0)    return '🌱 ';
+    if (ativ.indexOf('Cana') >= 0)    return '🌿 ';
+    if (ativ.indexOf('Milho') >= 0 || ativ.indexOf('Cereais') >= 0) return '🌽 ';
+    if (ativ.indexOf('Agricul') >= 0) return '🌾 ';
+    return '🏡 ';
+  }
+
+  propsFilt.forEach(function(p) {
     if (!p.lat || !p.lon) return;
     var color = statusColor[p.status] || '#2a6f97';
-    var isClient = geoData && (geoData.props || []).some(function(tp) {
-      return tp.mun === p.mun && Math.abs(tp.lat - p.lat) < 0.001 && Math.abs(tp.lon - p.lon) < 0.001;
+
+    // Cruzar com clientes TRR para obter atividade_principal
+    var clientProp = geoData && (geoData.props || []).find(function(tp) {
+      return tp.mun === p.mun &&
+             Math.abs((tp.lat||0) - p.lat) < 0.0015 &&
+             Math.abs((tp.lon||0) - p.lon) < 0.0015;
     });
+    var isClient = !!clientProp;
+    var atividade = isClient && clientProp.ativ ? clientProp.ativ : null;
+    var clientNome = isClient ? (clientProp.cli || '') : '';
+    var propNome   = isClient ? (clientProp.prop || '') : '';
+
+    var tipoDecod = tipoLabel[p.tipo] || p.tipo || '–';
 
     var circle = L.circleMarker([p.lat, p.lon], {
-      radius: 5,
+      radius: isClient ? 7 : 5,
       fillColor: color,
       color: isClient ? '#10243e' : '#fff',
       weight: isClient ? 2 : 0.5,
       opacity: 1,
-      fillOpacity: 0.75
+      fillOpacity: isClient ? 0.9 : 0.72
     }).addTo(carIndLayer);
 
-    circle.bindTooltip(
-      '<b>' + esc(p.nom || p.cod || '–') + '</b><br>' +
-      p.mun + ' (' + (p.uf || '').trim() + ')<br>' +
+    // Tooltip rápido
+    var ttip = (isClient ? '✅ ' : '🎯 ') +
+      esc(propNome || p.nom || p.cod || '–') + '<br>' +
+      (atividade ? ativIcon(atividade) + esc(atividade) + '<br>' : '') +
+      esc(p.mun) + ' · ' + tipoDecod + '<br>' +
       (p.area ? Number(p.area).toLocaleString('pt-BR') + ' ha · ' : '') +
-      (statusLabel[p.status] || p.status),
-      { sticky: true }
-    );
+      (statusLabel[p.status] || p.status);
+    circle.bindTooltip(ttip, { sticky: true });
+
+    // Popup completo
+    var atBlock = '';
+    if (atividade) {
+      atBlock = '<div style="background:#f0faf4;border-left:3px solid #1c7c54;padding:6px 10px;border-radius:4px;margin:8px 0;">' +
+        '<b>Atividade principal</b><br>' +
+        ativIcon(atividade) + esc(atividade) +
+        '</div>';
+    }
+    var clientBlock = '';
+    if (isClient) {
+      clientBlock =
+        '<div style="background:#e8f4ff;border-left:3px solid #2a6f97;padding:6px 10px;border-radius:4px;margin:8px 0;font-size:12px;">' +
+        '<b>👤 Cliente TRR:</b> ' + esc(clientNome) + (propNome ? '<br><b>Propriedade:</b> ' + esc(propNome) : '') +
+        '</div>';
+    }
 
     circle.bindPopup(
-      '<h4 class="lp-h">' + esc(p.nom || 'Sem nome') + '</h4>' +
+      '<h4 class="lp-h">' + (isClient ? '✅ ' : '🎯 ') + esc(propNome || p.nom || 'Sem nome') + '</h4>' +
       '<div class="lp-meta">' +
-        '<b>Cód. CAR:</b> ' + esc(p.cod || '–') + '<br>' +
-        '<b>Município:</b> ' + esc(p.mun || '–') + ' (' + (p.uf || '').trim() + ')<br>' +
+        '<b>Cód. CAR:</b> <span style="font-size:10.5px">' + esc(p.cod || '–') + '</span><br>' +
+        '<b>Município:</b> ' + esc(p.mun || '–') + ' (' + (p.uf||'').trim() + ')<br>' +
+        '<b>Tipo de imóvel:</b> ' + tipoDecod + '<br>' +
         (p.area ? '<b>Área:</b> ' + Number(p.area).toLocaleString('pt-BR') + ' ha<br>' : '') +
-        (p.tipo ? '<b>Tipo:</b> ' + esc(p.tipo) + '<br>' : '') +
         '<b>Status CAR:</b> <span style="color:' + color + ';font-weight:700">' + (statusLabel[p.status] || p.status || '–') + '</span>' +
-        (isClient ? '<br><span style="color:#1c7c54;font-weight:700">✅ Cliente TRR</span>' : '<br><span style="color:#e0762c">🎯 Potencial TRR</span>') +
-      '</div>',
-      { maxWidth: 300 }
+      '</div>' +
+      atBlock +
+      clientBlock +
+      (!isClient ? '<div style="color:#e0762c;font-size:12px;margin-top:6px">🎯 Potencial cliente TRR</div>' : ''),
+      { maxWidth: 320 }
     );
   });
 }

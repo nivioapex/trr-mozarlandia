@@ -1398,6 +1398,7 @@ var prospLayer = null;
 var prospDrillLayer = null;
 var prospData = null;
 var prospDrillData = null;
+var prospFilters = { q: '', uf: '', score: '', dist: '', semCli: false };
 var prospMunSel = null;
 
 function initProspMap() {
@@ -1484,9 +1485,68 @@ function renderProspMap(muns) {
   });
 }
 
+function applyProspFilters() {
+  if (!prospData) return;
+  var muns = (prospData.municipios || []);
+  var f = prospFilters;
+  if (f.q) { var q = f.q.toLowerCase(); muns = muns.filter(function(m){ return m.mun.toLowerCase().indexOf(q) >= 0; }); }
+  if (f.uf) muns = muns.filter(function(m){ return (m.uf||'').trim() === f.uf; });
+  if (f.score === 'alta')       muns = muns.filter(function(m){ return m.score >= 70; });
+  else if (f.score === 'malt')  muns = muns.filter(function(m){ return m.score >= 55 && m.score < 70; });
+  else if (f.score === 'med')   muns = muns.filter(function(m){ return m.score >= 35 && m.score < 55; });
+  else if (f.score === 'baixa') muns = muns.filter(function(m){ return m.score < 35; });
+  if (f.dist === 'lt50')        muns = muns.filter(function(m){ return m.dist_trr < 50; });
+  else if (f.dist === 'd100')   muns = muns.filter(function(m){ return m.dist_trr >= 50 && m.dist_trr < 100; });
+  else if (f.dist === 'd200')   muns = muns.filter(function(m){ return m.dist_trr >= 100 && m.dist_trr < 200; });
+  else if (f.dist === 'gt200')  muns = muns.filter(function(m){ return m.dist_trr >= 200; });
+  if (f.semCli) muns = muns.filter(function(m){ return m.clientes_trr === 0; });
+  renderProspTable(muns);
+}
+
+function resetProspFilters() {
+  prospFilters = { q: '', uf: '', score: '', dist: '', semCli: false };
+  var e;
+  e = document.getElementById('pf-q');      if (e) e.value = '';
+  e = document.getElementById('pf-uf');     if (e) e.value = '';
+  e = document.getElementById('pf-score');  if (e) e.value = '';
+  e = document.getElementById('pf-dist');   if (e) e.value = '';
+  e = document.getElementById('pf-semcli'); if (e) e.checked = false;
+  if (prospData) renderProspTable((prospData.municipios)||[]);
+}
+
 function renderProspTable(muns) {
   if (!muns) return;
-  document.getElementById('prosp-tbl-title').textContent = '🏆 Ranking de Municípios por Oportunidade';
+  var allMuns = (prospData && prospData.municipios) || muns;
+  var ufs = [];
+  allMuns.forEach(function(m){ var u = (m.uf||'').trim(); if (u && ufs.indexOf(u) < 0) ufs.push(u); });
+  ufs.sort();
+  var fbar =
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #eef0f3">' +
+    '<input id="pf-q" type="text" placeholder="\U0001f50d Buscar município…" value="' + prospFilters.q + '" oninput="prospFilters.q=this.value;applyProspFilters()" style="padding:6px 10px;border:1px solid #dde2e7;border-radius:8px;font-size:12.5px;width:170px">' +
+    '<select id="pf-uf" onchange="prospFilters.uf=this.value;applyProspFilters()" style="padding:6px 9px;border:1px solid #dde2e7;border-radius:8px;font-size:12.5px">' +
+    '<option value="">Todas as UFs</option>' +
+    ufs.map(function(u){ return '<option value="'+u+'"'+(prospFilters.uf===u?' selected':'')+'>'+u+'</option>'; }).join('') +
+    '</select>' +
+    '<select id="pf-score" onchange="prospFilters.score=this.value;applyProspFilters()" style="padding:6px 9px;border:1px solid #dde2e7;border-radius:8px;font-size:12.5px">' +
+    '<option value="">Todos os scores</option>' +
+    '<option value="alta"'+(prospFilters.score==="alta"?" selected":"")+'>\U0001f534 Alta (≥70)</option>' +
+    '<option value="malt"'+(prospFilters.score==="malt"?" selected":"")+'>\U0001f7e0 Média-Alta (55–69)</option>' +
+    '<option value="med"'+(prospFilters.score==="med"?" selected":"")+'>\U0001f7e1 Média (35–54)</option>' +
+    '<option value="baixa"'+(prospFilters.score==="baixa"?" selected":"")+'>&#9898; Baixa (&lt;35)</option>' +
+    '</select>' +
+    '<select id="pf-dist" onchange="prospFilters.dist=this.value;applyProspFilters()" style="padding:6px 9px;border:1px solid #dde2e7;border-radius:8px;font-size:12.5px">' +
+    '<option value="">Qualquer distância</option>' +
+    '<option value="lt50"'+(prospFilters.dist==="lt50"?" selected":"")+'>&lt;50 km</option>' +
+    '<option value="d100"'+(prospFilters.dist==="d100"?" selected":"")+'>50–100 km</option>' +
+    '<option value="d200"'+(prospFilters.dist==="d200"?" selected":"")+'>100–200 km</option>' +
+    '<option value="gt200"'+(prospFilters.dist==="gt200"?" selected":"")+'>200+ km</option>' +
+    '</select>' +
+    '<label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer;white-space:nowrap">' +
+    '<input type="checkbox" id="pf-semcli" '+(prospFilters.semCli?'checked':'')+' onchange="prospFilters.semCli=this.checked;applyProspFilters()"> Sem clientes TRR</label>' +
+    '<button onclick="resetProspFilters()" style="padding:6px 12px;background:#f4f6f8;border:1px solid #dde2e7;border-radius:8px;font-size:12px;cursor:pointer;color:var(--muted)">&#x2715; Limpar</button>' +
+    '<span style="margin-left:auto;font-size:11.5px;color:var(--muted)">' + muns.length + ' de ' + allMuns.length + ' municípios</span>' +
+    '</div>';
+  document.getElementById('prosp-tbl-title').textContent = '\U0001f3c6 Ranking de Municípios por Oportunidade';
   var rows = muns.map(function(m,i){
     return '<tr>'+
       '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'+
@@ -1500,13 +1560,15 @@ function renderProspTable(muns) {
       '<td><button class="drill-btn" onclick="drillProspMun(\''+m.mun.replace(/'/g,"\\'")+'\')">Detalhar</button></td>'+
     '</tr>';
   }).join('');
+  var tbody = muns.length ? rows : '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">Nenhum município encontrado com os filtros aplicados.</td></tr>';
   document.getElementById('prosp-tbl-wrap').innerHTML =
+    fbar +
     '<table class="prosp-tbl"><thead><tr>'+
     '<th>#</th><th>Município</th><th>UF</th>'+
     '<th style="text-align:right">Prospects</th><th style="text-align:right">Clientes TRR</th>'+
     '<th style="text-align:right">Dist. TRR</th><th style="text-align:right">Área</th>'+
     '<th>Score</th><th></th>'+
-    '</tr></thead><tbody>'+rows+'</tbody></table>';
+    '</tr></thead><tbody>'+tbody+'</tbody></table>';
 }
 
 async function drillProspMun(mun) {
@@ -1608,7 +1670,7 @@ function backToMuns() {
   prospMap.flyTo([-14.2,-50.2],7,{duration:1});
   if (prospData) {
     renderProspMap((prospData.municipios)||[]);
-    renderProspTable((prospData.municipios)||[]);
+    applyProspFilters();
   }
 }
 

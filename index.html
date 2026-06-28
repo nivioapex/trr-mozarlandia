@@ -223,6 +223,18 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .pdp-lgpd{background:#fffbeb;border:1px solid #f5d76e;border-radius:8px;padding:10px 14px;font-size:12px;color:#78500a;line-height:1.55;}
 .pdp-loading{text-align:center;padding:32px 20px;color:var(--muted);}
 .pdp-ibge-tag{display:inline-block;background:#e8f4fd;color:#1a4a7a;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;margin-bottom:4px;}
+/* IBAMA status badges */
+.ibama-ok{display:inline-flex;align-items:center;gap:6px;background:#e6f9ef;color:#1a6e42;border:1px solid #a3e0be;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;}
+.ibama-nok{display:inline-flex;align-items:center;gap:6px;background:#fdecea;color:#c0392b;border:1px solid #f5a9a9;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;}
+.ibama-nd{display:inline-flex;align-items:center;gap:6px;background:#f0f2f4;color:#6b7785;border:1px solid #dde2e7;border-radius:8px;padding:6px 12px;font-size:13px;}
+.fd-car-chip{display:inline-block;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;color:#166534;margin-bottom:4px;}
+/* CNPJ input */
+.cnpj-row{display:flex;gap:8px;align-items:center;margin-top:10px;}
+.cnpj-input{flex:1;padding:8px 10px;border:1px solid #dde2e7;border-radius:8px;font-size:13px;outline:none;}
+.cnpj-input:focus{border-color:var(--acc);}
+.cnpj-btn{padding:8px 14px;background:var(--hdr);color:#fff;border:none;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.cnpj-btn:hover{opacity:.88;}
+#ibama-result{margin-top:10px;}
 /* CAR popup colors */
 .lp-pct-r{color:#a4243b;font-weight:700;}
 .lp-pct-o{color:#e0762c;font-weight:700;}
@@ -1736,10 +1748,41 @@ async function fetchAndRenderDetail(p) {
     html += '</div>';
   }
 
-  /* ── Proprietário / LGPD ────────────────────────────────────── */
-  html += '<div class="pdp-section">';
-  html += '<div class="pdp-section-title">👤 Proprietário</div>';
-  html += '<div class="pdp-lgpd">⚖️ <b>Restrição LGPD:</b> Nome, CPF e CNPJ do proprietário de imóvel rural são <b>mascarados por lei</b> em todas as consultas públicas (SICAR, INCRA, Receita Federal). Não existe fonte legítima de acesso público sem autorização judicial.</div>';
+  /* ── FonteData: CAR Ambiental ───────────────────────────────── */
+  if (edgeData.fd_car) {
+    html += '<div class="pdp-section">';
+    html += '<div class="pdp-section-title">🌿 CAR Ambiental (FonteData)</div>';
+    var car = edgeData.fd_car;
+    if (car.status)          html += row('Status CAR',        '<span class="fd-car-chip">' + esc(car.status) + '</span>');
+    if (car.situacao)        html += row('Situação',          esc(car.situacao));
+    if (car.area_total)      html += row('Área total',        Number(car.area_total).toLocaleString('pt-BR') + ' ha');
+    if (car.area_app)        html += row('Área APP',          Number(car.area_app).toLocaleString('pt-BR') + ' ha');
+    if (car.area_rl)         html += row('Reserva Legal',     Number(car.area_rl).toLocaleString('pt-BR') + ' ha');
+    if (car.area_vegetacao)  html += row('Veg. Nativa',       Number(car.area_vegetacao).toLocaleString('pt-BR') + ' ha');
+    if (car.data_cadastro)   html += row('Data de cadastro',  esc(car.data_cadastro));
+    if (car.data_validade)   html += row('Validade',          esc(car.data_validade));
+    if (car.municipio)       html += row('Município (CAR)',   esc(car.municipio));
+    if (car.uf)              html += row('UF',                esc(car.uf));
+    // Campos genéricos não mapeados
+    var knownKeys = ['status','situacao','area_total','area_app','area_rl','area_vegetacao','data_cadastro','data_validade','municipio','uf'];
+    Object.keys(car).forEach(function(k) {
+      if (!knownKeys.includes(k) && car[k] !== null && car[k] !== '' && typeof car[k] !== 'object')
+        html += row(k, esc(String(car[k])));
+    });
+    html += '</div>';
+  }
+
+  /* ── Proprietário / LGPD + CNPJ para IBAMA ─────────────────── */
+  var propId = p.id;
+  html += '<div class="pdp-section" id="pdp-prop-section">';
+  html += '<div class="pdp-section-title">👤 Proprietário & IBAMA (FonteData)</div>';
+  html += '<div class="pdp-lgpd">⚖️ Nome/CPF são mascarados por lei (LGPD) em todas as consultas públicas.<br>Se o proprietário for <b>pessoa jurídica</b>, informe o CNPJ para consultar IBAMA:</div>';
+  html += '<div class="cnpj-row">' +
+    '<input class="cnpj-input" id="cnpj-input-' + propId + '" type="text" maxlength="18" placeholder="CNPJ (14 dígitos)" ' +
+    'onkeydown="if(event.key===\'Enter\')consultarIbama(' + propId + ')">' +
+    '<button class="cnpj-btn" onclick="consultarIbama(' + propId + ')">🔍 Consultar IBAMA</button>' +
+    '</div>';
+  html += '<div id="ibama-result-' + propId + '"></div>';
   html += '</div>';
 
   /* ── Links externos ─────────────────────────────────────────── */
@@ -1777,6 +1820,87 @@ function link(ico, lbl, sub, href) {
     '<span class="pdp-link-ico">' + ico + '</span>' +
     '<span class="pdp-link-txt"><div class="pdp-link-lbl">' + lbl + '</div><div class="pdp-link-sub">' + sub + '</div></span>' +
     '</a>';
+}
+
+async function consultarIbama(propId) {
+  var p    = prospProps[propId];
+  var inp  = document.getElementById('cnpj-input-' + propId);
+  var res  = document.getElementById('ibama-result-' + propId);
+  if (!inp || !p) return;
+  var cnpj = inp.value.replace(/\D/g,'');
+  if (cnpj.length !== 14) {
+    res.innerHTML = '<div class="pdp-lgpd" style="margin-top:8px">⚠️ CNPJ inválido — informe 14 dígitos.</div>';
+    return;
+  }
+  res.innerHTML = '<div style="text-align:center;padding:14px;color:var(--muted)"><div class="ml-spinner" style="margin:0 auto 8px;width:28px;height:28px;border-width:3px"></div>Consultando IBAMA via FonteData…</div>';
+
+  try {
+    var EDGE = 'https://keeqkmguljsddfmrqlld.supabase.co/functions/v1/buscar-prop';
+    var params = '?nome=' + encodeURIComponent(p.nome||'') +
+                 '&mun='  + encodeURIComponent(p.mun||'') +
+                 '&uf='   + encodeURIComponent(p.uf||'GO') +
+                 '&cod='  + encodeURIComponent(p.cod||'') +
+                 '&cnpj=' + cnpj;
+    var r    = await fetch(EDGE + params);
+    var data = await r.json();
+
+    var html = '';
+
+    // IBAMA Regularidade
+    if (data.ibama_reg) {
+      var reg = data.ibama_reg;
+      var okR = reg.status && !reg.status.toLowerCase().includes('irregular') && !reg.status.toLowerCase().includes('não possui');
+      html += '<div style="margin-top:10px"><b>🌿 Regularidade IBAMA</b><br>';
+      html += '<div style="margin:6px 0"><span class="' + (okR?'ibama-ok':'ibama-nok') + '">' + (okR?'✅':'⚠️') + ' ' + esc(reg.status||'–') + '</span></div>';
+      if (reg.nome)          html += row('Nome/Razão Social', esc(reg.nome));
+      if (reg.municipio)     html += row('Município',         esc(reg.municipio));
+      if (reg.uf)            html += row('UF',                esc(reg.uf));
+      if (reg.atividades)    html += row('Atividades',        esc(reg.atividades));
+      if (reg.dataEmissao)   html += row('Emissão',           esc(reg.dataEmissao));
+      if (reg.dataValidade)  html += row('Validade',          esc(reg.dataValidade));
+      html += '</div>';
+    }
+
+    // IBAMA Débitos
+    if (data.ibama_deb) {
+      var deb = data.ibama_deb;
+      var okD = !deb.possuiDebito && !deb.efeitoNegativo;
+      html += '<div style="margin-top:10px"><b>💰 Débitos IBAMA</b><br>';
+      html += '<div style="margin:6px 0"><span class="' + (okD?'ibama-ok':'ibama-nok') + '">' + (okD?'✅ Nada consta':'⚠️ Possui débitos') + '</span></div>';
+      if (deb.nome)        html += row('Nome/Razão Social', esc(deb.nome));
+      if (deb.debitos && deb.debitos.length) {
+        html += '<div style="font-size:12px;margin-top:6px"><b>Débitos:</b>';
+        deb.debitos.forEach(function(d) {
+          html += '<div style="padding:4px 0;border-bottom:1px solid #f0f2f4">' + esc(JSON.stringify(d).substring(0,120)) + '</div>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+
+    // IBAMA Embargo
+    if (data.ibama_emb) {
+      var emb = data.ibama_emb;
+      var embargos = emb.embargos || emb.data || [];
+      var okE = !embargos.length;
+      html += '<div style="margin-top:10px"><b>🚫 Embargo IBAMA</b><br>';
+      html += '<div style="margin:6px 0"><span class="' + (okE?'ibama-ok':'ibama-nok') + '">' + (okE?'✅ Sem embargos':'🚫 Possui embargos') + '</span></div>';
+      if (!okE) {
+        embargos.slice(0,3).forEach(function(e) {
+          html += '<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #f0f2f4">' + esc(JSON.stringify(e).substring(0,150)) + '</div>';
+        });
+      }
+      html += '</div>';
+    }
+
+    if (!data.ibama_reg && !data.ibama_deb && !data.ibama_emb) {
+      html = '<div class="pdp-lgpd" style="margin-top:8px">⚠️ CNPJ não encontrado nas bases do IBAMA.</div>';
+    }
+
+    res.innerHTML = html;
+  } catch(e) {
+    res.innerHTML = '<div class="pdp-lgpd" style="margin-top:8px">❌ Erro ao consultar FonteData. Tente novamente.</div>';
+  }
 }
 </script>
 

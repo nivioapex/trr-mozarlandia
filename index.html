@@ -161,6 +161,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .btn-zoom:hover{opacity:.88;}
 .btn-map-rst{padding:8px 12px;background:transparent;color:var(--muted);border:1px solid #dde2e8;border-radius:6px;cursor:pointer;font-size:12.5px;align-self:flex-end;}
 .btn-map-rst:hover{background:#f4f6f8;}
+#car-ind-notice code{background:#f0e8c8;padding:1px 5px;border-radius:3px;font-size:12px;}
 /* CAR props list inside popup */
 .car-props-section{border-top:1px solid #eee;margin-top:10px;padding-top:8px;}
 .car-props-title{font-size:11.5px;font-weight:700;color:#10243e;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;}
@@ -362,9 +363,22 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   <div class="map-divider"></div>
   <span class="map-toolbar-title">Camadas</span>
   <button class="car-toggle" id="car-toggle-btn" onclick="toggleCarLayer()" title="Exibe imóveis do CAR (SICAR) por município — potencial de mercado não convertido">
-    📋 Dados CAR <span id="car-count-badge" style="font-size:10px;opacity:.75"></span>
+    📋 CAR por Município <span id="car-count-badge" style="font-size:10px;opacity:.75"></span>
+  </button>
+  <button class="car-toggle" id="car-ind-btn" onclick="toggleCarIndLayer()" title="Exibe cada imóvel CAR como marcador individual (requer importação de dados do SICAR)">
+    🏡 CAR Individual <span id="car-ind-badge" style="font-size:10px;opacity:.75"></span>
   </button>
   <div class="map-legend" id="map-legend"></div>
+</div>
+<!-- Notificação de estado vazio do CAR individual -->
+<div id="car-ind-notice" style="display:none;background:#fffbe6;border:1px solid #f5c842;border-radius:var(--r);padding:14px 18px;margin-bottom:var(--gap);font-size:13px;color:#7a5c00;line-height:1.65;">
+  <b>📋 Imóveis CAR individuais — dados não importados ainda</b><br>
+  A tabela <code>car_propriedades</code> está criada mas vazia. Para ver os <b>24.081 imóveis</b> como marcadores individuais:<br><br>
+  <b>1.</b> Acesse <a href="https://consultapublica.car.gov.br/publico/imoveis/index" target="_blank" style="color:#e0762c">consultapublica.car.gov.br</a> · informe e-mail e resolva o captcha por município<br>
+  <b>2.</b> Baixe o shapefile (.zip) de cada município<br>
+  <b>3.</b> Converta para CSV com lat/lon (centroide) usando QGIS ou Python/geopandas<br>
+  <b>4.</b> Importe para a tabela <code>car_propriedades</code> no Supabase (colunas: cod_imovel, nom_imovel, municipio, uf, area_ha, lat, lon)<br><br>
+  <span style="color:#999;font-size:11.5px">⚠️ O SICAR exige captcha por município — download deve ser feito manualmente. Não é possível automatizar essa etapa.</span>
 </div>
 <div id="map-loading" class="map-loading" style="display:none">⏳ Carregando dados do mapa…</div>
 <div id="leaflet-map"></div>
@@ -678,8 +692,9 @@ function initLeafMap() {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 18
   }).addTo(leafMap);
-  mapLayers = L.layerGroup().addTo(leafMap);
-  carLayer  = L.layerGroup();  // not added yet; shown only when toggled on
+  mapLayers   = L.layerGroup().addTo(leafMap);
+  carLayer    = L.layerGroup();    // shown only when toggled on
+  carIndLayer = L.layerGroup();    // shown only when toggled on
   renderMapLegend();
 }
 
@@ -894,6 +909,100 @@ function resetMapFilter() {
   onFilter();
 }
 
+/* ===== CAR INDIVIDUAL LAYER ===== */
+var carIndLayer  = null;
+var showCarInd   = false;
+var carIndData   = null;  // cached result of trr_car_geo()
+
+function toggleCarIndLayer() {
+  if (!leafMap) return;
+  showCarInd = !showCarInd;
+  var btn     = document.getElementById('car-ind-btn');
+  var notice  = document.getElementById('car-ind-notice');
+  btn.classList.toggle('on', showCarInd);
+
+  if (showCarInd) {
+    if (!carIndLayer) carIndLayer = L.layerGroup();
+    carIndLayer.addTo(leafMap);
+    loadCarIndData();
+  } else {
+    if (carIndLayer) carIndLayer.remove();
+    if (notice) notice.style.display = 'none';
+  }
+}
+
+async function loadCarIndData() {
+  if (!carIndLayer) return;
+  var uf  = document.getElementById('mf-uf').value  || document.getElementById('f-uf').value  || null;
+  var mun = document.getElementById('mf-mun').value || document.getElementById('f-mun').value || null;
+  try {
+    var res = await SB.rpc('trr_car_geo', { p_uf: uf, p_mun: mun, p_status: null });
+    if (res.error) { console.error('trr_car_geo error:', res.error); return; }
+    carIndData = res.data;
+    var notice = document.getElementById('car-ind-notice');
+    var badge  = document.getElementById('car-ind-badge');
+    var total  = (carIndData && carIndData.total) || 0;
+    var props  = (carIndData && carIndData.props) || [];
+    if (total === 0) {
+      // Table is empty — show import instructions
+      if (notice) notice.style.display = '';
+      if (badge)  badge.textContent = '(sem dados)';
+    } else {
+      if (notice) notice.style.display = 'none';
+      if (badge)  badge.textContent = '(' + total.toLocaleString('pt-BR') + ')';
+      renderCarIndMarkers(props);
+    }
+  } catch(e) { console.error(e); }
+}
+
+function renderCarIndMarkers(props) {
+  if (!carIndLayer) return;
+  carIndLayer.clearLayers();
+  if (!props || !props.length) return;
+
+  // Color by status_car
+  var statusColor = { 'AT': '#1c7c54', 'PE': '#f5a623', 'CA': '#a4243b' };
+  var statusLabel = { 'AT': 'Ativo', 'PE': 'Pendente', 'CA': 'Cancelado' };
+
+  props.forEach(function(p) {
+    if (!p.lat || !p.lon) return;
+    var color = statusColor[p.status] || '#2a6f97';
+    var isClient = geoData && (geoData.props || []).some(function(tp) {
+      return tp.mun === p.mun && Math.abs(tp.lat - p.lat) < 0.001 && Math.abs(tp.lon - p.lon) < 0.001;
+    });
+
+    var circle = L.circleMarker([p.lat, p.lon], {
+      radius: 5,
+      fillColor: color,
+      color: isClient ? '#10243e' : '#fff',
+      weight: isClient ? 2 : 0.5,
+      opacity: 1,
+      fillOpacity: 0.75
+    }).addTo(carIndLayer);
+
+    circle.bindTooltip(
+      '<b>' + esc(p.nom || p.cod || '–') + '</b><br>' +
+      p.mun + ' (' + (p.uf || '').trim() + ')<br>' +
+      (p.area ? Number(p.area).toLocaleString('pt-BR') + ' ha · ' : '') +
+      (statusLabel[p.status] || p.status),
+      { sticky: true }
+    );
+
+    circle.bindPopup(
+      '<h4 class="lp-h">' + esc(p.nom || 'Sem nome') + '</h4>' +
+      '<div class="lp-meta">' +
+        '<b>Cód. CAR:</b> ' + esc(p.cod || '–') + '<br>' +
+        '<b>Município:</b> ' + esc(p.mun || '–') + ' (' + (p.uf || '').trim() + ')<br>' +
+        (p.area ? '<b>Área:</b> ' + Number(p.area).toLocaleString('pt-BR') + ' ha<br>' : '') +
+        (p.tipo ? '<b>Tipo:</b> ' + esc(p.tipo) + '<br>' : '') +
+        '<b>Status CAR:</b> <span style="color:' + color + ';font-weight:700">' + (statusLabel[p.status] || p.status || '–') + '</span>' +
+        (isClient ? '<br><span style="color:#1c7c54;font-weight:700">✅ Cliente TRR</span>' : '<br><span style="color:#e0762c">🎯 Potencial TRR</span>') +
+      '</div>',
+      { maxWidth: 300 }
+    );
+  });
+}
+
 function setMapView(v) {
   mapView = v;
   document.getElementById('vb-mun').classList.toggle('active', v === 'mun');
@@ -910,6 +1019,8 @@ async function loadGeoData() {
     geoData = res.data;
     renderMapMarkers();
     updateMapKpis();
+    // Se CAR individual ativo, recarregar com novos filtros
+    if (showCarInd && carIndLayer) loadCarIndData();
   } catch(e) { console.error(e); }
   finally { document.getElementById('map-loading').style.display = 'none'; }
 }

@@ -168,6 +168,31 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .ml-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:.01em;}
 .ml-sub{font-size:12.5px;color:var(--muted);}
 .map-divider{width:1px;background:#dde2e8;align-self:stretch;margin:0 2px;}
+/* ===== PROSPECÇÃO ===== */
+.prosp-kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:var(--gap);}
+.prosp-kpi{background:var(--card);border-radius:var(--r);padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:4px solid var(--acc);}
+.prosp-kpi.blue{border-left-color:#2a6f97;}.prosp-kpi.green{border-left-color:var(--grn);}.prosp-kpi.purple{border-left-color:#7c3aed;}
+.pk-val{font-size:26px;font-weight:800;color:var(--text);line-height:1.1;}
+.pk-lbl{font-size:11.5px;color:var(--muted);margin-top:4px;}
+.insights-panel{background:#f0f7ff;border:1px solid #c2dff5;border-radius:var(--r);padding:16px 20px;margin-bottom:var(--gap);}
+.insights-title{font-size:13px;font-weight:700;color:#1a4a7a;margin-bottom:10px;}
+.insight-item{font-size:13px;color:var(--text);padding:6px 0;border-bottom:1px solid #dceeff;line-height:1.6;}
+.insight-item:last-child{border-bottom:none;}
+.prosp-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border-radius:var(--r);padding:12px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+#prosp-map{height:420px;border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:var(--gap);}
+.prosp-map-wrap{position:relative;}
+#prosp-loading{display:none;position:absolute;inset:0;z-index:9999;background:rgba(255,255,255,.85);backdrop-filter:blur(3px);border-radius:var(--r);align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+#prosp-loading.visible{display:flex;}
+.prosp-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.prosp-tbl th{background:#f4f6f8;color:var(--muted);font-weight:600;font-size:11.5px;padding:8px 12px;text-align:left;border-bottom:2px solid #e8ecf0;}
+.prosp-tbl td{padding:8px 12px;border-bottom:1px solid #f0f2f5;vertical-align:middle;}
+.prosp-tbl tr:hover td{background:#fafbfc;}
+.score-pill{display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;font-size:11.5px;font-weight:700;color:#fff;}
+.sp-red{background:#a4243b;}.sp-org{background:#e0762c;}.sp-yel{background:#c9980a;}.sp-gry{background:#6b7785;}
+.drill-btn{padding:4px 12px;border:1.5px solid var(--acc);border-radius:10px;background:transparent;color:var(--acc);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.drill-btn:hover{background:var(--acc);color:#fff;}
+.back-btn{padding:6px 16px;border:none;border-radius:14px;background:#f0f2f4;color:var(--text);font-size:12.5px;font-weight:600;cursor:pointer;}
+.back-btn:hover{background:#e2e6ea;}
 .car-toggle{padding:6px 14px;border:1.5px dashed #2a6f97;border-radius:16px;cursor:pointer;font-size:12.5px;font-weight:600;background:transparent;color:#2a6f97;transition:all .2s;}
 .car-toggle.on{background:#2a6f97;color:#fff;border-style:solid;}
 .car-toggle:hover:not(.on){background:rgba(42,111,151,.08);}
@@ -302,6 +327,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 <div class="tab-nav">
   <button class="tab-btn active" id="tab-btn-painel" onclick="switchTab('painel')">📊 Painel</button>
   <button class="tab-btn" id="tab-btn-mapa" onclick="switchTab('mapa')">🗺 Mapa de Clientes</button>
+  <button class="tab-btn" id="tab-btn-prospeccao" onclick="switchTab('prospeccao')">🔭 Prospecção</button>
 </div>
 
 <!-- ===== PAINEL SECTION ===== -->
@@ -420,6 +446,51 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   <div id="leaflet-map"></div>
 </div>
 </div><!-- /mapa-section -->
+
+<!-- ===== PROSPECÇÃO SECTION ===== -->
+<div id="prospeccao-section" style="display:none">
+  <div style="margin-bottom:16px">
+    <h2 style="font-size:18px;font-weight:800;color:var(--text);margin:0 0 4px">🔭 Análise de Prospecção</h2>
+    <div style="font-size:13px;color:var(--muted)">Identificação inteligente de potenciais clientes em regiões próximas à base TRR — baseada em imóveis CAR ativos sem relacionamento TRR</div>
+  </div>
+  <!-- KPIs -->
+  <div class="prosp-kpi-row">
+    <div class="prosp-kpi"><div class="pk-val" id="pk-total">–</div><div class="pk-lbl">Prospects identificados</div></div>
+    <div class="prosp-kpi blue"><div class="pk-val" id="pk-muns">–</div><div class="pk-lbl">Municípios com oportunidade</div></div>
+    <div class="prosp-kpi green"><div class="pk-val" id="pk-alta">–</div><div class="pk-lbl">Alta prioridade (score ≥ 70)</div></div>
+    <div class="prosp-kpi purple"><div class="pk-val" id="pk-area">–</div><div class="pk-lbl">Área total (mil ha)</div></div>
+  </div>
+  <!-- Insights -->
+  <div class="insights-panel">
+    <div class="insights-title">💡 Insights de Prospecção</div>
+    <div id="prosp-insights-body"><em style="color:var(--muted)">Carregando análise…</em></div>
+  </div>
+  <!-- Toolbar -->
+  <div class="prosp-toolbar">
+    <span style="font-size:13.5px;font-weight:700;color:var(--text)" id="prosp-view-title">📍 Por Município</span>
+    <button class="back-btn" id="prosp-back-btn" style="display:none" onclick="backToMuns()">← Voltar</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">
+      <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#a4243b"></span>Alta
+      <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#e0762c"></span>Média-Alta
+      <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#f5a623"></span>Média
+      <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#6b7785"></span>Baixa
+    </div>
+  </div>
+  <!-- Map -->
+  <div class="prosp-map-wrap">
+    <div id="prosp-loading">
+      <div class="ml-spinner"></div>
+      <div class="ml-text" id="prosp-loading-txt">Aguarde — Analisando Dados</div>
+      <div class="ml-sub">Calculando scores de prospecção…</div>
+    </div>
+    <div id="prosp-map"></div>
+  </div>
+  <!-- Table -->
+  <div style="background:var(--card);border-radius:var(--r);padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.06);">
+    <div style="font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:12px" id="prosp-tbl-title">🏆 Ranking de Municípios por Oportunidade</div>
+    <div id="prosp-tbl-wrap" style="overflow-x:auto"></div>
+  </div>
+</div><!-- /prospeccao-section -->
 
 <footer>Supabase · Prospecção TRR Mozarlândia · Apex Technology</footer>
 </div><!-- /wrap -->
@@ -702,12 +773,18 @@ function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
   document.getElementById('tab-btn-' + tab).classList.add('active');
-  document.getElementById('painel-section').style.display = tab === 'painel' ? '' : 'none';
-  document.getElementById('mapa-section').style.display = tab === 'mapa' ? '' : 'none';
+  document.getElementById('painel-section').style.display    = tab === 'painel'     ? '' : 'none';
+  document.getElementById('mapa-section').style.display       = tab === 'mapa'       ? '' : 'none';
+  document.getElementById('prospeccao-section').style.display = tab === 'prospeccao' ? '' : 'none';
   if (tab === 'mapa') {
     initLeafMap();
     if (!geoData) loadGeoData();
     else renderMapMarkers();
+  }
+  if (tab === 'prospeccao') {
+    initProspMap();
+    setTimeout(function() { if (prospMap) prospMap.invalidateSize(); }, 100);
+    if (!prospData) loadProspData();
   }
 }
 
@@ -1275,6 +1352,199 @@ function esc(s) {
 }
 
 window.addEventListener('load', checkSession);
+
+/* ===== PROSPECÇÃO ===== */
+var prospMap = null;
+var prospLayer = null;
+var prospDrillLayer = null;
+var prospData = null;
+var prospDrillData = null;
+var prospMunSel = null;
+
+function initProspMap() {
+  if (prospMap) return;
+  prospMap = L.map('prosp-map', {zoomControl:true, preferCanvas:true}).setView([-14.2,-50.2],7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {attribution:'© OpenStreetMap', maxZoom:16}).addTo(prospMap);
+  prospLayer      = L.layerGroup().addTo(prospMap);
+  prospDrillLayer = L.layerGroup().addTo(prospMap);
+}
+
+function pScoreColor(s){ return s>=70?'#a4243b':s>=55?'#e0762c':s>=35?'#f5a623':'#6b7785'; }
+function pScorePill(s) { return s>=70?'sp-red':s>=55?'sp-org':s>=35?'sp-yel':'sp-gry'; }
+function pScoreLbl(s)  { return s>=70?'🔴 Alta':s>=55?'🟠 Média-Alta':s>=35?'🟡 Média':'⚪ Baixa'; }
+
+async function loadProspData() {
+  if (!prospMap) return;
+  document.getElementById('prosp-loading').classList.add('visible');
+  try {
+    var res = await SB.rpc('trr_prospectar_mun', {});
+    if (res.error) throw res.error;
+    prospData = res.data;
+    var muns = (prospData && prospData.municipios) || [];
+    var tot  = (prospData && prospData.totais)     || {};
+    // KPIs
+    document.getElementById('pk-total').textContent = Number(tot.prospects||0).toLocaleString('pt-BR');
+    document.getElementById('pk-muns').textContent  = muns.length;
+    document.getElementById('pk-alta').textContent  = muns.filter(function(m){return m.score>=70;}).length;
+    document.getElementById('pk-area').textContent  = Math.round((tot.area_ha||0)/1000).toLocaleString('pt-BR') + ' k';
+    renderProspInsights(muns);
+    renderProspMap(muns);
+    renderProspTable(muns);
+  } catch(e){ console.error('prosp error:',e); }
+  finally { document.getElementById('prosp-loading').classList.remove('visible'); }
+}
+
+function renderProspInsights(muns) {
+  if (!muns||!muns.length) return;
+  var top     = muns[0];
+  var top2    = muns[1];
+  var alta    = muns.filter(function(m){return m.score>=70;});
+  var semCli  = muns.filter(function(m){return m.clientes_trr===0;});
+  var perto   = muns.filter(function(m){return m.dist_trr<100;});
+  var totalHa = muns.reduce(function(s,m){return s+(m.area_ha||0);},0);
+  var items = [];
+  if (top)  items.push('🎯 <b>Maior oportunidade:</b> <b>'+top.mun+'</b> — '+Number(top.prospects).toLocaleString('pt-BR')+' prospects CAR ativos, '+top.clientes_trr+' clientes TRR confirmados, score <b>'+top.score+'</b>');
+  if (top2) items.push('📍 <b>2ª opção:</b> '+top2.mun+' com '+Number(top2.prospects).toLocaleString('pt-BR')+' prospects (score '+top2.score+') a '+top2.dist_trr+' km do TRR');
+  if (alta.length) items.push('⭐ <b>'+alta.length+' município'+(alta.length>1?'s':'')+' de alta prioridade</b> (score ≥ 70) — mercado validado por clientes TRR existentes: '+alta.slice(0,4).map(function(m){return m.mun;}).join(', ')+(alta.length>4?'…':''));
+  if (perto.length) items.push('🚗 <b>'+perto.length+' municípios a menos de 100 km</b> do TRR em Mozarlândia — menor custo logístico para prospecção');
+  if (semCli.length) items.push('🌐 <b>'+semCli.length+' município'+(semCli.length>1?'s':'')+' ainda sem cliente TRR</b> — território a conquistar: '+semCli.slice(0,3).map(function(m){return m.mun;}).join(', ')+(semCli.length>3?'…':''));
+  items.push('🌾 <b>Área total prospectada:</b> '+Math.round(totalHa/1000).toLocaleString('pt-BR')+' mil hectares de imóveis rurais CAR ativos sem relacionamento TRR — potencial significativo de consumo de combustível, óleo e insumos');
+  document.getElementById('prosp-insights-body').innerHTML = items.map(function(i){return '<div class="insight-item">'+i+'</div>';}).join('');
+}
+
+function renderProspMap(muns) {
+  if (!prospLayer||!muns||!muns.length) return;
+  prospLayer.clearLayers();
+  var maxP = Math.max.apply(null, muns.map(function(m){return m.prospects||0;}));
+  muns.forEach(function(m) {
+    if (!m.lat||!m.lon) return;
+    var r = 9 + Math.round(((m.prospects||0)/Math.max(maxP,1))*26);
+    var col = pScoreColor(m.score);
+    var c = L.circleMarker([m.lat,m.lon],{
+      radius:r, fillColor:col, color:'#fff', weight:1.5, opacity:1, fillOpacity:0.83
+    }).addTo(prospLayer);
+    c.bindTooltip(
+      '<b>'+m.mun+'</b><br>'+
+      '🎯 '+Number(m.prospects).toLocaleString('pt-BR')+' prospects · Score: '+m.score+'<br>'+
+      '✅ '+m.clientes_trr+' clientes TRR · 📏 '+m.dist_trr+' km',
+      {sticky:true}
+    );
+    c.bindPopup(
+      '<h4 class="lp-h">'+m.mun+' ('+(m.uf||'').trim()+')</h4>'+
+      '<div class="lp-meta">'+
+      '<b>Score:</b> <span style="color:'+col+';font-weight:800">'+m.score+'</span> — '+pScoreLbl(m.score)+'<br>'+
+      '<b>Prospects CAR:</b> '+Number(m.prospects).toLocaleString('pt-BR')+'<br>'+
+      '<b>Clientes TRR ativos:</b> '+m.clientes_trr+'<br>'+
+      '<b>Área total:</b> '+Math.round((m.area_ha||0)/1000).toLocaleString('pt-BR')+' mil ha<br>'+
+      '<b>Dist. ao TRR:</b> '+m.dist_trr+' km'+
+      '</div>'+
+      '<button class="drill-btn" style="margin-top:8px" onclick="drillProspMun(\''+m.mun.replace(/'/g,"\\'")+'\')">🔍 Ver imóveis individuais</button>',
+      {maxWidth:300}
+    );
+  });
+}
+
+function renderProspTable(muns) {
+  if (!muns) return;
+  document.getElementById('prosp-tbl-title').textContent = '🏆 Ranking de Municípios por Oportunidade';
+  var rows = muns.map(function(m,i){
+    return '<tr>'+
+      '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'+
+      '<td><b>'+esc(m.mun)+'</b></td>'+
+      '<td>'+(m.uf||'').trim()+'</td>'+
+      '<td style="text-align:right">'+Number(m.prospects).toLocaleString('pt-BR')+'</td>'+
+      '<td style="text-align:right">'+m.clientes_trr+'</td>'+
+      '<td style="text-align:right">'+m.dist_trr+' km</td>'+
+      '<td style="text-align:right">'+Math.round((m.area_ha||0)/1000).toLocaleString('pt-BR')+' k</td>'+
+      '<td><span class="score-pill '+pScorePill(m.score)+'">'+m.score+'</span></td>'+
+      '<td><button class="drill-btn" onclick="drillProspMun(\''+m.mun.replace(/'/g,"\\'")+'\')">Detalhar</button></td>'+
+    '</tr>';
+  }).join('');
+  document.getElementById('prosp-tbl-wrap').innerHTML =
+    '<table class="prosp-tbl"><thead><tr>'+
+    '<th>#</th><th>Município</th><th>UF</th>'+
+    '<th style="text-align:right">Prospects</th><th style="text-align:right">Clientes TRR</th>'+
+    '<th style="text-align:right">Dist. TRR</th><th style="text-align:right">Área</th>'+
+    '<th>Score</th><th></th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+async function drillProspMun(mun) {
+  prospMunSel = mun;
+  document.getElementById('prosp-view-title').textContent = '📍 Imóveis prospects em '+mun;
+  document.getElementById('prosp-back-btn').style.display = '';
+  document.getElementById('prosp-loading-txt').textContent = 'Carregando imóveis de '+mun+'…';
+  document.getElementById('prosp-loading').classList.add('visible');
+  prospLayer.clearLayers();
+  prospDrillLayer.clearLayers();
+  try {
+    var res = await SB.rpc('trr_prospectar_imoveis', {p_mun:mun, p_lim:150});
+    if (res.error) throw res.error;
+    var imoveis = (res.data && res.data.imoveis) || [];
+    var total   = (res.data && res.data.total)   || 0;
+    var tipoLbl = {IRU:'Imóvel Rural Único',AST:'Assentamento',PCT:'Parcelamento Coletivo'};
+    if (imoveis.length && imoveis[0].lat) {
+      prospMap.flyTo([imoveis[0].lat,imoveis[0].lon],11,{duration:1.2});
+    }
+    imoveis.forEach(function(p){
+      if (!p.lat||!p.lon) return;
+      var col = pScoreColor(p.score);
+      var r   = 5 + Math.min(8, Math.round((p.area||0)/200));
+      var c   = L.circleMarker([p.lat,p.lon],{
+        radius:r, fillColor:col, color:'#fff', weight:1, opacity:1, fillOpacity:0.82
+      }).addTo(prospDrillLayer);
+      c.bindTooltip(
+        '🎯 Prospect<br>'+(p.area?Number(p.area).toLocaleString('pt-BR')+' ha · ':'')+
+        'Score: '+p.score+(p.dist_cli?'<br>📏 '+Number(p.dist_cli).toFixed(1)+' km do cliente mais próximo':''),
+        {sticky:true}
+      );
+      c.bindPopup(
+        '<h4 class="lp-h">🎯 Prospect — '+esc(mun)+'</h4>'+
+        '<div class="lp-meta">'+
+        '<b>Tipo:</b> '+(tipoLbl[p.tipo]||p.tipo||'–')+'<br>'+
+        (p.area?'<b>Área:</b> '+Number(p.area).toLocaleString('pt-BR')+' ha<br>':'')+
+        '<b>Dist. ao TRR:</b> '+(p.dist_trr||'–')+' km<br>'+
+        '<b>Dist. ao cliente mais próximo:</b> '+(p.dist_cli?Number(p.dist_cli).toFixed(1)+' km':'–')+'<br>'+
+        '<b>Score:</b> <span style="color:'+col+';font-weight:800">'+p.score+'</span> — '+pScoreLbl(p.score)+
+        '</div>',{maxWidth:280}
+      );
+    });
+    // Tabela individual
+    document.getElementById('prosp-tbl-title').textContent = '🏠 Top Prospects em '+mun+' ('+Number(total).toLocaleString('pt-BR')+' total, exibindo '+imoveis.length+')';
+    var rows = imoveis.slice(0,60).map(function(p,i){
+      return '<tr>'+
+        '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'+
+        '<td style="font-size:10.5px;max-width:180px;word-break:break-all">'+esc(p.cod||'–')+'</td>'+
+        '<td>'+(p.tipo||'–')+'</td>'+
+        '<td style="text-align:right">'+(p.area?Number(p.area).toLocaleString('pt-BR')+'ha':'–')+'</td>'+
+        '<td style="text-align:right">'+(p.dist_trr||'–')+' km</td>'+
+        '<td style="text-align:right">'+(p.dist_cli?Number(p.dist_cli).toFixed(1)+' km':'–')+'</td>'+
+        '<td><span class="score-pill '+pScorePill(p.score)+'">'+p.score+'</span></td>'+
+      '</tr>';
+    }).join('');
+    document.getElementById('prosp-tbl-wrap').innerHTML =
+      '<table class="prosp-tbl"><thead><tr>'+
+      '<th>#</th><th>Cód. CAR</th><th>Tipo</th>'+
+      '<th style="text-align:right">Área</th><th style="text-align:right">Dist. TRR</th>'+
+      '<th style="text-align:right">Dist. Cliente</th><th>Score</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table>';
+  } catch(e){ console.error(e); }
+  finally { document.getElementById('prosp-loading').classList.remove('visible'); }
+}
+
+function backToMuns() {
+  prospMunSel = null;
+  prospDrillLayer.clearLayers();
+  document.getElementById('prosp-view-title').textContent = '📍 Por Município';
+  document.getElementById('prosp-back-btn').style.display = 'none';
+  document.getElementById('prosp-loading-txt').textContent = 'Aguarde — Analisando Dados';
+  prospMap.flyTo([-14.2,-50.2],7,{duration:1});
+  if (prospData) {
+    renderProspMap((prospData.municipios)||[]);
+    renderProspTable((prospData.municipios)||[]);
+  }
+}
 </script>
 </body>
 </html>

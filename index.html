@@ -150,6 +150,24 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .lp-pct-r{color:#a4243b;font-weight:700;}
 .lp-pct-o{color:#e0762c;font-weight:700;}
 .lp-pct-g{color:#1c7c54;font-weight:700;}
+/* Map quick filter */
+.map-qfilter{background:var(--card);border-radius:var(--r);padding:13px 18px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:var(--gap);display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;}
+.map-qfilter .map-toolbar-title{align-self:center;}
+.fg-map{display:flex;flex-direction:column;gap:4px;min-width:150px;}
+.fg-map label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
+.fg-map select{padding:8px 10px;border:1px solid #dde2e8;border-radius:6px;font-size:13px;background:#fff;color:var(--txt);outline:none;cursor:pointer;}
+.fg-map select:focus{border-color:var(--acc);}
+.btn-zoom{padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:700;white-space:nowrap;align-self:flex-end;}
+.btn-zoom:hover{opacity:.88;}
+.btn-map-rst{padding:8px 12px;background:transparent;color:var(--muted);border:1px solid #dde2e8;border-radius:6px;cursor:pointer;font-size:12.5px;align-self:flex-end;}
+.btn-map-rst:hover{background:#f4f6f8;}
+/* CAR props list inside popup */
+.car-props-section{border-top:1px solid #eee;margin-top:10px;padding-top:8px;}
+.car-props-title{font-size:11.5px;font-weight:700;color:#10243e;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;}
+.car-prop-item{padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:11.5px;overflow:hidden;}
+.car-prop-item:last-child{border-bottom:none;}
+.car-prop-nm{font-weight:600;color:#1c2733;display:block;margin-right:52px;}
+.car-prop-mt{color:#6b7785;font-size:11px;display:block;margin-right:52px;}
 
 /* Leaflet popup */
 .leaflet-popup-content{max-height:340px;overflow-y:auto;padding:2px;}
@@ -308,6 +326,26 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 
 <!-- ===== MAPA SECTION ===== -->
 <div id="mapa-section" style="display:none">
+
+<!-- Filtro rápido do mapa -->
+<div class="map-qfilter">
+  <span class="map-toolbar-title">🔍 Filtro do mapa</span>
+  <div class="fg-map">
+    <label>Estado (UF)</label>
+    <select id="mf-uf" onchange="onMapUfChange()">
+      <option value="">Todos os estados</option>
+    </select>
+  </div>
+  <div class="fg-map">
+    <label>Cidade / Município</label>
+    <select id="mf-mun" onchange="onMapMunChange()">
+      <option value="">Todas as cidades</option>
+    </select>
+  </div>
+  <button class="btn-zoom" onclick="zoomToSelection()" title="Centralizar mapa na seleção">🎯 Ir para</button>
+  <button class="btn-map-rst" onclick="resetMapFilter()">✕ Limpar</button>
+</div>
+
 <div class="map-stats-row">
   <div class="map-kpi"><div class="mk-val" id="mk-prop">–</div><div class="mk-lbl">Propriedades</div></div>
   <div class="map-kpi"><div class="mk-val" id="mk-cli">–</div><div class="mk-lbl">Clientes únicos</div></div>
@@ -324,7 +362,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   <div class="map-divider"></div>
   <span class="map-toolbar-title">Camadas</span>
   <button class="car-toggle" id="car-toggle-btn" onclick="toggleCarLayer()" title="Exibe imóveis do CAR (SICAR) por município — potencial de mercado não convertido">
-    📋 Dados CAR
+    📋 Dados CAR <span id="car-count-badge" style="font-size:10px;opacity:.75"></span>
   </button>
   <div class="map-legend" id="map-legend"></div>
 </div>
@@ -499,6 +537,7 @@ async function init(){
     fillSel('f-mun',d.muns||[],function(v){return v;},function(v){return v;});
     fillSel('f-ativ',d.ativs||[],function(v){return v;},function(v){return shortA(v);});
     fillSel('f-faixa',FAIXAS,function(v){return v;},function(v){return v;});
+    fillMapFilters(d.ufs||[], d.muns||[]);
     renderCarTable();renderCarChart();await refresh();
   }catch(e){addErr('Erro na inicialização: '+(e.message||JSON.stringify(e)));setBadge('🔴 Erro');}
 }
@@ -714,6 +753,27 @@ function renderCarLayer() {
 
     circle.bindTooltip(tooltip, { sticky: true });
 
+    // List of client properties in this municipality (from geoData)
+    var munProps = geoData ? (geoData.props || []).filter(function(p){ return p.mun === r.municipio; }) : [];
+    var propsHtml = '';
+    if (munProps.length) {
+      var shown = munProps.slice(0, 20);
+      propsHtml = '<div class="car-props-section">' +
+        '<div class="car-props-title">📍 Propriedades TRR (' + munProps.length + ')</div>' +
+        shown.map(function(p) {
+          var av = p.ativa === true || p.ativa === 'true';
+          return '<div class="car-prop-item">' +
+            '<span class="lp-bd ' + (av ? 'g' : 'n') + '">' + (av ? 'Ativa' : 'Inativa') + '</span>' +
+            '<span class="car-prop-nm">' + esc(p.prop || '–') + '</span>' +
+            '<span class="car-prop-mt">' + esc(p.cli || '–') + ' · ' + Number(p.dist).toFixed(0) + ' km</span>' +
+            '</div>';
+        }).join('') +
+        (munProps.length > 20 ? '<div class="lp-more">+ ' + (munProps.length - 20) + ' mais</div>' : '') +
+        '</div>';
+    } else if (geoData) {
+      propsHtml = '<div class="car-props-section" style="color:#aaa;font-size:12px">Nenhuma propriedade TRR neste município (nos filtros ativos)</div>';
+    }
+
     var popupContent =
       '<h4 class="lp-h">' + esc(r.municipio) +
         ' <span style="font-weight:400;color:#aaa;font-size:12px">(' + (r.uf || '').trim() + ')</span></h4>' +
@@ -725,12 +785,113 @@ function renderCarLayer() {
         '📊 <b>Penetração atual:</b> <span class="' + pctCls + '">' + pct.toFixed(1) + '%</span><br>' +
         '📍 <b>Dist. média ao TRR:</b> ' + distTrr.toFixed(0) + ' km' +
       '</div>' +
-      '<div style="background:#f8f9fa;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:11.5px;color:#555">' +
-        '💡 Se 10% do potencial virar cliente: <b>+' + Math.round(potencial * 0.1).toLocaleString('pt-BR') + ' propriedades</b>' +
-      '</div>';
+      '<div style="background:#f0f7ff;border-radius:6px;padding:8px 10px;margin-top:6px;font-size:11.5px;color:#555">' +
+        '💡 Potencial 10%: <b>+' + Math.round(potencial * 0.1).toLocaleString('pt-BR') + ' propriedades</b>' +
+      '</div>' +
+      propsHtml;
 
-    circle.bindPopup(popupContent, { maxWidth: 320, minWidth: 260 });
+    circle.bindPopup(popupContent, { maxWidth: 340, minWidth: 270, maxHeight: 460 });
   });
+}
+
+/* ===== MAP QUICK FILTER (city / state) ===== */
+var _allMuns = [];   // all municipalities with coords, for filtering
+var _allUfs  = [];   // all UFs
+
+function fillMapFilters(ufs, muns) {
+  _allUfs  = ufs  || [];
+  _allMuns = muns || [];
+  var ufSel  = document.getElementById('mf-uf');
+  var munSel = document.getElementById('mf-mun');
+  if (!ufSel || !munSel) return;
+  // Fill UFs
+  while (ufSel.options.length > 1) ufSel.remove(1);
+  _allUfs.forEach(function(u) {
+    var o = document.createElement('option'); o.value = u; o.textContent = u; ufSel.appendChild(o);
+  });
+  // Fill all muns initially
+  _fillMunOptions('');
+  // Set badge on CAR button
+  var badge = document.getElementById('car-count-badge');
+  if (badge && carRows.length) badge.textContent = '(' + carRows.length + ' mun.)';
+}
+
+function _fillMunOptions(ufFilter) {
+  var munSel = document.getElementById('mf-mun');
+  if (!munSel) return;
+  while (munSel.options.length > 1) munSel.remove(1);
+  _allMuns.forEach(function(m) {
+    if (!ufFilter || m.indexOf(ufFilter) >= 0) { /* can't filter here without uf info per mun */ }
+    var o = document.createElement('option'); o.value = m; o.textContent = m; munSel.appendChild(o);
+  });
+}
+
+function onMapUfChange() {
+  var uf = document.getElementById('mf-uf').value;
+  // Sync to global header filter
+  document.getElementById('f-uf').value = uf;
+  document.getElementById('f-mun').value = '';
+  document.getElementById('mf-mun').value = '';
+  // Refill city dropdown based on UF (filter muns that have that UF from geoData/carRows)
+  var munSel = document.getElementById('mf-mun');
+  while (munSel.options.length > 1) munSel.remove(1);
+  var filteredMuns = _allMuns;
+  if (uf && geoData && geoData.muns) {
+    var ufMuns = geoData.muns.filter(function(m){ return m.uf === uf; }).map(function(m){ return m.mun; });
+    filteredMuns = ufMuns.length ? ufMuns : _allMuns;
+  } else if (uf && carRows.length) {
+    filteredMuns = carRows.filter(function(r){ return (r.uf||'').trim() === uf; }).map(function(r){ return r.municipio; });
+    if (!filteredMuns.length) filteredMuns = _allMuns;
+  }
+  filteredMuns.forEach(function(m) {
+    var o = document.createElement('option'); o.value = m; o.textContent = m; munSel.appendChild(o);
+  });
+  // Zoom to state bounding box (approximate: all munCoords in this UF)
+  if (uf && leafMap) {
+    var pts = [];
+    if (geoData && geoData.muns) {
+      geoData.muns.filter(function(m){ return m.uf===uf && m.lat && m.lon; })
+        .forEach(function(m){ pts.push([m.lat, m.lon]); });
+    }
+    if (!pts.length) {
+      Object.keys(munCoords).forEach(function(k){ pts.push([munCoords[k].lat, munCoords[k].lon]); });
+    }
+    if (pts.length) { try { leafMap.flyToBounds(L.latLngBounds(pts), {padding:[30,30],duration:1}); } catch(e){} }
+  }
+  onFilter();
+}
+
+function onMapMunChange() {
+  var mun = document.getElementById('mf-mun').value;
+  // Sync to global header filter
+  document.getElementById('f-mun').value = mun;
+  // Zoom to city
+  if (mun && munCoords[mun] && leafMap) {
+    leafMap.flyTo([munCoords[mun].lat, munCoords[mun].lon], 12, {duration: 1.2});
+  }
+  onFilter();
+}
+
+function zoomToSelection() {
+  var mun = document.getElementById('mf-mun').value;
+  var uf  = document.getElementById('mf-uf').value;
+  if (mun && munCoords[mun] && leafMap) {
+    leafMap.flyTo([munCoords[mun].lat, munCoords[mun].lon], 12, {duration: 1.2});
+  } else if (uf && leafMap && geoData && geoData.muns) {
+    var pts = geoData.muns.filter(function(m){ return m.uf===uf && m.lat && m.lon; })
+                          .map(function(m){ return [m.lat, m.lon]; });
+    if (pts.length) try { leafMap.flyToBounds(L.latLngBounds(pts), {padding:[40,40],duration:1}); } catch(e){}
+  }
+}
+
+function resetMapFilter() {
+  document.getElementById('mf-uf').value  = '';
+  document.getElementById('mf-mun').value = '';
+  document.getElementById('f-uf').value   = '';
+  document.getElementById('f-mun').value  = '';
+  _fillMunOptions('');
+  if (leafMap) leafMap.flyTo([-14.2, -50.2], 7, {duration: 1});
+  onFilter();
 }
 
 function setMapView(v) {

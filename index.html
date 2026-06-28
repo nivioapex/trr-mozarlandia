@@ -1472,64 +1472,86 @@ function renderProspTable(muns) {
 
 async function drillProspMun(mun) {
   prospMunSel = mun;
-  document.getElementById('prosp-view-title').textContent = '📍 Imóveis prospects em '+mun;
+  document.getElementById('prosp-view-title').textContent = '📍 Imóveis prospects em ' + mun;
   document.getElementById('prosp-back-btn').style.display = '';
-  document.getElementById('prosp-loading-txt').textContent = 'Carregando imóveis de '+mun+'…';
+  document.getElementById('prosp-loading-txt').textContent = 'Carregando imóveis de ' + mun + '…';
   document.getElementById('prosp-loading').classList.add('visible');
   prospLayer.clearLayers();
   prospDrillLayer.clearLayers();
   try {
-    var res = await SB.rpc('trr_prospectar_imoveis', {p_mun:mun, p_lim:150});
+    var res = await SB.rpc('trr_prospectar_imoveis', { p_mun: mun, p_lim: 200 });
     if (res.error) throw res.error;
-    var imoveis = (res.data && res.data.imoveis) || [];
+    var all     = (res.data && res.data.imoveis) || [];
     var total   = (res.data && res.data.total)   || 0;
-    var tipoLbl = {IRU:'Imóvel Rural Único',AST:'Assentamento',PCT:'Parcelamento Coletivo'};
-    if (imoveis.length && imoveis[0].lat) {
-      prospMap.flyTo([imoveis[0].lat,imoveis[0].lon],11,{duration:1.2});
+    var tipoLbl = { IRU:'Imóvel Rural Único', AST:'Assentamento', PCT:'Parcelamento Coletivo' };
+
+    // Separar clientes TRR dos prospects usando geoData (se carregado)
+    var cliCoords = geoData ? (geoData.props || []).filter(function(tp) { return tp.mun === mun && tp.lat && tp.lon; }) : [];
+    function isClientTRR(p) {
+      return cliCoords.some(function(tp) {
+        return Math.abs(tp.lat - p.lat) < 0.002 && Math.abs(tp.lon - p.lon) < 0.002;
+      });
     }
-    imoveis.forEach(function(p){
-      if (!p.lat||!p.lon) return;
+    var imoveis  = all.filter(function(p) { return !isClientTRR(p); });
+    var excluidos = all.length - imoveis.length;
+
+    if (imoveis.length && imoveis[0].lat) {
+      prospMap.flyTo([imoveis[0].lat, imoveis[0].lon], 11, { duration: 1.2 });
+    } else if (all.length && all[0].lat) {
+      prospMap.flyTo([all[0].lat, all[0].lon], 11, { duration: 1.2 });
+    }
+
+    imoveis.forEach(function(p) {
+      if (!p.lat || !p.lon) return;
       var col = pScoreColor(p.score);
-      var r   = 5 + Math.min(8, Math.round((p.area||0)/200));
-      var c   = L.circleMarker([p.lat,p.lon],{
-        radius:r, fillColor:col, color:'#fff', weight:1, opacity:1, fillOpacity:0.82
+      var r   = 5 + Math.min(8, Math.round((p.area || 0) / 200));
+      var c = L.circleMarker([p.lat, p.lon], {
+        radius: r, fillColor: col, color: '#fff', weight: 1, opacity: 1, fillOpacity: 0.82
       }).addTo(prospDrillLayer);
       c.bindTooltip(
-        '🎯 Prospect<br>'+(p.area?Number(p.area).toLocaleString('pt-BR')+' ha · ':'')+
-        'Score: '+p.score+(p.dist_cli?'<br>📏 '+Number(p.dist_cli).toFixed(1)+' km do cliente mais próximo':''),
-        {sticky:true}
+        '🎯 Prospect<br>' +
+        (p.area ? Number(p.area).toLocaleString('pt-BR') + ' ha · ' : '') +
+        (tipoLbl[p.tipo] || p.tipo || '') + '<br>Score: ' + p.score +
+        ' · ' + (p.dist_trr || '–') + ' km do TRR',
+        { sticky: true }
       );
       c.bindPopup(
-        '<h4 class="lp-h">🎯 Prospect — '+esc(mun)+'</h4>'+
-        '<div class="lp-meta">'+
-        '<b>Tipo:</b> '+(tipoLbl[p.tipo]||p.tipo||'–')+'<br>'+
-        (p.area?'<b>Área:</b> '+Number(p.area).toLocaleString('pt-BR')+' ha<br>':'')+
-        '<b>Dist. ao TRR:</b> '+(p.dist_trr||'–')+' km<br>'+
-        '<b>Dist. ao cliente mais próximo:</b> '+(p.dist_cli?Number(p.dist_cli).toFixed(1)+' km':'–')+'<br>'+
-        '<b>Score:</b> <span style="color:'+col+';font-weight:800">'+p.score+'</span> — '+pScoreLbl(p.score)+
-        '</div>',{maxWidth:280}
+        '<h4 class="lp-h">🎯 Prospect</h4>' +
+        '<div class="lp-meta">' +
+        '<b>Município:</b> ' + esc(p.mun) + '<br>' +
+        '<b>Tipo de imóvel:</b> ' + (tipoLbl[p.tipo] || p.tipo || '–') + '<br>' +
+        (p.area ? '<b>Área:</b> ' + Number(p.area).toLocaleString('pt-BR') + ' ha<br>' : '') +
+        '<b>Dist. ao TRR:</b> ' + (p.dist_trr || '–') + ' km<br>' +
+        '<b>Clientes TRR no município:</b> ' + (p.cli_mun || 0) + '<br>' +
+        '<b>Score:</b> <span style="color:' + col + ';font-weight:800">' + p.score + '</span> — ' + pScoreLbl(p.score) +
+        '</div>',
+        { maxWidth: 280 }
       );
     });
-    // Tabela individual
-    document.getElementById('prosp-tbl-title').textContent = '🏠 Top Prospects em '+mun+' ('+Number(total).toLocaleString('pt-BR')+' total, exibindo '+imoveis.length+')';
-    var rows = imoveis.slice(0,60).map(function(p,i){
-      return '<tr>'+
-        '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'+
-        '<td style="font-size:10.5px;max-width:180px;word-break:break-all">'+esc(p.cod||'–')+'</td>'+
-        '<td>'+(p.tipo||'–')+'</td>'+
-        '<td style="text-align:right">'+(p.area?Number(p.area).toLocaleString('pt-BR')+'ha':'–')+'</td>'+
-        '<td style="text-align:right">'+(p.dist_trr||'–')+' km</td>'+
-        '<td style="text-align:right">'+(p.dist_cli?Number(p.dist_cli).toFixed(1)+' km':'–')+'</td>'+
-        '<td><span class="score-pill '+pScorePill(p.score)+'">'+p.score+'</span></td>'+
+
+    var excNote = excluidos > 0 ? ' · ' + excluidos + ' já clientes TRR excluídos' : '';
+    document.getElementById('prosp-tbl-title').textContent =
+      '🏠 Prospects em ' + mun + ' — ' + Number(imoveis.length).toLocaleString('pt-BR') +
+      ' imóveis' + excNote;
+
+    var rows = imoveis.slice(0, 60).map(function(p, i) {
+      return '<tr>' +
+        '<td style="color:var(--muted);font-size:11px">' + (i + 1) + '</td>' +
+        '<td style="font-size:10.5px;max-width:170px;word-break:break-all">' + esc(p.cod || '–') + '</td>' +
+        '<td>' + (tipoLbl[p.tipo] || p.tipo || '–') + '</td>' +
+        '<td style="text-align:right">' + (p.area ? Number(p.area).toLocaleString('pt-BR') + ' ha' : '–') + '</td>' +
+        '<td style="text-align:right">' + (p.dist_trr || '–') + ' km</td>' +
+        '<td><span class="score-pill ' + pScorePill(p.score) + '">' + p.score + '</span></td>' +
       '</tr>';
     }).join('');
     document.getElementById('prosp-tbl-wrap').innerHTML =
-      '<table class="prosp-tbl"><thead><tr>'+
-      '<th>#</th><th>Cód. CAR</th><th>Tipo</th>'+
-      '<th style="text-align:right">Área</th><th style="text-align:right">Dist. TRR</th>'+
-      '<th style="text-align:right">Dist. Cliente</th><th>Score</th>'+
-      '</tr></thead><tbody>'+rows+'</tbody></table>';
-  } catch(e){ console.error(e); }
+      '<table class="prosp-tbl"><thead><tr>' +
+      '<th>#</th><th>Cód. CAR</th><th>Tipo de Imóvel</th>' +
+      '<th style="text-align:right">Área</th>' +
+      '<th style="text-align:right">Dist. TRR</th>' +
+      '<th>Score</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  } catch(e) { console.error('drillProspMun error:', e); }
   finally { document.getElementById('prosp-loading').classList.remove('visible'); }
 }
 

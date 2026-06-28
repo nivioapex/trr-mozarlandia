@@ -141,7 +141,32 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .leg-item{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);}
 .leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
 #leaflet-map{height:580px;border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:var(--gap);}
-.map-loading{text-align:center;padding:20px;font-size:13px;color:var(--muted);}
+/* Loading overlay */
+.map-loading-wrap{position:relative;}
+#map-loading{
+  display:none;
+  position:absolute;
+  inset:0;
+  z-index:9999;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(3px);
+  border-radius:var(--r);
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:16px;
+}
+#map-loading.visible{display:flex;}
+.ml-spinner{
+  width:48px;height:48px;
+  border:5px solid #e0e6ef;
+  border-top-color:var(--acc);
+  border-radius:50%;
+  animation:ml-spin .8s linear infinite;
+}
+@keyframes ml-spin{to{transform:rotate(360deg);}}
+.ml-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:.01em;}
+.ml-sub{font-size:12.5px;color:var(--muted);}
 .map-divider{width:1px;background:#dde2e8;align-self:stretch;margin:0 2px;}
 .car-toggle{padding:6px 14px;border:1.5px dashed #2a6f97;border-radius:16px;cursor:pointer;font-size:12.5px;font-weight:600;background:transparent;color:#2a6f97;transition:all .2s;}
 .car-toggle.on{background:#2a6f97;color:#fff;border-style:solid;}
@@ -380,8 +405,14 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   <b>4.</b> Importe para a tabela <code>car_propriedades</code> no Supabase (colunas: cod_imovel, nom_imovel, municipio, uf, area_ha, lat, lon)<br><br>
   <span style="color:#999;font-size:11.5px">⚠️ O SICAR exige captcha por município — download deve ser feito manualmente. Não é possível automatizar essa etapa.</span>
 </div>
-<div id="map-loading" class="map-loading" style="display:none">⏳ Carregando dados do mapa…</div>
-<div id="leaflet-map"></div>
+<div class="map-loading-wrap">
+  <div id="map-loading">
+    <div class="ml-spinner"></div>
+    <div class="ml-text">Aguarde — Carregando Dados</div>
+    <div class="ml-sub">Buscando imóveis e municípios…</div>
+  </div>
+  <div id="leaflet-map"></div>
+</div>
 </div><!-- /mapa-section -->
 
 <footer>Supabase · Prospecção TRR Mozarlândia · Apex Technology</footer>
@@ -1012,7 +1043,7 @@ function setMapView(v) {
 
 async function loadGeoData() {
   if (!leafMap) return;
-  document.getElementById('map-loading').style.display = '';
+  document.getElementById('map-loading').classList.add('visible');
   try {
     var res = await SB.rpc('trr_geo_all', getGeoFilterParams());
     if (res.error) { console.error('trr_geo_all error:', res.error); return; }
@@ -1022,7 +1053,7 @@ async function loadGeoData() {
     // Se CAR individual ativo, recarregar com novos filtros
     if (showCarInd && carIndLayer) loadCarIndData();
   } catch(e) { console.error(e); }
-  finally { document.getElementById('map-loading').style.display = 'none'; }
+  finally { document.getElementById('map-loading').classList.remove('visible'); }
 }
 
 function updateMapKpis() {

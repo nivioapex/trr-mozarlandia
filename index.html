@@ -1959,83 +1959,36 @@ function _rrShowSaveForm(el, carCod, pid, rrUrl) {
 function buscarContatosRR(carCod, pid) {
   var el = document.getElementById('pdp-contatos-' + pid);
   if (!el) return;
-  el.innerHTML = '<span style="color:var(--muted);font-size:12px">⏳ Verificando banco de dados…</span>';
-  var rrUrl = 'https://www.registrorural.com.br/imoveis/car-' + encodeURIComponent(carCod) + '/';
+  el.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f0f7f2;border:1px solid #c8e6c9;border-radius:9px">'
+    + '<div style="width:18px;height:18px;border:2px solid #1a6e42;border-top-color:transparent;border-radius:50%;animation:rrSpin 0.8s linear infinite"></div>'
+    + '<span style="font-size:12.5px;color:#1a6e42;font-weight:600">Buscando contatos…</span>'
+    + '</div>';
 
   fetch(_rrSaveEdge, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({cod_car: carCod, action: 'check'})
+    body: JSON.stringify({cod_car: carCod, action: 'fetch'})
   }).then(function(r) { return r.json(); })
   .then(function(data) {
     if (!el) return;
     if (data.ok && data.contatos && data.contatos.length > 0) {
-      _rrRenderContatos(el, data.contatos, data.imovel_titulo || '', 'cache');
+      _rrRenderContatos(el, data.contatos, data.imovel_titulo || '', data.source || 'rr');
     } else {
-      window.open(rrUrl, '_blank', 'noopener');
-      _rrStartPolling(el, carCod, pid, rrUrl);
+      var rrUrl = 'https://www.registrorural.com.br/imoveis/car-' + encodeURIComponent(carCod) + '/';
+      _rrShowManualForm(el, carCod, pid, rrUrl);
     }
   }).catch(function() {
-    if (el) el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ Erro de conexão.</span>';
+    if (el) el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ Erro de conexão. Tente novamente.</span>';
   });
-}
-
-function _rrStartPolling(el, carCod, pid, rrUrl) {
-  if (!el) return;
-  el.innerHTML =
-    '<div style="background:#f0f7f2;border:1px solid #c8e6c9;border-radius:9px;padding:14px">'
-    + '<div style="font-size:13px;font-weight:700;color:#1a6e42;margin-bottom:8px">📡 Aguardando dados do Registro Rural…</div>'
-    + '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">A página do imóvel foi aberta em nova aba.<br>'
-    + 'Use o bookmarklet <b>🔖 TRR — Salvar Contatos RR</b> nessa aba e volte aqui.'
-    + '<br><small style="color:#aaa">(os dados aparecerão automaticamente)</small></div>'
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
-    + '<a href="' + rrUrl + '" target="_blank" rel="noopener" '
-    + 'style="font-size:12px;color:#1a6e42;text-decoration:none;border:1px solid #c8e6c9;padding:4px 10px;border-radius:6px">🔗 Abrir no RR</a>'
-    + '<button onclick="_rrStopPolling(\'' + carCod + '\')" '
-    + 'style="font-size:11px;color:#888;background:none;border:1px solid #dde2e7;border-radius:6px;padding:4px 8px;cursor:pointer">✕ Cancelar</button>'
-    + '</div>'
-    + '</div>';
-
-  var attempts = 0;
-  var maxAttempts = 36;
-  if (!window._rrPolling) window._rrPolling = {};
-  if (window._rrPolling[carCod]) clearInterval(window._rrPolling[carCod]);
-
-  window._rrPolling[carCod] = setInterval(function() {
-    attempts++;
-    if (attempts > maxAttempts) {
-      clearInterval(window._rrPolling[carCod]);
-      delete window._rrPolling[carCod];
-      _rrShowManualForm(el, carCod, pid, rrUrl);
-      return;
-    }
-    fetch(_rrSaveEdge, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({cod_car: carCod, action: 'check'})
-    }).then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.ok && data.contatos && data.contatos.length > 0) {
-        clearInterval(window._rrPolling[carCod]);
-        delete window._rrPolling[carCod];
-        _rrRenderContatos(el, data.contatos, data.imovel_titulo || '', 'cache');
-      }
-    }).catch(function(){});
-  }, 5000);
-}
-
-function _rrStopPolling(carCod) {
-  if (window._rrPolling && window._rrPolling[carCod]) {
-    clearInterval(window._rrPolling[carCod]);
-    delete window._rrPolling[carCod];
-  }
 }
 
 function _rrShowManualForm(el, carCod, pid, rrUrl) {
   if (!el) return;
   el.innerHTML =
-    '<div style="margin-bottom:6px">'
-    + '<label style="font-size:11px;font-weight:600;color:var(--dark);display:block;margin-bottom:3px">Nome da Fazenda (RR)</label>'
+    '<div style="font-size:12px;color:#c0392b;margin-bottom:8px">⚠️ Não foi possível buscar automaticamente.</div>'
+    + '<div style="margin-bottom:6px">'
+    + '<label style="font-size:11px;font-weight:600;color:var(--dark);display:block;margin-bottom:3px">Nome da Fazenda</label>'
     + '<input id="rr-fazenda-' + pid + '" type="text" placeholder="Nome conforme aparece no Registro Rural" '
     + 'style="width:100%;box-sizing:border-box;padding:5px 9px;border:1px solid #dde2e7;border-radius:6px;font-size:12px">'
     + '</div>'
@@ -2055,6 +2008,7 @@ function _rrShowManualForm(el, carCod, pid, rrUrl) {
     + ' <a href="' + rrUrl + '" target="_blank" rel="noopener" '
     + 'style="font-size:11.5px;color:#1a6e42;text-decoration:none">🔗 Abrir no RR</a>';
 }
+
 
 
 function salvarContatoRR(carCod, pid) {

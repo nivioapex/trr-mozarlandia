@@ -1865,17 +1865,16 @@ async function fetchAndRenderDetail(p) {
   }
   html += link('🏛️', 'INCRA SNCR', 'Requer login — dados de titular e área fiscal',
     'https://sncr.serpro.gov.br/sncr/faces/common/jsf/home.jsp');
-  var rrQuery = (p.nome && p.nome !== 'Sem nome' ? p.nome : '') + (p.mun ? ' ' + p.mun : '');
-  rrQuery = rrQuery.trim();
+  var rrCod = p.cod || '';
   html += '<a class="pdp-link" href="https://www.registrorural.com.br/imoveis/" target="_blank" rel="noopener" '
-    + 'onclick="event.stopPropagation();navigator.clipboard.writeText(\'' + rrQuery.replace(/\'/g,"\\'") + '\').catch(function(){});'
+    + 'onclick="event.stopPropagation();navigator.clipboard.writeText(\'' + rrCod.replace(/\'/g,"\\'") + '\').catch(function(){});'
     + 'var t=document.getElementById(\'rr-tip-' + propId + '\');'
     + 'if(t){t.style.display=\'inline\';setTimeout(function(){t.style.display=\'none\';},3000);}">' 
     + '<span class="pdp-link-ico">🏡</span>'
     + '<span class="pdp-link-txt">'
     + '<div class="pdp-link-lbl">Registro Rural — Busca de Imóveis '
-    + '<span id="rr-tip-' + propId + '" style="display:none;color:#1a6e42;font-size:11px;font-weight:700;margin-left:6px">✓ Nome copiado!</span></div>'
-    + '<div class="pdp-link-sub">Clique para abrir — nome copiado automaticamente: <b>' + esc(rrQuery.substring(0,30)) + (rrQuery.length>30?'…':'') + '</b></div>'
+    + '<span id="rr-tip-' + propId + '" style="display:none;color:#1a6e42;font-size:11px;font-weight:700;margin-left:6px">✓ CAR copiado!</span></div>'
+    + '<div class="pdp-link-sub">Clique para abrir — código CAR copiado automaticamente: <b>' + esc(rrCod.substring(0,26)) + (rrCod.length>26?'…':'') + '</b></div>'
     + '</span></a>';
   html += '</div>';
 

@@ -1639,6 +1639,7 @@ async function drillProspMun(mun) {
       ' imóveis' + excNote;
 
     var rows = imoveis.slice(0, 60).map(function(p, i) {
+      prospProps[p.id] = p;
       return '<tr>' +
         '<td style="color:var(--muted);font-size:11px">' + (i + 1) + '</td>' +
         '<td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis" title="' + esc(p.nome || '') + '">' + esc(p.nome || 'Sem nome') + '</td>' +

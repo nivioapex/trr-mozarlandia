@@ -1732,11 +1732,11 @@ async function fetchAndRenderDetail(p) {
   /* ── Dados CAR ─────────────────────────────────────────────── */
   html += '<div class="pdp-section">';
   html += '<div class="pdp-section-title">📋 Dados do Imóvel (CAR/SICAR)</div>';
-  html += row('Nome', '<b>' + esc(p.nome || 'Sem nome') + '</b>');
-  html += row('Tipo de imóvel', tipoLbl[p.tipo] || p.tipo || '–');
-  if (p.area) html += row('Área', Number(p.area).toLocaleString('pt-BR') + ' ha');
-  html += row('Dist. ao TRR', (p.dist_trr || '–') + ' km');
-  html += row('Score prospecção', '<span style="font-weight:800;color:' + pScoreColor(p.score) + '">' + p.score + ' — ' + pScoreLbl(p.score) + '</span>');
+  html += _pdpRow('Nome', '<b>' + esc(p.nome || 'Sem nome') + '</b>');
+  html += _pdpRow('Tipo de imóvel', tipoLbl[p.tipo] || p.tipo || '–');
+  if (p.area) html += _pdpRow('Área', Number(p.area).toLocaleString('pt-BR') + ' ha');
+  html += _pdpRow('Dist. ao TRR', (p.dist_trr || '–') + ' km');
+  html += _pdpRow('Score prospecção', '<span style="font-weight:800;color:' + pScoreColor(p.score) + '">' + p.score + ' — ' + pScoreLbl(p.score) + '</span>');
   html += '<div class="pdp-row" style="flex-direction:column;gap:2px"><span class="lbl">Código CAR</span><span style="font-size:10px;font-family:monospace;color:var(--muted);word-break:break-all;margin-top:2px">' + esc(p.cod || '–') + '</span></div>';
   html += '</div>';
 
@@ -1776,11 +1776,11 @@ async function fetchAndRenderDetail(p) {
   html += '<div class="pdp-section">';
   html += '<div class="pdp-section-title">🗺️ Localização (IBGE)</div>';
   if (ibge) {
-    html += row('Município', ibge.nome);
-    if (ibge.microrregiao) html += row('Microrregião', ibge.microrregiao.nome);
+    html += _pdpRow('Município', ibge.nome);
+    if (ibge.microrregiao) html += _pdpRow('Microrregião', ibge.microrregiao.nome);
     if (ibge.microrregiao && ibge.microrregiao.mesorregiao)
-      html += row('Mesorregião', ibge.microrregiao.mesorregiao.nome);
-    html += row('Código IBGE', ibge.id);
+      html += _pdpRow('Mesorregião', ibge.microrregiao.mesorregiao.nome);
+    html += _pdpRow('Código IBGE', ibge.id);
   }
   if (edgeData.mun_desc) {
     html += '<div style="font-size:12.5px;line-height:1.6;color:var(--txt);margin-top:8px;padding-top:8px;border-top:1px solid #eef">' + esc(edgeData.mun_desc) + '</div>';
@@ -1790,7 +1790,7 @@ async function fetchAndRenderDetail(p) {
   if (edgeData.mun_info && edgeData.mun_info.length) {
     html += '<div style="margin-top:10px">';
     edgeData.mun_info.forEach(function(i) {
-      html += row(i.label, esc(i.value));
+      html += _pdpRow(i.label, esc(i.value));
     });
     html += '</div>';
   }
@@ -1802,21 +1802,21 @@ async function fetchAndRenderDetail(p) {
     html += '<div class="pdp-section">';
     html += '<div class="pdp-section-title">🌿 CAR Ambiental (FonteData)</div>';
     var car = edgeData.fd_car;
-    if (car.status)          html += row('Status CAR',        '<span class="fd-car-chip">' + esc(car.status) + '</span>');
-    if (car.situacao)        html += row('Situação',          esc(car.situacao));
-    if (car.area_total)      html += row('Área total',        Number(car.area_total).toLocaleString('pt-BR') + ' ha');
-    if (car.area_app)        html += row('Área APP',          Number(car.area_app).toLocaleString('pt-BR') + ' ha');
-    if (car.area_rl)         html += row('Reserva Legal',     Number(car.area_rl).toLocaleString('pt-BR') + ' ha');
-    if (car.area_vegetacao)  html += row('Veg. Nativa',       Number(car.area_vegetacao).toLocaleString('pt-BR') + ' ha');
-    if (car.data_cadastro)   html += row('Data de cadastro',  esc(car.data_cadastro));
-    if (car.data_validade)   html += row('Validade',          esc(car.data_validade));
-    if (car.municipio)       html += row('Município (CAR)',   esc(car.municipio));
-    if (car.uf)              html += row('UF',                esc(car.uf));
+    if (car.status)          html += _pdpRow('Status CAR',        '<span class="fd-car-chip">' + esc(car.status) + '</span>');
+    if (car.situacao)        html += _pdpRow('Situação',          esc(car.situacao));
+    if (car.area_total)      html += _pdpRow('Área total',        Number(car.area_total).toLocaleString('pt-BR') + ' ha');
+    if (car.area_app)        html += _pdpRow('Área APP',          Number(car.area_app).toLocaleString('pt-BR') + ' ha');
+    if (car.area_rl)         html += _pdpRow('Reserva Legal',     Number(car.area_rl).toLocaleString('pt-BR') + ' ha');
+    if (car.area_vegetacao)  html += _pdpRow('Veg. Nativa',       Number(car.area_vegetacao).toLocaleString('pt-BR') + ' ha');
+    if (car.data_cadastro)   html += _pdpRow('Data de cadastro',  esc(car.data_cadastro));
+    if (car.data_validade)   html += _pdpRow('Validade',          esc(car.data_validade));
+    if (car.municipio)       html += _pdpRow('Município (CAR)',   esc(car.municipio));
+    if (car.uf)              html += _pdpRow('UF',                esc(car.uf));
     // Campos genéricos não mapeados
     var knownKeys = ['status','situacao','area_total','area_app','area_rl','area_vegetacao','data_cadastro','data_validade','municipio','uf'];
     Object.keys(car).forEach(function(k) {
       if (!knownKeys.includes(k) && car[k] !== null && car[k] !== '' && typeof car[k] !== 'object')
-        html += row(k, esc(String(car[k])));
+        html += _pdpRow(k, esc(String(car[k])));
     });
     html += '</div>';
   }
@@ -2079,7 +2079,7 @@ function salvarContatoRR(carCod, pid) {
   });
 }
 
-function row(lbl, val) {
+function _pdpRow(lbl, val) {
   return '<div class="pdp-row"><span class="lbl">' + lbl + '</span><span class="val">' + val + '</span></div>';
 }
 function link(ico, lbl, sub, href) {
@@ -2119,12 +2119,12 @@ async function consultarIbama(propId) {
       var okR = reg.status && !reg.status.toLowerCase().includes('irregular') && !reg.status.toLowerCase().includes('não possui');
       html += '<div style="margin-top:10px"><b>🌿 Regularidade IBAMA</b><br>';
       html += '<div style="margin:6px 0"><span class="' + (okR?'ibama-ok':'ibama-nok') + '">' + (okR?'✅':'⚠️') + ' ' + esc(reg.status||'–') + '</span></div>';
-      if (reg.nome)          html += row('Nome/Razão Social', esc(reg.nome));
-      if (reg.municipio)     html += row('Município',         esc(reg.municipio));
-      if (reg.uf)            html += row('UF',                esc(reg.uf));
-      if (reg.atividades)    html += row('Atividades',        esc(reg.atividades));
-      if (reg.dataEmissao)   html += row('Emissão',           esc(reg.dataEmissao));
-      if (reg.dataValidade)  html += row('Validade',          esc(reg.dataValidade));
+      if (reg.nome)          html += _pdpRow('Nome/Razão Social', esc(reg.nome));
+      if (reg.municipio)     html += _pdpRow('Município',         esc(reg.municipio));
+      if (reg.uf)            html += _pdpRow('UF',                esc(reg.uf));
+      if (reg.atividades)    html += _pdpRow('Atividades',        esc(reg.atividades));
+      if (reg.dataEmissao)   html += _pdpRow('Emissão',           esc(reg.dataEmissao));
+      if (reg.dataValidade)  html += _pdpRow('Validade',          esc(reg.dataValidade));
       html += '</div>';
     }
 
@@ -2134,7 +2134,7 @@ async function consultarIbama(propId) {
       var okD = !deb.possuiDebito && !deb.efeitoNegativo;
       html += '<div style="margin-top:10px"><b>💰 Débitos IBAMA</b><br>';
       html += '<div style="margin:6px 0"><span class="' + (okD?'ibama-ok':'ibama-nok') + '">' + (okD?'✅ Nada consta':'⚠️ Possui débitos') + '</span></div>';
-      if (deb.nome)        html += row('Nome/Razão Social', esc(deb.nome));
+      if (deb.nome)        html += _pdpRow('Nome/Razão Social', esc(deb.nome));
       if (deb.debitos && deb.debitos.length) {
         html += '<div style="font-size:12px;margin-top:6px"><b>Débitos:</b>';
         deb.debitos.forEach(function(d) {

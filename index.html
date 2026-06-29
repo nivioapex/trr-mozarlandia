@@ -1895,36 +1895,86 @@ async function fetchAndRenderDetail(p) {
   body.innerHTML = html;
 }
 
+var _rrSaveEdge = 'https://keeqkmguljsddfmrqlld.supabase.co/functions/v1/rr-contatos';
+
+function _rrRenderContatos(el, contatos, source) {
+  if (!el) return;
+  var parts = contatos.map(function(ct) {
+    var ico = ct.kind === 'phone' ? '📱' : ct.kind === 'email' ? '📧' : '📋';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0f2f4">'
+      + '<span style="font-size:18px">' + ico + '</span>'
+      + '<div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">' + (ct.label||ct.kind) + '</div>'
+      + '<div style="font-size:14px;font-weight:700;color:var(--dark)">' + (ct.value||'') + '</div></div></div>';
+  });
+  var badge = source === 'cache'
+    ? '<div style="margin-top:6px;font-size:11px;color:#1a6e42">✓ Salvo no banco de dados</div>'
+    : '<div style="margin-top:6px;font-size:11px;color:#1a6e42">✓ Contato salvo no banco de dados</div>';
+  el.innerHTML = parts.join('') + badge;
+}
+
 function buscarContatosRR(carCod, pid) {
   var el = document.getElementById('pdp-contatos-' + pid);
   if (!el) return;
-  el.innerHTML = '<span style="color:var(--muted);font-size:12px">⏳ Consultando Registro Rural…</span>';
-  fetch('https://keeqkmguljsddfmrqlld.supabase.co/functions/v1/rr-contatos', {
+  el.innerHTML = '<span style="color:var(--muted);font-size:12px">⏳ Verificando banco de dados…</span>';
+
+  fetch(_rrSaveEdge, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({cod_car: carCod})
+    body: JSON.stringify({cod_car: carCod, action: 'check'})
   }).then(function(r) { return r.json(); })
   .then(function(data) {
     if (!el) return;
     if (data.ok && data.contatos && data.contatos.length > 0) {
-      var parts = data.contatos.map(function(ct) {
-        var ico = ct.kind === 'phone' ? '📱' : ct.kind === 'email' ? '📧' : '📋';
-        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0">'
-          + '<span style="font-size:18px">' + ico + '</span>'
-          + '<div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">' + (ct.label || '') + '</div>'
-          + '<div style="font-size:14px;font-weight:700;color:var(--dark)">' + (ct.value || '') + '</div></div></div>';
-      });
-      var badge = '<div style="margin-top:8px;font-size:11px;color:#1a6e42">'
-        + (data.source === 'cache' ? '✓ Contatos já salvos no banco de dados' : '✓ Contatos salvos no banco de dados')
-        + '</div>';
-      el.innerHTML = parts.join('') + badge;
-    } else if (data.ok) {
-      el.innerHTML = '<span style="color:var(--muted);font-size:12px">Sem contatos disponíveis neste imóvel.</span>';
+      _rrRenderContatos(el, data.contatos, 'cache');
     } else {
-      el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ ' + (data.error || 'Falha na consulta') + '</span>';
+      // Not in cache — show RR link + manual save form
+      var rrUrl = 'https://www.registrorural.com.br/imoveis/car-' + encodeURIComponent(carCod) + '/';
+      el.innerHTML =
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">'
+        + 'Contatos não encontrados no banco. Consulte no Registro Rural e salve abaixo.</div>'
+        + '<a href="' + rrUrl + '" target="_blank" rel="noopener" '
+        + 'style="display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:#f0f7f2;'
+        + 'border:1px solid #a8d5a8;border-radius:7px;font-size:12.5px;color:#1a6e42;font-weight:600;text-decoration:none;margin-bottom:12px">'
+        + '🏡 Abrir no Registro Rural</a>'
+        + '<div style="margin-top:4px">'
+        + '<div style="font-size:11.5px;font-weight:600;color:var(--dark);margin-bottom:6px">Salvar contato no banco:</div>'
+        + '<div style="display:flex;gap:6px;margin-bottom:5px">'
+        + '<select id="rr-kind-' + pid + '" style="padding:5px 8px;border:1px solid #dde2e7;border-radius:6px;font-size:12px">'
+        + '<option value="phone">📱 Telefone</option><option value="email">📧 E-mail</option><option value="other">📋 Outro</option>'
+        + '</select>'
+        + '<input id="rr-val-' + pid + '" type="text" placeholder="Ex: (61) 99999-9999" '
+        + 'style="flex:1;padding:5px 9px;border:1px solid #dde2e7;border-radius:6px;font-size:12px">'
+        + '</div>'
+        + '<input id="rr-lbl-' + pid + '" type="text" placeholder="Etiqueta (ex: Telefone do imóvel)" '
+        + 'style="width:100%;box-sizing:border-box;padding:5px 9px;border:1px solid #dde2e7;border-radius:6px;font-size:12px;margin-bottom:7px">'
+        + '<button onclick="salvarContatoRR(\'' + carCod.replace(/'/g,"\\'") + '\',\'' + pid + '\')" '
+        + 'style="padding:6px 14px;background:#1a6e42;color:#fff;border:none;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer">'
+        + 'Salvar</button>'
+        + '</div>';
     }
   }).catch(function() {
-    if (el) el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ Erro de conexão com o servidor.</span>';
+    if (el) el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ Erro de conexão.</span>';
+  });
+}
+
+function salvarContatoRR(carCod, pid) {
+  var kind = (document.getElementById('rr-kind-' + pid)||{}).value || 'phone';
+  var val  = ((document.getElementById('rr-val-'  + pid)||{}).value||'').trim();
+  var lbl  = ((document.getElementById('rr-lbl-'  + pid)||{}).value||'').trim() || (kind === 'phone' ? 'Telefone' : kind === 'email' ? 'E-mail' : 'Contato');
+  if (!val) { alert('Informe o valor do contato.'); return; }
+  var contatos = [{kind: kind, label: lbl, value: val}];
+  var el = document.getElementById('pdp-contatos-' + pid);
+  if (el) el.innerHTML = '<span style="color:var(--muted);font-size:12px">⏳ Salvando…</span>';
+  fetch(_rrSaveEdge, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({cod_car: carCod, action: 'save', contatos: contatos})
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) _rrRenderContatos(el, data.contatos, 'manual');
+    else if (el) el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ Erro ao salvar.</span>';
+  }).catch(function() {
+    if (el) el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ Erro de conexão.</span>';
   });
 }
 

@@ -1900,9 +1900,9 @@ var _rrSaveEdge = 'https://keeqkmguljsddfmrqlld.supabase.co/functions/v1/rr-cont
 function _rrRenderContatos(el, contatos, imovel_titulo, source) {
   if (!el) return;
   var header = '';
-  if (imovel_titulo) {
-    header = '<div style="font-size:12px;font-weight:700;color:var(--dark);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e8edf2">'
-      + '🏡 ' + imovel_titulo + '</div>';
+  if (imovel_titulo && imovel_titulo.trim()) {
+    header = '<div style="font-size:12.5px;font-weight:700;color:var(--dark);margin-bottom:8px;'
+      + 'padding-bottom:6px;border-bottom:1px solid #e8edf2">🏡 ' + imovel_titulo + '</div>';
   }
   var parts = contatos.map(function(ct) {
     var ico = ct.kind === 'phone' ? '📱' : ct.kind === 'email' ? '📧' : '📋';
@@ -1916,6 +1916,7 @@ function _rrRenderContatos(el, contatos, imovel_titulo, source) {
     : '<div style="margin-top:6px;font-size:11px;color:#1a6e42">✓ Contato salvo no banco de dados</div>';
   el.innerHTML = header + parts.join('') + badge;
 }
+
 
 function _rrShowSaveForm(el, carCod, pid, rrUrl) {
   window.open(rrUrl, '_blank', 'noopener');

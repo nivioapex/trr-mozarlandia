@@ -1878,7 +1878,46 @@ async function fetchAndRenderDetail(p) {
     + '</span></a>';
   html += '</div>';
 
+  /* ── Contatos Registro Rural (busca silenciosa) ───────────────────────── */
+  html += '<div class="pdp-section" id="pdp-contatos-sec-' + propId + '">';
+  html += '<div class="pdp-section-title">\u{1F4DE} Contatos</div>';
+  html += '<div id="pdp-contatos-' + propId + '" style="font-size:12px;color:var(--muted);padding:4px 0">Buscando…</div>';
+  html += '</div>';
+
   body.innerHTML = html;
+
+  /* busca assíncrona de contatos via Edge Function */
+  (function() {
+    var _carCod = p.cod || '';
+    var _pid = propId;
+    if (!_carCod) return;
+    fetch('https://keeqkmguljsddfmrqlld.supabase.co/functions/v1/rr-contatos', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({cod_car: _carCod})
+    }).then(function(r){ return r.json(); }).then(function(data) {
+      var el = document.getElementById('pdp-contatos-' + _pid);
+      if (!el) return;
+      if (data.ok && data.contatos && data.contatos.length > 0) {
+        var parts = data.contatos.map(function(ct) {
+          var ico = ct.kind === 'phone' ? '\u{1F4F1}' : ct.kind === 'email' ? '\u{1F4E7}' : '\u{1F4CB}';
+          return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f0f0f0">'
+            + '<span style="font-size:16px">' + ico + '</span>'
+            + '<div><div style="font-size:11px;color:var(--muted);margin-bottom:1px">' + (ct.label||'') + '</div>'
+            + '<div style="font-size:13px;font-weight:600;color:var(--dark)">' + (ct.value||'') + '</div></div></div>';
+        });
+        el.innerHTML = parts.join('');
+      } else if (data.ok) {
+        el.innerHTML = '<span style="color:var(--muted)">Sem contatos disponíveis neste imóvel.</span>';
+      } else {
+        var sec = document.getElementById('pdp-contatos-sec-' + _pid);
+        if (sec) sec.style.display = 'none';
+      }
+    }).catch(function() {
+      var sec = document.getElementById('pdp-contatos-sec-' + _pid);
+      if (sec) sec.style.display = 'none';
+    });
+  })();
 }
 
 function row(lbl, val) {

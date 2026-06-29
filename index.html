@@ -1956,38 +1956,55 @@ function _rrShowSaveForm(el, carCod, pid, rrUrl) {
 }
 
 
+var _rrProxyUrl = 'http://localhost:7891';
+
 function buscarContatosRR(carCod, pid) {
   var el = document.getElementById('pdp-contatos-' + pid);
   if (!el) return;
   el.innerHTML =
     '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f0f7f2;border:1px solid #c8e6c9;border-radius:9px">'
-    + '<div style="width:18px;height:18px;border:2px solid #1a6e42;border-top-color:transparent;border-radius:50%;animation:rrSpin 0.8s linear infinite"></div>'
+    + '<div style="width:16px;height:16px;border:2px solid #1a6e42;border-top-color:transparent;border-radius:50%;animation:rrSpin 0.8s linear infinite"></div>'
     + '<span style="font-size:12.5px;color:#1a6e42;font-weight:600">Buscando contatos…</span>'
     + '</div>';
 
-  fetch(_rrSaveEdge, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({cod_car: carCod, action: 'fetch'})
-  }).then(function(r) { return r.json(); })
+  var rrUrl = 'https://www.registrorural.com.br/imoveis/car-' + encodeURIComponent(carCod) + '/';
+
+  // 1. Tenta proxy local (roda na maquina do usuario, sem restricoes de CORS/Cloudflare)
+  fetch(_rrProxyUrl + '/ping', {signal: AbortSignal.timeout ? AbortSignal.timeout(2000) : undefined})
+  .then(function(r) { return r.ok; })
+  .catch(function() { return false; })
+  .then(function(proxyOk) {
+    if (proxyOk) {
+      return fetch(_rrProxyUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({cod_car: carCod})
+      }).then(function(r) { return r.json(); });
+    }
+    // 2. Tenta Supabase Edge Function (check cache)
+    return fetch(_rrSaveEdge, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({cod_car: carCod, action: 'check'})
+    }).then(function(r) { return r.json(); });
+  })
   .then(function(data) {
     if (!el) return;
-    if (data.ok && data.contatos && data.contatos.length > 0) {
+    if (data && data.ok && data.contatos && data.contatos.length > 0) {
       _rrRenderContatos(el, data.contatos, data.imovel_titulo || '', data.source || 'rr');
     } else {
-      var rrUrl = 'https://www.registrorural.com.br/imoveis/car-' + encodeURIComponent(carCod) + '/';
       _rrShowManualForm(el, carCod, pid, rrUrl);
     }
-  }).catch(function() {
-    if (el) el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ Erro de conexão. Tente novamente.</span>';
+  })
+  .catch(function() {
+    if (el) _rrShowManualForm(el, carCod, pid, rrUrl);
   });
 }
 
 function _rrShowManualForm(el, carCod, pid, rrUrl) {
   if (!el) return;
   el.innerHTML =
-    '<div style="font-size:12px;color:#c0392b;margin-bottom:8px">⚠️ Não foi possível buscar automaticamente.</div>'
-    + '<div style="margin-bottom:6px">'
+    '<div style="margin-bottom:6px">'
     + '<label style="font-size:11px;font-weight:600;color:var(--dark);display:block;margin-bottom:3px">Nome da Fazenda</label>'
     + '<input id="rr-fazenda-' + pid + '" type="text" placeholder="Nome conforme aparece no Registro Rural" '
     + 'style="width:100%;box-sizing:border-box;padding:5px 9px;border:1px solid #dde2e7;border-radius:6px;font-size:12px">'
@@ -2008,6 +2025,7 @@ function _rrShowManualForm(el, carCod, pid, rrUrl) {
     + ' <a href="' + rrUrl + '" target="_blank" rel="noopener" '
     + 'style="font-size:11.5px;color:#1a6e42;text-decoration:none">🔗 Abrir no RR</a>';
 }
+
 
 
 

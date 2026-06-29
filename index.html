@@ -1878,46 +1878,54 @@ async function fetchAndRenderDetail(p) {
     + '</span></a>';
   html += '</div>';
 
-  /* ── Contatos Registro Rural (busca silenciosa) ───────────────────────── */
-  html += '<div class="pdp-section" id="pdp-contatos-sec-' + propId + '">';
-  html += '<div class="pdp-section-title">\u{1F4DE} Contatos</div>';
-  html += '<div id="pdp-contatos-' + propId + '" style="font-size:12px;color:var(--muted);padding:4px 0">Buscando…</div>';
-  html += '</div>';
+  /* ── Contatos Registro Rural (botão manual) ────────────────────────────────── */
+  var _rrCarEsc = (p.cod || '').replace(/'/g, "\\'");
+  if (_rrCarEsc) {
+    html += '<div class="pdp-section" id="pdp-contatos-sec-' + propId + '">';
+    html += '<div class="pdp-section-title">📞 Contatos</div>';
+    html += '<div id="pdp-contatos-' + propId + '">'
+      + '<button onclick="buscarContatosRR(\'' + _rrCarEsc + '\',\'' + propId + '\')" '
+      + 'style="display:flex;align-items:center;gap:8px;padding:9px 16px;background:#f0f7f2;'
+      + 'border:1px solid #a8d5a8;border-radius:8px;cursor:pointer;font-size:13px;color:#1a6e42;font-weight:600;width:100%">'
+      + '🏡 Consultar Contatos no Registro Rural</button>'
+      + '</div>';
+    html += '</div>';
+  }
 
   body.innerHTML = html;
+}
 
-  /* busca assíncrona de contatos via Edge Function */
-  (function() {
-    var _carCod = p.cod || '';
-    var _pid = propId;
-    if (!_carCod) return;
-    fetch('https://keeqkmguljsddfmrqlld.supabase.co/functions/v1/rr-contatos', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({cod_car: _carCod})
-    }).then(function(r){ return r.json(); }).then(function(data) {
-      var el = document.getElementById('pdp-contatos-' + _pid);
-      if (!el) return;
-      if (data.ok && data.contatos && data.contatos.length > 0) {
-        var parts = data.contatos.map(function(ct) {
-          var ico = ct.kind === 'phone' ? '\u{1F4F1}' : ct.kind === 'email' ? '\u{1F4E7}' : '\u{1F4CB}';
-          return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f0f0f0">'
-            + '<span style="font-size:16px">' + ico + '</span>'
-            + '<div><div style="font-size:11px;color:var(--muted);margin-bottom:1px">' + (ct.label||'') + '</div>'
-            + '<div style="font-size:13px;font-weight:600;color:var(--dark)">' + (ct.value||'') + '</div></div></div>';
-        });
-        el.innerHTML = parts.join('');
-      } else if (data.ok) {
-        el.innerHTML = '<span style="color:var(--muted)">Sem contatos disponíveis neste imóvel.</span>';
-      } else {
-        var sec = document.getElementById('pdp-contatos-sec-' + _pid);
-        if (sec) sec.style.display = 'none';
-      }
-    }).catch(function() {
-      var sec = document.getElementById('pdp-contatos-sec-' + _pid);
-      if (sec) sec.style.display = 'none';
-    });
-  })();
+function buscarContatosRR(carCod, pid) {
+  var el = document.getElementById('pdp-contatos-' + pid);
+  if (!el) return;
+  el.innerHTML = '<span style="color:var(--muted);font-size:12px">⏳ Consultando Registro Rural…</span>';
+  fetch('https://keeqkmguljsddfmrqlld.supabase.co/functions/v1/rr-contatos', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({cod_car: carCod})
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!el) return;
+    if (data.ok && data.contatos && data.contatos.length > 0) {
+      var parts = data.contatos.map(function(ct) {
+        var ico = ct.kind === 'phone' ? '📱' : ct.kind === 'email' ? '📧' : '📋';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0">'
+          + '<span style="font-size:18px">' + ico + '</span>'
+          + '<div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">' + (ct.label || '') + '</div>'
+          + '<div style="font-size:14px;font-weight:700;color:var(--dark)">' + (ct.value || '') + '</div></div></div>';
+      });
+      var badge = '<div style="margin-top:8px;font-size:11px;color:#1a6e42">'
+        + (data.source === 'cache' ? '✓ Contatos já salvos no banco de dados' : '✓ Contatos salvos no banco de dados')
+        + '</div>';
+      el.innerHTML = parts.join('') + badge;
+    } else if (data.ok) {
+      el.innerHTML = '<span style="color:var(--muted);font-size:12px">Sem contatos disponíveis neste imóvel.</span>';
+    } else {
+      el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ ' + (data.error || 'Falha na consulta') + '</span>';
+    }
+  }).catch(function() {
+    if (el) el.innerHTML = '<span style="color:#c0392b;font-size:12px">⚠️ Erro de conexão com o servidor.</span>';
+  });
 }
 
 function row(lbl, val) {

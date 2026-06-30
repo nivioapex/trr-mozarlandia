@@ -256,6 +256,43 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .car-props-title{font-size:11.5px;font-weight:700;color:#10243e;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;}
 .car-prop-item{padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:11.5px;overflow:hidden;}
 .car-prop-item:last-child{border-bottom:none;}
+/* ===== PROSP AVANÇADA ===== */
+#prosp-avancada-section{padding-top:2px;}
+.adv-toolbar{background:var(--card);border-radius:var(--r);padding:13px 18px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:var(--gap);display:flex;align-items:center;flex-wrap:wrap;gap:14px;}
+.adv-toolbar-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;}
+.adv-radius-group{display:flex;gap:4px;background:#f0f2f4;border-radius:20px;padding:3px;}
+.adv-radius-btn{padding:6px 16px;border:none;border-radius:16px;cursor:pointer;font-size:12.5px;font-weight:600;background:transparent;color:var(--muted);transition:all .2s;}
+.adv-radius-btn.active{background:#7c3aed;color:#fff;box-shadow:0 1px 4px rgba(124,58,237,.35);}
+.adv-radius-btn:hover:not(.active){background:#e2d9f3;color:#7c3aed;}
+.adv-legend{display:flex;gap:14px;flex-wrap:wrap;margin-left:auto;align-items:center;}
+.adv-leg-item{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);}
+.adv-leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+#adv-cli-count{font-size:12px;background:rgba(124,58,237,.1);color:#7c3aed;padding:4px 12px;border-radius:12px;font-weight:700;white-space:nowrap;}
+.adv-layout{display:grid;grid-template-columns:1fr 320px;gap:var(--gap);align-items:start;}
+@media(max-width:900px){.adv-layout{grid-template-columns:1fr;}}
+.adv-map-wrap{position:relative;}
+#adv-map{height:560px;border-radius:var(--r);box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.adv-map-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:6px 16px;border-radius:16px;pointer-events:none;z-index:1000;white-space:nowrap;transition:opacity .4s;}
+.adv-map-hint.hidden{opacity:0;}
+.adv-panel{background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;min-height:200px;max-height:560px;overflow-y:auto;}
+.adv-panel-hdr{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;padding:14px 18px;}
+.adv-panel-hdr-title{font-size:13.5px;font-weight:700;}
+.adv-panel-hdr-sub{font-size:11.5px;opacity:.82;margin-top:3px;}
+.adv-empty{text-align:center;padding:40px 16px;color:#6b7785;}
+.adv-empty-ico{font-size:36px;margin-bottom:10px;}
+.adv-empty-txt{font-size:13px;line-height:1.6;}
+.adv-loading-bar{height:3px;background:linear-gradient(90deg,#7c3aed,#a78bfa,#7c3aed);background-size:200% 100%;animation:adv-shimmer 1.2s linear infinite;}
+@keyframes adv-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.adv-result-item{padding:11px 16px;border-bottom:1px solid #f0f2f5;cursor:pointer;transition:background .15s;}
+.adv-result-item:hover{background:#f5f0ff;}
+.adv-result-name{font-size:13px;font-weight:700;color:#1c2733;margin-bottom:2px;}
+.adv-result-mun{font-size:11.5px;color:#6b7785;}
+.adv-result-tags{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center;}
+.adv-tag{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:8px;}
+.adv-tag-at{background:#fef3e2;color:#92400e;}.adv-tag-pe{background:#fffbeb;color:#78500a;}
+.adv-tag-ca{background:#fdecea;color:#c0392b;}.adv-tag-dist{background:#f0f2f4;color:#6b7785;}
+.adv-tag-area{background:#e8f4fd;color:#1a4a7a;}.adv-tag-cli{background:#e8f9ef;color:#166534;}
+.adv-results-footer{text-align:center;padding:10px;font-size:12px;color:#6b7785;border-top:1px solid #f0f2f5;}
 .car-prop-nm{font-weight:600;color:#1c2733;display:block;margin-right:52px;}
 .car-prop-mt{color:#6b7785;font-size:11px;display:block;margin-right:52px;}
 
@@ -367,6 +404,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   <button class="tab-btn active" id="tab-btn-painel" onclick="switchTab('painel')">📊 Painel</button>
   <button class="tab-btn" id="tab-btn-mapa" onclick="switchTab('mapa')">🗺 Mapa de Clientes</button>
   <button class="tab-btn" id="tab-btn-prospeccao" onclick="switchTab('prospeccao')">🔭 Prospecção</button>
+  <button class="tab-btn" id="tab-btn-prosp-avancada" onclick="switchTab('prosp-avancada')">🏔 Prosp Avançada</button>
 </div>
 
 <!-- ===== PAINEL SECTION ===== -->
@@ -485,6 +523,48 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   <div id="leaflet-map"></div>
 </div>
 </div><!-- /mapa-section -->
+
+<!-- ===== PROSP AVANÇADA SECTION ===== -->
+<div id="prosp-avancada-section" style="display:none">
+  <div class="adv-toolbar">
+    <span class="adv-toolbar-title">🏔 Prosp Avançada</span>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <span style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;">Raio de busca</span>
+      <div class="adv-radius-group">
+        <button class="adv-radius-btn" onclick="setAdvRadius(5)">5 km</button>
+        <button class="adv-radius-btn active" onclick="setAdvRadius(10)">10 km</button>
+        <button class="adv-radius-btn" onclick="setAdvRadius(15)">15 km</button>
+        <button class="adv-radius-btn" onclick="setAdvRadius(20)">20 km</button>
+        <button class="adv-radius-btn" onclick="setAdvRadius(25)">25 km</button>
+      </div>
+    </div>
+    <div class="adv-legend">
+      <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#7c3aed;border:2px solid #fff;box-shadow:0 0 0 1.5px #7c3aed"></div>Cliente TRR</div>
+      <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#e0762c"></div>CAR Ativo</div>
+      <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#c9980a"></div>CAR Pendente</div>
+      <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#a4243b"></div>CAR Cancelado</div>
+    </div>
+    <span id="adv-cli-count" style="margin-left:auto">- clientes</span>
+  </div>
+  <div class="adv-layout">
+    <div class="adv-map-wrap">
+      <div id="adv-map"></div>
+      <div class="adv-map-hint" id="adv-hint">Clique em um cliente para ver imoveis CAR no raio</div>
+    </div>
+    <div class="adv-panel" id="adv-panel">
+      <div class="adv-panel-hdr">
+        <div class="adv-panel-hdr-title">Imoveis CAR no Raio</div>
+        <div class="adv-panel-hdr-sub">Selecione um cliente no mapa</div>
+      </div>
+      <div id="adv-results">
+        <div class="adv-empty">
+          <div class="adv-empty-ico">🗺️</div>
+          <div class="adv-empty-txt">Clique em qualquer cliente roxo no mapa para ver os imoveis CAR dentro do raio selecionado.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ===== PROSPECÇÃO SECTION ===== -->
 <div id="prospeccao-section" style="display:none">
@@ -824,6 +904,11 @@ function switchTab(tab) {
     initProspMap();
     setTimeout(function() { if (prospMap) prospMap.invalidateSize(); }, 100);
     if (!prospData) loadProspData();
+  }
+  document.getElementById('prosp-avancada-section').style.display = tab === 'prosp-avancada' ? '' : 'none';
+  if (tab === 'prosp-avancada') {
+    initAdvMap();
+    setTimeout(function() { if (advMap) advMap.invalidateSize(); }, 150);
   }
 }
 
@@ -1398,6 +1483,13 @@ var prospMap = null;
 var prospLayer = null;
 var prospDrillLayer = null;
 var prospCliLayer   = null;
+
+/* ===== PROSP AVANCADA VARS ===== */
+var advMap         = null;
+var advCliLayer    = null;
+var advRadiusLayer = null;
+var advCarLayer    = null;
+var advRadius      = 10;
 var prospData = null;
 var prospDrillData = null;
 var prospFilters = { q: '', uf: '', score: '', dist: '', semCli: false };
@@ -1486,6 +1578,165 @@ function renderProspClientes(muns) {
       {sticky: true}
     );
   });
+}
+
+
+// ===== PROSP AVANCADA FUNCTIONS =====
+
+function initAdvMap() {
+  if (advMap) { setTimeout(function(){advMap.invalidateSize();},150); return; }
+  advMap = L.map('adv-map', {zoomControl:true, preferCanvas:true}).setView([-14.2,-50.2],7);
+  L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+    { attribution: 'Tiles © Esri — World Topo Map', maxZoom: 18 }
+  ).addTo(advMap);
+  advCliLayer    = L.layerGroup().addTo(advMap);
+  advRadiusLayer = L.layerGroup().addTo(advMap);
+  advCarLayer    = L.layerGroup().addTo(advMap);
+  renderAdvClientes();
+}
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  var R = 6371;
+  var dLat = (lat2-lat1)*Math.PI/180;
+  var dLon = (lon2-lon1)*Math.PI/180;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+          Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+          Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function setAdvRadius(km) {
+  advRadius = km;
+  document.querySelectorAll('.adv-radius-btn').forEach(function(b){
+    b.classList.toggle('active', b.textContent.trim() === km+' km');
+  });
+  if (window._advCurrentClient) advSelectClient(window._advCurrentClient);
+}
+
+function renderAdvClientes() {
+  if (!advCliLayer || !geoData) return;
+  advCliLayer.clearLayers();
+  var props = geoData.props || [];
+  var count = 0;
+  props.forEach(function(p) {
+    if (!p.lat || !p.lon) return;
+    count++;
+    var av = p.ativa === true || p.ativa === 'true';
+    var m = L.circleMarker([p.lat, p.lon], {
+      radius: 9, fillColor: '#7c3aed', color: '#fff',
+      weight: 2, opacity: 1, fillOpacity: av ? 0.95 : 0.45
+    }).addTo(advCliLayer);
+    m.bindTooltip(
+      '🟣 <b>'+esc(p.cli||'–')+'</b><br>'+esc(p.prop||'')+'<br>'+(p.mun||'')
+      +(p.dist ? ' · '+Number(p.dist).toFixed(0)+' km' : ''),
+      {sticky:true}
+    );
+    m.on('click', function(e){ L.DomEvent.stopPropagation(e); advSelectClient(p); });
+  });
+  var el = document.getElementById('adv-cli-count');
+  if (el) el.textContent = count+' clientes';
+}
+
+async function advSelectClient(p) {
+  window._advCurrentClient = p;
+  if (!advRadiusLayer || !advCarLayer) return;
+  advRadiusLayer.clearLayers();
+  advCarLayer.clearLayers();
+  var km = advRadius;
+  var hint = document.getElementById('adv-hint');
+  if (hint) hint.classList.add('hidden');
+
+  L.circle([p.lat,p.lon], {
+    radius:km*1000, color:'#7c3aed', fillColor:'#7c3aed',
+    fillOpacity:0.05, weight:2, dashArray:'7 5'
+  }).addTo(advRadiusLayer);
+  L.circleMarker([p.lat,p.lon], {
+    radius:11, fillColor:'#7c3aed', color:'#fff', weight:3, fillOpacity:1
+  }).addTo(advRadiusLayer);
+  advMap.fitBounds(L.circle([p.lat,p.lon],{radius:km*1000}).getBounds(),{padding:[30,30]});
+
+  var resultsEl = document.getElementById('adv-results');
+  resultsEl.innerHTML = '<div class="adv-loading-bar"></div><div class="adv-empty" style="padding:28px"><div class="adv-empty-ico">⏳</div><div class="adv-empty-txt">Carregando dados CAR...</div></div>';
+
+  if (!carIndData || !carIndData.props) {
+    try {
+      var res = await SB.rpc('trr_car_geo', {p_uf:null, p_mun:null, p_status:null});
+      if (res.error) throw res.error;
+      carIndData = res.data;
+    } catch(e) {
+      resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">❌</div><div class="adv-empty-txt">Erro ao carregar CAR:<br>'+(e.message||String(e))+'</div></div>';
+      return;
+    }
+  }
+
+  var allCar = (carIndData && carIndData.props) || [];
+  var nearby = [];
+  allCar.forEach(function(c){
+    if (!c.lat || !c.lon) return;
+    var d = haversineKm(p.lat, p.lon, c.lat, c.lon);
+    if (d <= km) nearby.push({prop:c, dist:d});
+  });
+  nearby.sort(function(a,b){ return a.dist-b.dist; });
+
+  var trrProps = (geoData && geoData.props) || [];
+  var statusColor = {'AT':'#e0762c','PE':'#c9980a','CA':'#a4243b'};
+  nearby.forEach(function(item){
+    var c = item.prop;
+    var isClient = trrProps.some(function(tp){
+      return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
+    });
+    var col = isClient ? '#7c3aed' : (statusColor[c.status]||'#6b7785');
+    L.circleMarker([c.lat,c.lon],{
+      radius:isClient?7:5, fillColor:col, color:'#fff',
+      weight:isClient?2:1, fillOpacity:0.88
+    }).addTo(advCarLayer)
+    .bindTooltip(
+      (isClient?'✅ Cliente TRR · ':'🎯 ')+
+      esc(c.nom||c.cod||c.cod_car||'–')+'<br>'+(c.mun||'')+'<br>'+item.dist.toFixed(1)+' km',
+      {sticky:true}
+    );
+  });
+
+  advShowResults(p, nearby, km, trrProps);
+}
+
+function advShowResults(p, nearby, km, trrProps) {
+  var resultsEl = document.getElementById('adv-results');
+  if (!resultsEl) return;
+  var statusLabel = {'AT':'Ativo','PE':'Pendente','CA':'Cancelado'};
+  var statusTagCls = {'AT':'adv-tag-at','PE':'adv-tag-pe','CA':'adv-tag-ca'};
+
+  var panelHdr = document.querySelector('#adv-panel .adv-panel-hdr');
+  var totalCli = trrProps ? nearby.filter(function(item){
+    return trrProps.some(function(tp){ return Math.abs((tp.lat||0)-item.prop.lat)<0.0015&&Math.abs((tp.lon||0)-item.prop.lon)<0.0015; });
+  }).length : 0;
+  if (panelHdr) panelHdr.innerHTML =
+    '<div class="adv-panel-hdr-title">📍 '+esc(p.cli||'–')+'</div>'+
+    '<div class="adv-panel-hdr-sub"><b>'+nearby.length+'</b> imóvel(eis) em '+km+' km'+(totalCli?' · <b>'+totalCli+'</b> já cliente(s)':'')+'</div>';
+
+  if (!nearby.length) {
+    resultsEl.innerHTML='<div class="adv-empty"><div class="adv-empty-ico">🔍</div><div class="adv-empty-txt">Nenhum imóvel CAR em <b>'+km+' km</b> de<br><b>'+esc(p.cli||p.prop||'–')+'</b></div></div>';
+    return;
+  }
+
+  var html='';
+  var maxShow=120;
+  nearby.slice(0,maxShow).forEach(function(item){
+    var c=item.prop; var st=c.status||'AT';
+    var isClient = trrProps&&trrProps.some(function(tp){return Math.abs((tp.lat||0)-c.lat)<0.0015&&Math.abs((tp.lon||0)-c.lon)<0.0015;});
+    html+='<div class="adv-result-item">'+
+      '<div class="adv-result-name">'+esc(c.nom||c.cod||c.cod_car||'–')+'</div>'+
+      '<div class="adv-result-mun">'+esc(c.mun||'')+(c.tipo?' · '+c.tipo:'')+'</div>'+
+      '<div class="adv-result-tags">'+
+        '<span class="adv-tag '+(statusTagCls[st]||'adv-tag-dist')+'">'+(statusLabel[st]||st)+'</span>'+
+        '<span class="adv-tag adv-tag-dist">'+item.dist.toFixed(1)+' km</span>'+
+        (c.area?'<span class="adv-tag adv-tag-area">'+Number(c.area).toFixed(0)+' ha</span>':'')+
+        (isClient?'<span class="adv-tag adv-tag-cli">✅ Cliente TRR</span>':'')+
+      '</div></div>';
+  });
+  if (nearby.length>maxShow) html+='<div class="adv-results-footer">+' +(nearby.length-maxShow)+' imóveis. Reduza o raio para refinar.</div>';
+  resultsEl.innerHTML=html;
 }
 
 function renderProspMap(muns) {

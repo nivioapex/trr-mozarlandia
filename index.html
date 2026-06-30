@@ -1669,14 +1669,18 @@ async function advSelectClient(p) {
   var hint = document.getElementById('adv-hint');
   if (hint) hint.classList.add('hidden');
 
-  L.circle([p.lat,p.lon], {
+  var radiusCircle = L.circle([p.lat,p.lon], {
     radius:km*1000, color:'#7c3aed', fillColor:'#7c3aed',
     fillOpacity:0.05, weight:2, dashArray:'7 5'
   }).addTo(advRadiusLayer);
   L.circleMarker([p.lat,p.lon], {
     radius:11, fillColor:'#7c3aed', color:'#fff', weight:3, fillOpacity:1
   }).addTo(advRadiusLayer);
-  advMap.fitBounds(L.circle([p.lat,p.lon],{radius:km*1000}).getBounds(),{padding:[30,30]});
+  // fitBounds usando circulo ja adicionado ao mapa (getBounds requer referencia ao mapa)
+  try { advMap.fitBounds(radiusCircle.getBounds(), {padding:[30,30]}); } catch(_) {
+    var d = km/111;
+    advMap.fitBounds([[p.lat-d, p.lon-d],[p.lat+d, p.lon+d]], {padding:[30,30]});
+  }
 
   var resultsEl = document.getElementById('adv-results');
   resultsEl.innerHTML = '<div class="adv-loading-bar"></div><div class="adv-empty" style="padding:28px"><div class="adv-empty-ico">⏳</div><div class="adv-empty-txt">Buscando imóveis CAR em '+km+' km...</div></div>';

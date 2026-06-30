@@ -1746,24 +1746,34 @@ async function advSelectClient(p) {
   nearby.sort(function(a,b){ return a.dist-b.dist; });
 
   var trrProps = (geoData&&geoData.props)||[];
-  var statusColor = {'AT':'#e0762c','PE':'#c9980a','CA':'#a4243b'};
-  nearby.forEach(function(item){
-    var c=item.prop;
-    var isClient=trrProps.some(function(tp){return Math.abs((tp.lat||0)-c.lat)<0.0015&&Math.abs((tp.lon||0)-c.lon)<0.0015;});
-    L.circleMarker([c.lat,c.lon],{
-      radius:isClient?7:5, fillColor:isClient?'#7c3aed':(statusColor[c.status]||'#6b7785'),
-      color:'#fff', weight:isClient?2:1, fillOpacity:0.88
-    }).addTo(advCarLayer)
-    .bindTooltip(
-      (isClient?'&#x2705; Cliente TRR &middot; ':'&#x1F3AF; ')+
-      esc(c.nom||c.cod||'\u2013')+'<br>'+(c.mun||'')+'<br>'+item.dist.toFixed(1)+' km',
-      {sticky:true}
-    );
-  });
+  // Desenhar marcadores CAR (delega para funcao reutilizada pelos filtros)
+  advRenderCarMarkers(nearby, trrProps);
 
   // Desenhar rota TRR → cliente via OSRM
   advDrawRoute(p);
   advShowResults(p, nearby, km, trrProps);
+}
+
+function advRenderCarMarkers(items, trrProps) {
+  if (!advCarLayer) return;
+  advCarLayer.clearLayers();
+  var statusColor = {'AT':'#e0762c','PE':'#c9980a','CA':'#a4243b'};
+  items.forEach(function(item) {
+    var c = item.prop;
+    var isClient = trrProps && trrProps.some(function(tp) {
+      return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
+    });
+    L.circleMarker([c.lat, c.lon], {
+      radius: isClient ? 7 : 5,
+      fillColor: isClient ? '#7c3aed' : (statusColor[c.status] || '#6b7785'),
+      color: '#fff', weight: isClient ? 2 : 1, fillOpacity: 0.88
+    }).addTo(advCarLayer)
+    .bindTooltip(
+      (isClient ? '&#x2705; Cliente TRR &middot; ' : '&#x1F3AF; ') +
+      esc(c.nom||c.cod||'\u2013') + '<br>' + (c.mun||'') + '<br>' + item.dist.toFixed(1) + ' km',
+      {sticky: true}
+    );
+  });
 }
 
 async function advDrawRoute(p) {
@@ -1837,6 +1847,7 @@ function advApplyFilters() {
     if (areaVal==='gt500'   && area <= 500)             return false;
     return true;
   });
+  advRenderCarMarkers(filtered, trrProps);
   advRenderResults(filtered, trrProps);
 }
 

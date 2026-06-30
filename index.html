@@ -1679,34 +1679,29 @@ async function advSelectClient(p) {
   advMap.fitBounds(L.circle([p.lat,p.lon],{radius:km*1000}).getBounds(),{padding:[30,30]});
 
   var resultsEl = document.getElementById('adv-results');
-  resultsEl.innerHTML = '<div class="adv-loading-bar"></div><div class="adv-empty" style="padding:28px"><div class="adv-empty-ico">⏳</div><div class="adv-empty-txt">Carregando imóveis CAR...</div></div>';
+  resultsEl.innerHTML = '<div class="adv-loading-bar"></div><div class="adv-empty" style="padding:28px"><div class="adv-empty-ico">⏳</div><div class="adv-empty-txt">Buscando imóveis CAR em '+km+' km...</div></div>';
 
-  // Carrega CAR se não disponível — usa municipio do cliente para evitar dataset enorme
-  if (!carIndData || !advCarProps(carIndData).length) {
+  // Cache por municipio — evita recarregar ao trocar raio
+  window._advCarCache = window._advCarCache || {};
+  var cacheKey = p.mun || '__all__';
+  var allCar = [];
+
+  if (window._advCarCache[cacheKey]) {
+    allCar = advCarProps(window._advCarCache[cacheKey]);
+  } else {
     try {
-      // Tenta primeiro com mun do cliente (rápido); fallback sem filtro
-      var munFiltro = p.mun || null;
-      var res = await SB.rpc('trr_car_geo', {p_uf:null, p_mun:munFiltro, p_status:null});
-      if (res.error) throw res.error;
-      // Guarda em cache específico para prosp avancada (não sobrescreve carIndData do mapa)
-      window._advCarCache = window._advCarCache || {};
-      window._advCarCache[munFiltro || '__all__'] = res.data;
-      console.log('[AdvMap] CAR carregado mun='+munFiltro, 'res.data type:', Array.isArray(res.data)?'array':'object', 'props?:', res.data && res.data.props ? res.data.props.length : 'n/a', 'direct length?:', Array.isArray(res.data)?res.data.length:'n/a');
+      var res = await SB.rpc('trr_car_geo', {p_uf: null, p_mun: p.mun || null, p_status: null});
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      window._advCarCache[cacheKey] = res.data;
+      allCar = advCarProps(res.data);
+      console.log('[AdvMap] carregado mun='+p.mun+' | total props:', allCar.length, '| data keys:', Object.keys(res.data||{}));
     } catch(e) {
-      resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">❌</div><div class="adv-empty-txt">Erro ao carregar CAR:<br>'+(e.message||String(e))+'</div></div>';
+      resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">❌</div><div class="adv-empty-txt">Erro ao carregar CAR:<br>'+esc(e.message||String(e))+'</div></div>';
       return;
     }
   }
 
-  // Resolve props do cache ou carIndData — suporta {props:[]} e array direto
-  function getCarProps(mun) {
-    var cache = window._advCarCache;
-    var src = (cache && cache[mun||'__all__']) || (cache && cache['__all__']) || carIndData;
-    return advCarProps(src);
-  }
-
-  var allCar = getCarProps(p.mun || null);
-  console.log('[AdvMap] allCar total:', allCar.length, '| cliente:', p.cli, 'lat:', p.lat, 'lon:', p.lon);
+  console.log('[AdvMap] allCar='+allCar.length+' | p.lat='+p.lat+' p.lon='+p.lon+' km='+km);
   var nearby = [];
   allCar.forEach(function(c){
     if (!c.lat || !c.lon) return;

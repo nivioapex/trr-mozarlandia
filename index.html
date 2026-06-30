@@ -1396,6 +1396,7 @@ window.addEventListener('load', checkSession);
 var prospMap = null;
 var prospLayer = null;
 var prospDrillLayer = null;
+var prospCliLayer   = null;
 var prospData = null;
 var prospDrillData = null;
 var prospFilters = { q: '', uf: '', score: '', dist: '', semCli: false };
@@ -1408,6 +1409,7 @@ function initProspMap() {
     {attribution:'© OpenStreetMap', maxZoom:16}).addTo(prospMap);
   prospLayer      = L.layerGroup().addTo(prospMap);
   prospDrillLayer = L.layerGroup().addTo(prospMap);
+  prospCliLayer   = L.layerGroup().addTo(prospMap);
 }
 
 function pScoreColor(s){ return s>=70?'#a4243b':s>=55?'#e0762c':s>=35?'#f5a623':'#6b7785'; }
@@ -1453,6 +1455,38 @@ function renderProspInsights(muns) {
   document.getElementById('prosp-insights-body').innerHTML = items.map(function(i){return '<div class="insight-item">'+i+'</div>';}).join('');
 }
 
+
+function renderProspClientes(muns) {
+  if (!prospCliLayer) return;
+  prospCliLayer.clearLayers();
+  if (!geoData || !geoData.props || !muns || !muns.length) return;
+  // Conjunto de municipios filtrados (lowercase para comparacao)
+  var munSet = {};
+  muns.forEach(function(m) { munSet[(m.mun||'').trim().toLowerCase()] = true; });
+  var props = geoData.props || [];
+  props.forEach(function(p) {
+    if (!p.lat || !p.lon) return;
+    var munKey = (p.mun || '').trim().toLowerCase();
+    if (!munSet[munKey]) return;
+    var av = p.ativa === true || p.ativa === 'true';
+    var c = L.circleMarker([p.lat, p.lon], {
+      radius: 6,
+      fillColor: '#7c3aed',
+      color: '#fff',
+      weight: 1.5,
+      opacity: 1,
+      fillOpacity: av ? 0.9 : 0.4
+    }).addTo(prospCliLayer);
+    c.bindTooltip(
+      '🟣 <b>' + esc(p.cli || '–') + '</b><br>' +
+      (p.prop ? esc(p.prop) + '<br>' : '') +
+      (p.mun ? p.mun + '<br>' : '') +
+      (p.faixa || ''),
+      {sticky: true}
+    );
+  });
+}
+
 function renderProspMap(muns) {
   if (!prospLayer||!muns||!muns.length) return;
   prospLayer.clearLayers();
@@ -1483,6 +1517,7 @@ function renderProspMap(muns) {
       {maxWidth:300}
     );
   });
+  renderProspClientes(muns);
 }
 
 function applyProspFilters() {
@@ -1500,7 +1535,9 @@ function applyProspFilters() {
   else if (f.dist === 'd200')   muns = muns.filter(function(m){ return m.dist_trr >= 100 && m.dist_trr < 200; });
   else if (f.dist === 'gt200')  muns = muns.filter(function(m){ return m.dist_trr >= 200; });
   if (f.semCli) muns = muns.filter(function(m){ return m.clientes_trr === 0; });
+  renderProspMap(muns);
   renderProspTable(muns);
+  renderProspClientes(muns);
 }
 
 function resetProspFilters() {

@@ -1124,7 +1124,7 @@ function renderCarIndMarkers(props) {
   var tipoFiltro = document.getElementById('car-tipo-filter') ? document.getElementById('car-tipo-filter').value : '';
   var propsFilt = tipoFiltro ? props.filter(function(p){ return p.tipo === tipoFiltro; }) : props;
 
-  var statusColor = { 'AT': '#1c7c54', 'PE': '#f5a623', 'CA': '#a4243b' };
+  var statusColor = { 'AT': '#7c3aed', 'PE': '#f5a623', 'CA': '#a4243b' };
   var statusLabel = { 'AT': 'Ativo', 'PE': 'Pendente', 'CA': 'Cancelado' };
 
   // Decodificação tipo de imóvel CAR
@@ -1167,7 +1167,7 @@ function renderCarIndMarkers(props) {
     var circle = L.circleMarker([p.lat, p.lon], {
       radius: isClient ? 7 : 5,
       fillColor: color,
-      color: isClient ? '#10243e' : '#fff',
+      color: isClient ? '#7c3aed' : '#fff',
       weight: isClient ? 2 : 0.5,
       opacity: 1,
       fillOpacity: isClient ? 0.9 : 0.72
@@ -1292,7 +1292,7 @@ function renderMunMarkers() {
   muns.forEach(function(m) {
     if (!m.lat || !m.lon) return;
     var faixa = distToFaixa(m.avg_d);
-    var color  = FCOLS[faixa] || '#999';
+    var color  = '#7c3aed';
     var radius = Math.max(9, Math.sqrt(m.cnt) * 4.5);
 
     var circle = L.circleMarker([m.lat, m.lon], {
@@ -1352,7 +1352,7 @@ function renderPropMarkers() {
 
   props.forEach(function(p) {
     if (!p.lat || !p.lon) return;
-    var color = FCOLS[p.faixa] || '#999';
+    var color = '#7c3aed';
     var av = p.ativa === true || p.ativa === 'true';
 
     var circle = L.circleMarker([p.lat, p.lon], {

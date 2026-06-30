@@ -264,6 +264,13 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-radius-btn{padding:6px 16px;border:none;border-radius:16px;cursor:pointer;font-size:12.5px;font-weight:600;background:transparent;color:var(--muted);transition:all .2s;}
 .adv-radius-btn.active{background:#7c3aed;color:#fff;box-shadow:0 1px 4px rgba(124,58,237,.35);}
 .adv-radius-btn:hover:not(.active){background:#e2d9f3;color:#7c3aed;}
+.adv-filter-bar{padding:8px 12px;background:#f4f4f8;border-bottom:1px solid #e0e0ec;display:flex;flex-direction:column;gap:6px;}
+.adv-filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.adv-filter-lbl{font-size:10px;font-weight:700;color:#7c3aed;letter-spacing:.06em;min-width:44px;}
+.adv-filter-sel{font-size:12px;padding:3px 8px;border:1px solid #c4b5fd;border-radius:8px;background:#fff;color:#10243e;cursor:pointer;}
+.adv-filt-btn{font-size:11px;padding:3px 10px;border:1px solid #d1d5db;border-radius:12px;background:#fff;cursor:pointer;color:#374151;transition:all .15s;}
+.adv-filt-btn.active{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+.adv-filt-btn:hover:not(.active){background:#f3f0ff;border-color:#c4b5fd;}
 .adv-legend{display:flex;gap:14px;flex-wrap:wrap;margin-left:auto;align-items:center;}
 .adv-leg-item{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);}
 .adv-leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
@@ -557,6 +564,22 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
         <div class="adv-panel-hdr-sub">Selecione um cliente no mapa</div>
       </div>
       <div id="adv-route-badge" style="display:none;align-items:center;gap:6px;padding:8px 16px;background:#fff8f2;border-bottom:1px solid #fde8d2;font-size:13px;"></div>
+      <div id="adv-filter-bar" class="adv-filter-bar" style="display:none;">
+        <div class="adv-filter-row">
+          <span class="adv-filter-lbl">CIDADE</span>
+          <select id="adv-filter-mun" class="adv-filter-sel" onchange="advApplyFilters()">
+            <option value="">Todas as cidades</option>
+          </select>
+        </div>
+        <div class="adv-filter-row">
+          <span class="adv-filter-lbl">ÁREA</span>
+          <button class="adv-filt-btn active" onclick="advSetAreaFilter(this,'')" >Todos</button>
+          <button class="adv-filt-btn" onclick="advSetAreaFilter(this,'lt50')">&lt; 50 ha</button>
+          <button class="adv-filt-btn" onclick="advSetAreaFilter(this,'50-200')">50–200 ha</button>
+          <button class="adv-filt-btn" onclick="advSetAreaFilter(this,'200-500')">200–500 ha</button>
+          <button class="adv-filt-btn" onclick="advSetAreaFilter(this,'gt500')">&gt; 500 ha</button>
+        </div>
+      </div>
       <div id="adv-results">
         <div class="adv-empty">
           <div class="adv-empty-ico">🗺️</div>
@@ -1493,6 +1516,7 @@ var advCarLayer    = null;
 var advRouteLayer  = null;
 var advRadius      = 10;
 var TRR_LAT = -14.7483, TRR_LON = -50.5803;
+var _advAreaFilter = '';
 var TRR_LAT = -14.7483, TRR_LON = -50.5803;
 var prospData = null;
 var prospDrillData = null;
@@ -1790,42 +1814,105 @@ async function advDrawRoute(p) {
   }
 }
 
-function advShowResults(p, nearby, km, trrProps) {
+/* ---------- Filtros Prosp Avançada ---------- */
+function advSetAreaFilter(btn, val) {
+  _advAreaFilter = val;
+  document.querySelectorAll('.adv-filt-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  advApplyFilters();
+}
+
+function advApplyFilters() {
+  var nearby   = window._advNearby   || [];
+  var trrProps = window._advTrrProps  || [];
+  var munVal   = (document.getElementById('adv-filter-mun')||{}).value || '';
+  var areaVal  = _advAreaFilter;
+  var filtered = nearby.filter(function(item) {
+    var c = item.prop;
+    if (munVal && (c.mun||'').toLowerCase() !== munVal.toLowerCase()) return false;
+    var area = parseFloat(c.area) || 0;
+    if (areaVal==='lt50'    && area >= 50)             return false;
+    if (areaVal==='50-200'  && (area < 50||area > 200)) return false;
+    if (areaVal==='200-500' && (area < 200||area > 500)) return false;
+    if (areaVal==='gt500'   && area <= 500)             return false;
+    return true;
+  });
+  advRenderResults(filtered, trrProps);
+}
+
+function advRenderResults(filtered, trrProps) {
   var resultsEl = document.getElementById('adv-results');
   if (!resultsEl) return;
-  var statusLabel = {'AT':'Ativo','PE':'Pendente','CA':'Cancelado'};
+  var statusLabel  = {'AT':'Ativo','PE':'Pendente','CA':'Cancelado'};
   var statusTagCls = {'AT':'adv-tag-at','PE':'adv-tag-pe','CA':'adv-tag-ca'};
-
-  var panelHdr = document.querySelector('#adv-panel .adv-panel-hdr');
-  var totalCli = trrProps ? nearby.filter(function(item){
-    return trrProps.some(function(tp){ return Math.abs((tp.lat||0)-item.prop.lat)<0.0015&&Math.abs((tp.lon||0)-item.prop.lon)<0.0015; });
-  }).length : 0;
-  if (panelHdr) panelHdr.innerHTML =
-    '<div class="adv-panel-hdr-title">📍 '+esc(p.cli||'–')+'</div>'+
-    '<div class="adv-panel-hdr-sub"><b>'+nearby.length+'</b> imóvel(eis) em '+km+' km'+(totalCli?' · <b>'+totalCli+'</b> já cliente(s)':'')+'</div>';
-
-  if (!nearby.length) {
-    resultsEl.innerHTML='<div class="adv-empty"><div class="adv-empty-ico">🔍</div><div class="adv-empty-txt">Nenhum imóvel CAR em <b>'+km+' km</b> de<br><b>'+esc(p.cli||p.prop||'–')+'</b></div></div>';
+  if (!filtered.length) {
+    resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">🔍</div>'
+      + '<div class="adv-empty-txt">Nenhum imóvel com esses filtros.</div></div>';
     return;
   }
-
-  var html='';
-  var maxShow=120;
-  nearby.slice(0,maxShow).forEach(function(item){
-    var c=item.prop; var st=c.status||'AT';
-    var isClient = trrProps&&trrProps.some(function(tp){return Math.abs((tp.lat||0)-c.lat)<0.0015&&Math.abs((tp.lon||0)-c.lon)<0.0015;});
-    html+='<div class="adv-result-item">'+
-      '<div class="adv-result-name">'+esc(c.nom||c.cod||c.cod_car||'–')+'</div>'+
-      '<div class="adv-result-mun">'+esc(c.mun||'')+(c.tipo?' · '+c.tipo:'')+'</div>'+
-      '<div class="adv-result-tags">'+
-        '<span class="adv-tag '+(statusTagCls[st]||'adv-tag-dist')+'">'+(statusLabel[st]||st)+'</span>'+
-        '<span class="adv-tag adv-tag-dist">'+item.dist.toFixed(1)+' km</span>'+
-        (c.area?'<span class="adv-tag adv-tag-area">'+Number(c.area).toFixed(0)+' ha</span>':'')+
-        (isClient?'<span class="adv-tag adv-tag-cli">✅ Cliente TRR</span>':'')+
-      '</div></div>';
+  var h = ''; var maxShow = 150;
+  filtered.slice(0, maxShow).forEach(function(item) {
+    var c = item.prop; var st = c.status||'AT';
+    var isClient = trrProps && trrProps.some(function(tp) {
+      return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
+    });
+    h += '<div class="adv-result-item">'
+      + '<div class="adv-result-name">' + esc(c.nom||c.cod||'–') + '</div>'
+      + '<div class="adv-result-mun">' + esc(c.mun||'') + (c.tipo?' · '+c.tipo:'') + '</div>'
+      + '<div class="adv-result-tags">'
+        + '<span class="adv-tag '+(statusTagCls[st]||'adv-tag-dist')+'">'+(statusLabel[st]||st)+'</span>'
+        + '<span class="adv-tag adv-tag-dist">'+item.dist.toFixed(1)+' km</span>'
+        + (c.area ? '<span class="adv-tag adv-tag-area">'+Number(c.area).toFixed(0)+' ha</span>' : '')
+        + (isClient ? '<span class="adv-tag adv-tag-cli">✅ Cliente TRR</span>' : '')
+      + '</div></div>';
   });
-  if (nearby.length>maxShow) html+='<div class="adv-results-footer">+' +(nearby.length-maxShow)+' imóveis. Reduza o raio para refinar.</div>';
-  resultsEl.innerHTML=html;
+  if (filtered.length > maxShow)
+    h += '<div class="adv-results-footer">+'+(filtered.length-maxShow)+' imóveis. Filtre para refinar.</div>';
+  resultsEl.innerHTML = h;
+}
+
+function advShowResults(p, nearby, km, trrProps) {
+  // Salvar estado para reuso pelos filtros
+  window._advNearby  = nearby;
+  window._advTrrProps = trrProps;
+
+  var panelHdr = document.querySelector('#adv-panel .adv-panel-hdr');
+  var totalCli = trrProps ? nearby.filter(function(item) {
+    return trrProps.some(function(tp) {
+      return Math.abs((tp.lat||0)-item.prop.lat)<0.0015 && Math.abs((tp.lon||0)-item.prop.lon)<0.0015;
+    });
+  }).length : 0;
+  if (panelHdr) panelHdr.innerHTML =
+    '<div class="adv-panel-hdr-title">📍 '+esc(p.cli||'–')+'</div>'
+    + '<div class="adv-panel-hdr-sub"><b>'+nearby.length+'</b> imóvel(eis) em '+km+' km'
+    + (totalCli ? ' · <b>'+totalCli+'</b> já cliente(s)' : '')+'</div>';
+
+  // Popula dropdown de cidades
+  var munSel = document.getElementById('adv-filter-mun');
+  if (munSel) {
+    var muns = {};
+    nearby.forEach(function(item){ if(item.prop.mun) muns[item.prop.mun]=1; });
+    var munList = Object.keys(muns).sort();
+    munSel.innerHTML = '<option value="">Todas as cidades ('+ nearby.length +')</option>';
+    munList.forEach(function(m) {
+      var cnt = nearby.filter(function(i){return i.prop.mun===m;}).length;
+      munSel.innerHTML += '<option value="'+m+'">'+m+' ('+cnt+')</option>';
+    });
+  }
+
+  // Resetar filtro de area e mostrar barra
+  _advAreaFilter = '';
+  document.querySelectorAll('.adv-filt-btn').forEach(function(b,i){ b.classList.toggle('active', i===0); });
+  var fb = document.getElementById('adv-filter-bar');
+  if (fb) fb.style.display = nearby.length ? 'block' : 'none';
+
+  if (!nearby.length) {
+    var resultsEl = document.getElementById('adv-results');
+    if (resultsEl) resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">🔍</div>'
+      + '<div class="adv-empty-txt">Nenhum imóvel CAR em <b>'+km+' km</b> de<br><b>'+esc(p.cli||p.prop||'–')+'</b></div></div>';
+    return;
+  }
+  advApplyFilters();
 }
 
 function renderProspMap(muns) {

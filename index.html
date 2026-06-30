@@ -1583,7 +1583,7 @@ function renderProspClientes(muns) {
 
 // ===== PROSP AVANCADA FUNCTIONS =====
 
-function initAdvMap() {
+async function initAdvMap() {
   if (advMap) { setTimeout(function(){advMap.invalidateSize();},150); return; }
   advMap = L.map('adv-map', {zoomControl:true, preferCanvas:true}).setView([-14.2,-50.2],7);
   L.tileLayer(
@@ -1593,6 +1593,18 @@ function initAdvMap() {
   advCliLayer    = L.layerGroup().addTo(advMap);
   advRadiusLayer = L.layerGroup().addTo(advMap);
   advCarLayer    = L.layerGroup().addTo(advMap);
+  // Carregar geoData se ainda nao disponivel (independente da aba Mapa)
+  if (!geoData) {
+    var el = document.getElementById('adv-cli-count');
+    if (el) el.textContent = 'Carregando...';
+    try {
+      var res = await SB.rpc('trr_geo_all', {});
+      if (!res.error) {
+        geoData = res.data;
+        if (typeof updateMapKpis === 'function') updateMapKpis();
+      }
+    } catch(e) { console.warn('advMap geoData load error', e); }
+  }
   renderAdvClientes();
 }
 

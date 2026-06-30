@@ -556,6 +556,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
         <div class="adv-panel-hdr-title">Imoveis CAR no Raio</div>
         <div class="adv-panel-hdr-sub">Selecione um cliente no mapa</div>
       </div>
+      <div id="adv-route-badge" style="display:none;align-items:center;gap:6px;padding:8px 16px;background:#fff8f2;border-bottom:1px solid #fde8d2;font-size:13px;"></div>
       <div id="adv-results">
         <div class="adv-empty">
           <div class="adv-empty-ico">🗺️</div>
@@ -1489,7 +1490,10 @@ var advMap         = null;
 var advCliLayer    = null;
 var advRadiusLayer = null;
 var advCarLayer    = null;
+var advRouteLayer  = null;
 var advRadius      = 10;
+var TRR_LAT = -14.7483, TRR_LON = -50.5803;
+var TRR_LAT = -14.7483, TRR_LON = -50.5803;
 var prospData = null;
 var prospDrillData = null;
 var prospFilters = { q: '', uf: '', score: '', dist: '', semCli: false };
@@ -1593,6 +1597,15 @@ async function initAdvMap() {
   advCliLayer    = L.layerGroup().addTo(advMap);
   advRadiusLayer = L.layerGroup().addTo(advMap);
   advCarLayer    = L.layerGroup().addTo(advMap);
+  advRouteLayer  = L.layerGroup().addTo(advMap);
+  // Marcador TRR fixo no mapa avancado
+  var trrDivIcon = L.divIcon({
+    html: '<div style="background:#10243e;color:#f5a623;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;border:2px solid #f5a623;box-shadow:0 2px 8px rgba(0,0,0,.5)">TRR</div>',
+    iconSize:[28,28], iconAnchor:[14,14], className:''
+  });
+  L.marker([TRR_LAT, TRR_LON], {icon: trrDivIcon, zIndexOffset:1000})
+    .bindTooltip('<b>TRR Mozarlândia</b><br>Base de operações', {sticky:true})
+    .addTo(advMap);
   // Carregar geoData se ainda nao disponivel (independente da aba Mapa)
   if (!geoData) {
     var el = document.getElementById('adv-cli-count');
@@ -1724,7 +1737,57 @@ async function advSelectClient(p) {
     );
   });
 
+  // Desenhar rota TRR → cliente via OSRM
+  advDrawRoute(p);
   advShowResults(p, nearby, km, trrProps);
+}
+
+async function advDrawRoute(p) {
+  if (!advRouteLayer) return;
+  advRouteLayer.clearLayers();
+  try {
+    var url = 'https://router.project-osrm.org/route/v1/driving/'
+      + TRR_LON + ',' + TRR_LAT + ';'
+      + p.lon   + ',' + p.lat
+      + '?overview=full&geometries=geojson';
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (!data.routes || !data.routes.length) return;
+    var route = data.routes[0];
+    var coords = route.geometry.coordinates.map(function(c){ return [c[1], c[0]]; });
+    var distKm = (route.distance / 1000).toFixed(1);
+    var durMin = Math.round(route.duration / 60);
+    var durH   = Math.floor(durMin / 60);
+    var durM   = durMin % 60;
+    var durStr = durH > 0 ? durH + 'h ' + durM + 'min' : durM + ' min';
+
+    // Linha de rota laranja animada
+    L.polyline(coords, {
+      color: '#e0762c', weight: 5, opacity: 0.85,
+      dashArray: null
+    }).addTo(advRouteLayer);
+    // Linha base mais suave por baixo
+    L.polyline(coords, {
+      color: '#fff', weight: 8, opacity: 0.35
+    }).addTo(advRouteLayer);
+    // Linha principal por cima
+    L.polyline(coords, {
+      color: '#e0762c', weight: 4, opacity: 0.9
+    }).addTo(advRouteLayer);
+
+    // Badge de distancia no painel
+    var badge = document.getElementById('adv-route-badge');
+    if (badge) {
+      badge.innerHTML =
+        '<span style="font-size:11px;color:#6b7785">&#x1F6E3; Rota: </span>' +
+        '<b style="color:#e0762c">' + distKm + ' km</b>' +
+        '<span style="font-size:11px;color:#6b7785"> &middot; </span>' +
+        '<b style="color:#10243e">' + durStr + '</b>';
+      badge.style.display = 'flex';
+    }
+  } catch(e) {
+    console.warn('[AdvMap] Rota OSRM erro:', e.message);
+  }
 }
 
 function advShowResults(p, nearby, km, trrProps) {

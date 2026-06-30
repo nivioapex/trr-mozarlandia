@@ -1650,6 +1650,16 @@ function renderAdvClientes() {
   if (el) el.textContent = count+' clientes';
 }
 
+// Normaliza resposta do trr_car_geo — aceita {props:[]} OU array direto
+function advCarProps(data) {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;           // resposta como array de linhas
+  if (Array.isArray(data.props)) return data.props; // resposta como {props:[],total:N}
+  // Supabase às vezes retorna [{trr_car_geo:{...}}]
+  if (Array.isArray(data) && data[0] && data[0].props) return data[0].props;
+  return [];
+}
+
 async function advSelectClient(p) {
   window._advCurrentClient = p;
   if (!advRadiusLayer || !advCarLayer) return;
@@ -1669,20 +1679,34 @@ async function advSelectClient(p) {
   advMap.fitBounds(L.circle([p.lat,p.lon],{radius:km*1000}).getBounds(),{padding:[30,30]});
 
   var resultsEl = document.getElementById('adv-results');
-  resultsEl.innerHTML = '<div class="adv-loading-bar"></div><div class="adv-empty" style="padding:28px"><div class="adv-empty-ico">⏳</div><div class="adv-empty-txt">Carregando dados CAR...</div></div>';
+  resultsEl.innerHTML = '<div class="adv-loading-bar"></div><div class="adv-empty" style="padding:28px"><div class="adv-empty-ico">⏳</div><div class="adv-empty-txt">Carregando imóveis CAR...</div></div>';
 
-  if (!carIndData || !carIndData.props) {
+  // Carrega CAR se não disponível — usa municipio do cliente para evitar dataset enorme
+  if (!carIndData || !advCarProps(carIndData).length) {
     try {
-      var res = await SB.rpc('trr_car_geo', {p_uf:null, p_mun:null, p_status:null});
+      // Tenta primeiro com mun do cliente (rápido); fallback sem filtro
+      var munFiltro = p.mun || null;
+      var res = await SB.rpc('trr_car_geo', {p_uf:null, p_mun:munFiltro, p_status:null});
       if (res.error) throw res.error;
-      carIndData = res.data;
+      // Guarda em cache específico para prosp avancada (não sobrescreve carIndData do mapa)
+      window._advCarCache = window._advCarCache || {};
+      window._advCarCache[munFiltro || '__all__'] = res.data;
+      console.log('[AdvMap] CAR carregado mun='+munFiltro, 'res.data type:', Array.isArray(res.data)?'array':'object', 'props?:', res.data && res.data.props ? res.data.props.length : 'n/a', 'direct length?:', Array.isArray(res.data)?res.data.length:'n/a');
     } catch(e) {
       resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">❌</div><div class="adv-empty-txt">Erro ao carregar CAR:<br>'+(e.message||String(e))+'</div></div>';
       return;
     }
   }
 
-  var allCar = (carIndData && carIndData.props) || [];
+  // Resolve props do cache ou carIndData — suporta {props:[]} e array direto
+  function getCarProps(mun) {
+    var cache = window._advCarCache;
+    var src = (cache && cache[mun||'__all__']) || (cache && cache['__all__']) || carIndData;
+    return advCarProps(src);
+  }
+
+  var allCar = getCarProps(p.mun || null);
+  console.log('[AdvMap] allCar total:', allCar.length, '| cliente:', p.cli, 'lat:', p.lat, 'lon:', p.lon);
   var nearby = [];
   allCar.forEach(function(c){
     if (!c.lat || !c.lon) return;

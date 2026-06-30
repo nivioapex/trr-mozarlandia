@@ -1676,16 +1676,12 @@ async function advSelectClient(p) {
   L.circleMarker([p.lat,p.lon], {
     radius:11, fillColor:'#7c3aed', color:'#fff', weight:3, fillOpacity:1
   }).addTo(advRadiusLayer);
-  // fitBounds usando circulo ja adicionado ao mapa (getBounds requer referencia ao mapa)
-  try { advMap.fitBounds(radiusCircle.getBounds(), {padding:[30,30]}); } catch(_) {
-    var d = km/111;
-    advMap.fitBounds([[p.lat-d, p.lon-d],[p.lat+d, p.lon+d]], {padding:[30,30]});
-  }
+  try { advMap.fitBounds(radiusCircle.getBounds(), {padding:[30,30]}); }
+  catch(_) { var d=km/111; advMap.fitBounds([[p.lat-d,p.lon-d],[p.lat+d,p.lon+d]],{padding:[30,30]}); }
 
   var resultsEl = document.getElementById('adv-results');
-  resultsEl.innerHTML = '<div class="adv-loading-bar"></div><div class="adv-empty" style="padding:28px"><div class="adv-empty-ico">⏳</div><div class="adv-empty-txt">Buscando imóveis CAR em '+km+' km...</div></div>';
+  resultsEl.innerHTML = '<div class="adv-loading-bar"></div><div class="adv-empty" style="padding:28px"><div class="adv-empty-ico">&#x23F3;</div><div class="adv-empty-txt">Buscando im\u00f3veis CAR em '+km+' km...</div></div>';
 
-  // Cache por municipio — evita recarregar ao trocar raio
   window._advCarCache = window._advCarCache || {};
   var cacheKey = p.mun || '__all__';
   var allCar = [];
@@ -1694,41 +1690,36 @@ async function advSelectClient(p) {
     allCar = advCarProps(window._advCarCache[cacheKey]);
   } else {
     try {
-      var res = await SB.rpc('trr_car_geo', {p_uf: null, p_mun: p.mun || null, p_status: null});
+      var res = await SB.rpc('trr_car_geo', {p_uf:null, p_mun:p.mun||null, p_status:null});
       if (res.error) throw new Error(JSON.stringify(res.error));
       window._advCarCache[cacheKey] = res.data;
       allCar = advCarProps(res.data);
-      console.log('[AdvMap] carregado mun='+p.mun+' | total props:', allCar.length, '| data keys:', Object.keys(res.data||{}));
     } catch(e) {
-      resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">❌</div><div class="adv-empty-txt">Erro ao carregar CAR:<br>'+esc(e.message||String(e))+'</div></div>';
+      resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">&#x274C;</div><div class="adv-empty-txt">Erro ao carregar CAR:<br>'+esc(e.message||String(e))+'</div></div>';
       return;
     }
   }
 
-  console.log('[AdvMap] allCar='+allCar.length+' | p.lat='+p.lat+' p.lon='+p.lon+' km='+km);
   var nearby = [];
   allCar.forEach(function(c){
-    if (!c.lat || !c.lon) return;
-    var d = haversineKm(p.lat, p.lon, c.lat, c.lon);
-    if (d <= km) nearby.push({prop:c, dist:d});
+    if (!c.lat||!c.lon) return;
+    var d = haversineKm(p.lat,p.lon,c.lat,c.lon);
+    if (d<=km) nearby.push({prop:c,dist:d});
   });
   nearby.sort(function(a,b){ return a.dist-b.dist; });
 
-  var trrProps = (geoData && geoData.props) || [];
+  var trrProps = (geoData&&geoData.props)||[];
   var statusColor = {'AT':'#e0762c','PE':'#c9980a','CA':'#a4243b'};
   nearby.forEach(function(item){
-    var c = item.prop;
-    var isClient = trrProps.some(function(tp){
-      return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
-    });
-    var col = isClient ? '#7c3aed' : (statusColor[c.status]||'#6b7785');
+    var c=item.prop;
+    var isClient=trrProps.some(function(tp){return Math.abs((tp.lat||0)-c.lat)<0.0015&&Math.abs((tp.lon||0)-c.lon)<0.0015;});
     L.circleMarker([c.lat,c.lon],{
-      radius:isClient?7:5, fillColor:col, color:'#fff',
-      weight:isClient?2:1, fillOpacity:0.88
+      radius:isClient?7:5, fillColor:isClient?'#7c3aed':(statusColor[c.status]||'#6b7785'),
+      color:'#fff', weight:isClient?2:1, fillOpacity:0.88
     }).addTo(advCarLayer)
     .bindTooltip(
-      (isClient?'✅ Cliente TRR · ':'🎯 ')+
-      esc(c.nom||c.cod||c.cod_car||'–')+'<br>'+(c.mun||'')+'<br>'+item.dist.toFixed(1)+' km',
+      (isClient?'&#x2705; Cliente TRR &middot; ':'&#x1F3AF; ')+
+      esc(c.nom||c.cod||'\u2013')+'<br>'+(c.mun||'')+'<br>'+item.dist.toFixed(1)+' km',
       {sticky:true}
     );
   });

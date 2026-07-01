@@ -292,7 +292,10 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 @keyframes adv-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .adv-result-item{padding:11px 16px;border-bottom:1px solid #f0f2f5;cursor:pointer;transition:background .15s;}
 .adv-result-item:hover{background:#f5f0ff;}
-.adv-result-name{font-size:13px;font-weight:700;color:#1c2733;margin-bottom:2px;}
+.adv-result-item-cli{background:#f5f3ff;border-left:3px solid #7c3aed;}
+.adv-result-name{font-size:13px;font-weight:700;color:#1c2733;margin-bottom:2px;line-height:1.3;}
+.adv-result-cod{font-size:11px;font-family:monospace;color:#9ca3af;font-weight:400;}
+.adv-result-cli{font-size:11px;color:#7c3aed;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .adv-result-mun{font-size:11.5px;color:#6b7785;}
 .adv-result-tags{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center;}
 .adv-tag{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:8px;}
@@ -1861,21 +1864,53 @@ function advRenderResults(filtered, trrProps) {
       + '<div class="adv-empty-txt">Nenhum imóvel com esses filtros.</div></div>';
     return;
   }
+  var tipoLabel = {'IRU':'Imóvel Rural','AST':'Assentamento','PCT':'Parcelamento','POD':'Posseiro','REC':'Reconhecimento'};
   var h = ''; var maxShow = 150;
   filtered.slice(0, maxShow).forEach(function(item) {
     var c = item.prop; var st = c.status||'AT';
-    var isClient = trrProps && trrProps.some(function(tp) {
+    // Localiza dado do cliente TRR (se existir)
+    var clientTp = trrProps ? trrProps.find(function(tp) {
       return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
-    });
-    h += '<div class="adv-result-item">'
-      + '<div class="adv-result-name">' + esc(c.nom||c.cod||'–') + '</div>'
-      + '<div class="adv-result-mun">' + esc(c.mun||'') + (c.tipo?' · '+c.tipo:'') + '</div>'
+    }) : null;
+    var isClient = !!clientTp;
+
+    // Nome da propriedade: prefere nome do CAR, depois nome TRR, depois código formatado
+    var nomeCar   = c.nom && c.nom !== 'SEM_REGISTRO' ? c.nom : null;
+    var nomeTrr   = clientTp ? (clientTp.prop || clientTp.cli || null) : null;
+    var nomeExib  = nomeCar || nomeTrr || null;
+    var codCurto  = c.cod ? c.cod.split('-').slice(0,2).join('-') + '…' : '–';
+
+    // Bloco de cliente TRR
+    var clientBlk = '';
+    if (isClient) {
+      var cliNome = clientTp.cli  ? '<b>' + esc(clientTp.cli)  + '</b>' : '';
+      var propNome= clientTp.prop ? esc(clientTp.prop) : '';
+      clientBlk = '<div class="adv-result-cli">'
+        + '👤 ' + (cliNome || propNome || 'Cliente TRR')
+        + (cliNome && propNome ? ' &mdash; ' + propNome : '')
+        + '</div>';
+    }
+
+    h += '<div class="adv-result-item' + (isClient ? ' adv-result-item-cli' : '') + '">'
+      // Ícone + nome principal
+      + '<div class="adv-result-name">'
+        + (isClient ? '🏡 ' : '🎯 ')
+        + (nomeExib ? esc(nomeExib) : '<span class="adv-result-cod">' + esc(codCurto) + '</span>')
+      + '</div>'
+      // Cliente TRR (se aplicável)
+      + clientBlk
+      // Município + tipo
+      + '<div class="adv-result-mun">'
+        + '📍 ' + esc(c.mun||'') + (c.tipo ? ' · ' + (tipoLabel[c.tipo]||c.tipo) : '')
+      + '</div>'
+      // Tags
       + '<div class="adv-result-tags">'
         + '<span class="adv-tag '+(statusTagCls[st]||'adv-tag-dist')+'">'+(statusLabel[st]||st)+'</span>'
         + '<span class="adv-tag adv-tag-dist">'+item.dist.toFixed(1)+' km</span>'
-        + (c.area ? '<span class="adv-tag adv-tag-area">'+Number(c.area).toFixed(0)+' ha</span>' : '')
+        + (c.area ? '<span class="adv-tag adv-tag-area">'+Number(c.area).toLocaleString('pt-BR',{maximumFractionDigits:0})+' ha</span>' : '')
         + (isClient ? '<span class="adv-tag adv-tag-cli">✅ Cliente TRR</span>' : '')
-      + '</div></div>';
+      + '</div>'
+    + '</div>';
   });
   if (filtered.length > maxShow)
     h += '<div class="adv-results-footer">+'+(filtered.length-maxShow)+' imóveis. Filtre para refinar.</div>';

@@ -624,6 +624,10 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
         <button class="adv-radius-btn" onclick="setAdvRadius(25)">25 km</button>
       </div>
     </div>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <span style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;">Região</span>
+      <button id="adv-vale-btn" class="adv-radius-btn" onclick="advToggleVale(this)">🏞 Vale do Araguaia</button>
+    </div>
     <div class="adv-legend">
       <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#7c3aed;border:2px solid #fff;box-shadow:0 0 0 1.5px #7c3aed"></div>Cliente TRR</div>
       <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#e0762c"></div>CAR Ativo</div>
@@ -1628,6 +1632,18 @@ var advRouteLayer  = null;
 var advRadius      = 10;
 var TRR_LAT = -14.7483, TRR_LON = -50.5803;
 var _advAreaFilter = '';
+// Municipios do Vale do Araguaia (editavel)
+var VALE_ARAGUAIA = ['MOZARLANDIA','ARUANA','BRITANIA','JUSSARA','MATRINCHA','ARAGUAPAZ',
+  'NOVA CRIXAS','CRIXAS','SAO MIGUEL DO ARAGUAIA','MUNDO NOVO','NOVO PLANALTO','BONOPOLIS',
+  'AMARALINA','UIRAPURU','COCALINHO','AGUA BOA','CANARANA','ARAGUACU'];
+var _advValeFilter = false;
+function advIsVale(mun){ return VALE_ARAGUAIA.indexOf((mun||'').toUpperCase().trim()) >= 0; }
+function advToggleVale(btn){
+  _advValeFilter = !_advValeFilter;
+  btn.classList.toggle('active', _advValeFilter);
+  renderAdvClientes();
+  if (window._advNearby) advApplyFilters();
+}
 var TRR_LAT = -14.7483, TRR_LON = -50.5803;
 var prospData = null;
 var prospDrillData = null;
@@ -1781,6 +1797,7 @@ function renderAdvClientes() {
   var count = 0;
   props.forEach(function(p) {
     if (!p.lat || !p.lon) return;
+    if (_advValeFilter && !advIsVale(p.mun)) return;
     count++;
     var av = p.ativa === true || p.ativa === 'true';
     var m = L.circleMarker([p.lat, p.lon], {
@@ -1950,6 +1967,7 @@ function advApplyFilters() {
   var areaVal  = _advAreaFilter;
   var filtered = nearby.filter(function(item) {
     var c = item.prop;
+    if (_advValeFilter && !advIsVale(c.mun)) return false;
     if (munVal && (c.mun||'').toLowerCase() !== munVal.toLowerCase()) return false;
     var area = parseFloat(c.area) || 0;
     if (areaVal==='lt50'    && area >= 50)             return false;
@@ -2046,7 +2064,7 @@ function advShowResults(p, nearby, km, trrProps) {
   var munSel = document.getElementById('adv-filter-mun');
   if (munSel) {
     var muns = {};
-    nearby.forEach(function(item){ if(item.prop.mun) muns[item.prop.mun]=1; });
+    nearby.forEach(function(item){ if(item.prop.mun && (!_advValeFilter || advIsVale(item.prop.mun))) muns[item.prop.mun]=1; });
     var munList = Object.keys(muns).sort();
     munSel.innerHTML = '<option value="">Todas as cidades ('+ nearby.length +')</option>';
     munList.forEach(function(m) {

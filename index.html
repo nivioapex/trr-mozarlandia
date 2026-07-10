@@ -295,8 +295,8 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-result-item-cli{background:#f5f3ff;border-left:3px solid #7c3aed;}
 .adv-det-btn{display:block;width:calc(100% - 0px);margin:8px 0 2px;padding:7px 0;background:#7c3aed;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:background .15s;}
 .adv-det-btn:hover{background:#6d28d9;}
-#adv-detail-panel{position:absolute;top:0;right:-100%;width:100%;height:100%;background:#fff;z-index:20;overflow-y:auto;transition:right .25s cubic-bezier(.4,0,.2,1);border-left:1px solid #e5e7eb;}
-#adv-detail-panel.open{right:0;}
+#adv-detail-panel{display:none;background:#fff;overflow-y:auto;}
+#adv-detail-panel.open{display:block;}
 .adv-det-hdr{display:flex;align-items:center;gap:8px;padding:14px 16px 10px;border-bottom:1px solid #f0f2f5;position:sticky;top:0;background:#fff;z-index:2;}
 .adv-det-back{background:none;border:none;font-size:20px;cursor:pointer;color:#6b7785;padding:0 4px;line-height:1;}
 .adv-det-title{font-size:14px;font-weight:800;color:#10243e;flex:1;line-height:1.3;}
@@ -2239,12 +2239,25 @@ function advShowDetalhes(idx) {
   if (!panel || !bodyEl) return;
   if (titleEl) titleEl.textContent = nomeExib.length > 35 ? nomeExib.slice(0,33)+'…' : nomeExib;
   bodyEl.innerHTML = body;
+  // Ocultar resultados e mostrar painel de detalhes
+  var results    = document.getElementById('adv-results');
+  var filterBar  = document.getElementById('adv-filter-bar');
+  var routeBadge = document.getElementById('adv-route-badge');
+  if (results)    results.style.display    = 'none';
+  if (filterBar)  filterBar.style.display  = 'none';
+  if (routeBadge) routeBadge.style.display = 'none';
   panel.classList.add('open');
 }
 
 function advCloseDetalhes() {
-  var panel = document.getElementById('adv-detail-panel');
+  var panel      = document.getElementById('adv-detail-panel');
+  var results    = document.getElementById('adv-results');
+  var filterBar  = document.getElementById('adv-filter-bar');
+  var routeBadge = document.getElementById('adv-route-badge');
   if (panel) panel.classList.remove('open');
+  if (results)    results.style.display    = '';
+  if (filterBar && (window._advNearby||[]).length) filterBar.style.display = '';
+  if (routeBadge) routeBadge.style.display = '';
 }
 // ── fim painel Detalhes ──
 

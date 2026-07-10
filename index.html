@@ -2104,7 +2104,7 @@ function advRenderResults(filtered, trrProps) {
         + '</div>';
     }
 
-    h += '<div class="adv-result-item' + (isClient ? ' adv-result-item-cli' : '') + '" data-idx="'+filtered.indexOf(item)+'">''
+    h += '<div class="adv-result-item' + (isClient ? ' adv-result-item-cli' : '') + '" data-idx="'+filtered.indexOf(item)+"'>\n"
       // Ícone + nome principal
       + '<div class="adv-result-name">'
         + (isClient ? '🏡 ' : '🎯 ')

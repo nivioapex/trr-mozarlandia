@@ -319,6 +319,31 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .lp-bd.n{background:#f0f0f0;color:#999;}
 .lp-more{font-size:11px;color:#aaa;margin-top:8px;text-align:center;}
 .lp-spin{color:#aaa;font-size:12px;padding:6px 0;}
+
+/* ===== MODO CAMPO ===== */
+.campo-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--card);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.campo-gps-btn{border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:800;cursor:pointer;background:#1c7c54;color:#fff;transition:background .15s;}
+.campo-gps-btn.on{background:#a4243b;}
+.campo-radius-btn{border:1px solid #d8dee5;background:#fff;border-radius:7px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--muted);}
+.campo-radius-btn.active{background:#10243e;color:#fff;border-color:#10243e;}
+.campo-status{font-size:12.5px;color:var(--muted);font-weight:600;}
+.campo-follow{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--txt);cursor:pointer;user-select:none;}
+#campo-map{height:58vh;min-height:360px;border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:10px;}
+.campo-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-bottom:10px;padding:0 4px;}
+.campo-leg-dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:-1px;}
+#campo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
+.campo-card{background:var(--card);border-radius:var(--r);padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid #e0762c;cursor:pointer;}
+.campo-card.cli{border-left-color:#7c3aed;}
+.campo-card-nome{font-size:13.5px;font-weight:800;color:var(--txt);margin-bottom:3px;}
+.campo-card-sub{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.campo-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.campo-card-dist{font-size:13px;font-weight:800;color:#e0762c;}
+.campo-card.cli .campo-card-dist{color:#7c3aed;}
+.campo-nav-btn{border:none;background:#10243e;color:#fff;border-radius:6px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;}
+@media (max-width:640px){
+  .campo-toolbar{gap:8px;padding:8px 10px;}
+  #campo-map{height:52vh;}
+}
 </style>
 </head>
 <body>
@@ -415,6 +440,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   <button class="tab-btn" id="tab-btn-mapa" onclick="switchTab('mapa')">🗺 Mapa de Clientes</button>
   <button class="tab-btn" id="tab-btn-prospeccao" onclick="switchTab('prospeccao')">🔭 Prospecção</button>
   <button class="tab-btn" id="tab-btn-prosp-avancada" onclick="switchTab('prosp-avancada')">🏔 Prosp Avançada</button>
+  <button class="tab-btn" id="tab-btn-campo" onclick="switchTab('campo')">📍 Modo Campo</button>
 </div>
 
 <!-- ===== PAINEL SECTION ===== -->
@@ -593,6 +619,33 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   </div>
 </div>
 
+
+<!-- ===== MODO CAMPO SECTION ===== -->
+<div id="campo-section" style="display:none">
+  <div class="campo-toolbar">
+    <button id="campo-gps-btn" class="campo-gps-btn" onclick="campoToggleGps()">📍 Ativar GPS</button>
+    <div style="display:flex;gap:5px;align-items:center;">
+      <button class="campo-radius-btn" onclick="setCampoRadius(2,this)">2 km</button>
+      <button class="campo-radius-btn active" onclick="setCampoRadius(5,this)">5 km</button>
+      <button class="campo-radius-btn" onclick="setCampoRadius(10,this)">10 km</button>
+      <button class="campo-radius-btn" onclick="setCampoRadius(20,this)">20 km</button>
+    </div>
+    <label class="campo-follow"><input type="checkbox" id="campo-follow" checked> Seguir no mapa</label>
+    <span id="campo-status" class="campo-status">GPS desligado</span>
+  </div>
+  <div id="campo-map"></div>
+  <div class="campo-legend">
+    <span><span class="campo-leg-dot" style="background:#1d6ef5"></span>Você</span>
+    <span><span class="campo-leg-dot" style="background:#7c3aed"></span>Cliente TRR</span>
+    <span><span class="campo-leg-dot" style="background:#e0762c"></span>CAR Ativo (prospect)</span>
+    <span><span class="campo-leg-dot" style="background:#c9980a"></span>CAR Pendente</span>
+    <span><span class="campo-leg-dot" style="background:#a4243b"></span>CAR Cancelado</span>
+  </div>
+  <div id="campo-list">
+    <div class="adv-empty" style="grid-column:1/-1"><div class="adv-empty-ico">📱</div>
+    <div class="adv-empty-txt">Ative o GPS para ver clientes e prospects ao seu redor conforme você se desloca.</div></div>
+  </div>
+</div>
 <!-- ===== PROSPECÇÃO SECTION ===== -->
 <div id="prospeccao-section" style="display:none">
   <div style="margin-bottom:16px">
@@ -936,6 +989,11 @@ function switchTab(tab) {
   if (tab === 'prosp-avancada') {
     initAdvMap();
     setTimeout(function() { if (advMap) advMap.invalidateSize(); }, 150);
+  }
+  document.getElementById('campo-section').style.display = tab === 'campo' ? '' : 'none';
+  if (tab === 'campo') {
+    initCampoMap();
+    setTimeout(function() { if (campoMap) campoMap.invalidateSize(); }, 150);
   }
 }
 
@@ -2653,6 +2711,162 @@ async function consultarIbama(propId) {
     res.innerHTML = '<div class="pdp-lgpd" style="margin-top:8px">❌ Erro ao consultar FonteData. Tente novamente.</div>';
   }
 }
+
+/* ===== MODO CAMPO (GPS tempo real) ===== */
+var campoMap = null, campoMeLayer = null, campoCliLayer = null, campoCarLayer = null, campoRadiusLayer = null;
+var campoRadius = 5, campoWatchId = null, campoPos = null, campoLastQuery = null, campoBusy = false;
+
+function initCampoMap() {
+  if (campoMap) { setTimeout(function(){ campoMap.invalidateSize(); }, 120); return; }
+  campoMap = L.map('campo-map', { zoomControl:true, preferCanvas:true }).setView([TRR_LAT, TRR_LON], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap'
+  }).addTo(campoMap);
+  campoRadiusLayer = L.layerGroup().addTo(campoMap);
+  campoCarLayer = L.layerGroup().addTo(campoMap);
+  campoCliLayer = L.layerGroup().addTo(campoMap);
+  campoMeLayer  = L.layerGroup().addTo(campoMap);
+  var trrIcon = L.divIcon({
+    html: '<div style="background:#10243e;color:#f5a623;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;border:2px solid #f5a623">TRR</div>',
+    iconSize:[26,26], iconAnchor:[13,13], className:''
+  });
+  L.marker([TRR_LAT, TRR_LON], {icon:trrIcon, zIndexOffset:900}).bindTooltip('<b>TRR Mozarl\u00e2ndia</b>',{sticky:true}).addTo(campoMap);
+  if (!geoData) {
+    SB.rpc('trr_geo_all', {}).then(function(res){ if (!res.error) geoData = res.data; if (campoPos) campoRefresh(true); });
+  }
+}
+
+function campoToggleGps() {
+  var btn = document.getElementById('campo-gps-btn');
+  var st  = document.getElementById('campo-status');
+  if (campoWatchId !== null) {
+    navigator.geolocation.clearWatch(campoWatchId);
+    campoWatchId = null;
+    btn.textContent = '\uD83D\uDCCD Ativar GPS';
+    btn.classList.remove('on');
+    st.textContent = 'GPS desligado';
+    return;
+  }
+  if (!navigator.geolocation) { st.textContent = 'GPS n\u00e3o suportado neste navegador'; return; }
+  st.textContent = 'Obtendo posi\u00e7\u00e3o\u2026';
+  btn.textContent = '\u23F9 Parar GPS';
+  btn.classList.add('on');
+  campoWatchId = navigator.geolocation.watchPosition(campoOnPos, campoOnErr, {
+    enableHighAccuracy: true, maximumAge: 3000, timeout: 20000
+  });
+}
+
+function campoOnErr(err) {
+  var st = document.getElementById('campo-status');
+  var msg = err && err.code === 1 ? 'Permiss\u00e3o de localiza\u00e7\u00e3o negada \u2014 habilite no navegador'
+          : err && err.code === 3 ? 'GPS demorou a responder\u2026 tentando de novo'
+          : 'Erro ao obter posi\u00e7\u00e3o';
+  st.textContent = msg;
+}
+
+function campoOnPos(pos) {
+  campoPos = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy || 0 };
+  var st = document.getElementById('campo-status');
+  st.textContent = 'GPS ativo \u00b7 precis\u00e3o \u00b1' + Math.round(campoPos.acc) + ' m';
+  campoMeLayer.clearLayers();
+  L.circle([campoPos.lat, campoPos.lon], { radius: Math.min(campoPos.acc, 300), color:'#1d6ef5', weight:1, fillColor:'#1d6ef5', fillOpacity:0.12 }).addTo(campoMeLayer);
+  L.circleMarker([campoPos.lat, campoPos.lon], { radius:9, fillColor:'#1d6ef5', color:'#fff', weight:3, fillOpacity:1 }).addTo(campoMeLayer).bindTooltip('<b>Voc\u00ea est\u00e1 aqui</b>',{sticky:true});
+  if (document.getElementById('campo-follow').checked) campoMap.panTo([campoPos.lat, campoPos.lon]);
+  // Re-consulta quando andar mais de 10% do raio (min. 150 m) desde a ultima busca
+  var thresholdKm = Math.max(0.15, campoRadius * 0.1);
+  if (!campoLastQuery || haversineKm(campoLastQuery.lat, campoLastQuery.lon, campoPos.lat, campoPos.lon) > thresholdKm) {
+    campoRefresh(false);
+  }
+}
+
+function setCampoRadius(km, btn) {
+  campoRadius = km;
+  document.querySelectorAll('.campo-radius-btn').forEach(function(b){ b.classList.toggle('active', b === btn); });
+  if (campoPos) campoRefresh(true);
+}
+
+async function campoRefresh(force) {
+  if (!campoPos || (campoBusy && !force)) return;
+  campoBusy = true;
+  campoLastQuery = { lat: campoPos.lat, lon: campoPos.lon };
+  try {
+    // Circulo do raio
+    campoRadiusLayer.clearLayers();
+    L.circle([campoPos.lat, campoPos.lon], { radius: campoRadius*1000, color:'#1d6ef5', fillOpacity:0.03, weight:1.5, dashArray:'6 5' }).addTo(campoRadiusLayer);
+
+    // Prospects CAR via RPC (raio no banco)
+    var res = await SB.rpc('trr_campo_nearby', { p_lat: campoPos.lat, p_lon: campoPos.lon, p_km: campoRadius, p_lim: 300 });
+    if (res.error) throw new Error(res.error.message || JSON.stringify(res.error));
+    var cars = res.data || [];
+
+    // Clientes TRR (geoData ja em memoria) dentro do raio
+    var clis = [];
+    if (geoData && geoData.props) {
+      geoData.props.forEach(function(p){
+        if (!p.lat || !p.lon) return;
+        var d = haversineKm(campoPos.lat, campoPos.lon, p.lat, p.lon);
+        if (d <= campoRadius) clis.push({ p:p, dist:d });
+      });
+      clis.sort(function(a,b){ return a.dist-b.dist; });
+    }
+
+    // CAR que coincide com cliente = ja atendido (marca roxo, tira da lista de prospect)
+    var isCli = function(c){
+      return clis.some(function(x){ return Math.abs(x.p.lat-c.lat)<0.0015 && Math.abs(x.p.lon-c.lon)<0.0015; });
+    };
+
+    campoCliLayer.clearLayers();
+    clis.forEach(function(x){
+      L.circleMarker([x.p.lat, x.p.lon], { radius:8, fillColor:'#7c3aed', color:'#fff', weight:2, fillOpacity:0.95 })
+        .addTo(campoCliLayer)
+        .bindTooltip('\uD83D\uDFE3 <b>'+esc(x.p.cli||'\u2013')+'</b><br>'+esc(x.p.prop||'')+'<br>'+x.dist.toFixed(1)+' km de voc\u00ea', {sticky:true});
+    });
+
+    var statusColor = {'AT':'#e0762c','PE':'#c9980a','CA':'#a4243b'};
+    campoCarLayer.clearLayers();
+    var prospects = [];
+    cars.forEach(function(c){
+      if (isCli(c)) return; // ja e cliente
+      prospects.push(c);
+      L.circleMarker([c.lat, c.lon], { radius:5, fillColor: statusColor[c.status_car]||'#6b7785', color:'#fff', weight:1, fillOpacity:0.85 })
+        .addTo(campoCarLayer)
+        .bindTooltip('\uD83C\uDFAF <b>'+esc(c.nom_imovel||c.cod_imovel||'\u2013')+'</b><br>'+esc(c.municipio||'')+' \u00b7 '+(c.area_ha?Number(c.area_ha).toFixed(0)+' ha':'')+'<br>'+Number(c.dist_km).toFixed(1)+' km de voc\u00ea', {sticky:true});
+    });
+
+    campoRenderList(clis, prospects);
+    var st = document.getElementById('campo-status');
+    st.textContent = 'GPS ativo \u00b7 ' + clis.length + ' cliente' + (clis.length===1?'':'s') + ' \u00b7 ' + prospects.length + ' prospects em ' + campoRadius + ' km';
+  } catch(e) {
+    console.error('campoRefresh', e);
+    document.getElementById('campo-status').textContent = 'Erro ao buscar dados: ' + (e.message||e);
+  } finally {
+    campoBusy = false;
+  }
+}
+
+function campoRenderList(clis, prospects) {
+  var el = document.getElementById('campo-list');
+  var html = '';
+  var navBtn = function(lat, lon) {
+    return '<a class="campo-nav-btn" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+lat+','+lon+'" onclick="event.stopPropagation()">\uD83E\uDDED Navegar</a>';
+  };
+  clis.slice(0, 15).forEach(function(x){
+    html += '<div class="campo-card cli" onclick="campoMap.setView(['+x.p.lat+','+x.p.lon+'],14)">' +
+      '<div class="campo-card-nome">\uD83D\uDFE3 '+esc(x.p.cli||'\u2013')+'</div>' +
+      '<div class="campo-card-sub">'+esc(x.p.prop||'')+(x.p.mun?' \u00b7 '+esc(x.p.mun):'')+'</div>' +
+      '<div class="campo-card-foot"><span class="campo-card-dist">'+x.dist.toFixed(1)+' km</span>'+navBtn(x.p.lat,x.p.lon)+'</div></div>';
+  });
+  var statusLbl = {'AT':'Ativo','PE':'Pendente','CA':'Cancelado'};
+  prospects.slice(0, 40).forEach(function(c){
+    html += '<div class="campo-card" onclick="campoMap.setView(['+c.lat+','+c.lon+'],14)">' +
+      '<div class="campo-card-nome">\uD83C\uDFAF '+esc(c.nom_imovel||c.cod_imovel||'\u2013')+'</div>' +
+      '<div class="campo-card-sub">'+esc(c.municipio||'')+(c.area_ha?' \u00b7 '+Number(c.area_ha).toFixed(0)+' ha':'')+' \u00b7 CAR '+(statusLbl[c.status_car]||c.status_car||'')+'</div>' +
+      '<div class="campo-card-foot"><span class="campo-card-dist">'+Number(c.dist_km).toFixed(1)+' km</span>'+navBtn(c.lat,c.lon)+'</div></div>';
+  });
+  if (!html) html = '<div class="adv-empty" style="grid-column:1/-1"><div class="adv-empty-ico">\uD83C\uDF35</div><div class="adv-empty-txt">Nada num raio de '+campoRadius+' km. Aumente o raio ou continue dirigindo.</div></div>';
+  el.innerHTML = html;
+}
+
 </script>
 
 <!-- Painel lateral de detalhe de propriedade -->

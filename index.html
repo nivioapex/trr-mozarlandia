@@ -345,6 +345,20 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   #campo-map{height:52vh;}
 }
 
+/* ===== BUSCA GEORREFERENCIADA ===== */
+.adv-search-wrap{position:relative;flex:1 1 240px;min-width:200px;max-width:360px;}
+#adv-search{width:100%;box-sizing:border-box;border:1.5px solid #d8dee5;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;background:#fff;}
+#adv-search:focus{border-color:#10243e;}
+#adv-search-results{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border-radius:9px;box-shadow:0 8px 26px rgba(0,0,0,.22);z-index:2500;max-height:320px;overflow-y:auto;}
+#adv-search-results.open{display:block;}
+.advs-item{padding:9px 12px;cursor:pointer;border-bottom:1px solid #f0f2f5;display:flex;gap:8px;align-items:flex-start;font-size:12.5px;}
+.advs-item:hover{background:#f4f6f8;}
+.advs-item-ico{flex:0 0 auto;font-size:15px;}
+.advs-item-n{font-weight:700;color:var(--txt);line-height:1.3;}
+.advs-item-s{font-size:11px;color:var(--muted);margin-top:1px;}
+.advs-empty{padding:14px;font-size:12px;color:var(--muted);text-align:center;}
+@media (max-width:640px){.adv-search-wrap{max-width:100%;flex-basis:100%;}}
+
 /* intel v2: score de conversao */
 .intel-score{border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .intel-score.alta{background:linear-gradient(135deg,#1c7c54,#2aa06e);}
@@ -614,6 +628,11 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 <div id="prosp-avancada-section" style="display:none">
   <div class="adv-toolbar">
     <span class="adv-toolbar-title">🏔 Prosp Avançada</span>
+    <div class="adv-search-wrap">
+      <input id="adv-search" placeholder="🔍 Buscar fazenda, cliente ou código CAR…" autocomplete="off"
+        oninput="advSearchInput(this.value)" onfocus="advSearchInput(this.value)">
+      <div id="adv-search-results"></div>
+    </div>
     <div style="display:flex;flex-direction:column;gap:3px;">
       <span style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;">Raio de busca</span>
       <div class="adv-radius-group">
@@ -3242,6 +3261,69 @@ function intelCopyMsg(btn){
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok);
   else { var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok(); }
 }
+
+
+/* ===== BUSCA GEORREFERENCIADA (Prosp Avancada) ===== */
+var _advSearchTimer = null, _advSearchLayer = null, _advSearchLast = [];
+
+function advSearchInput(q){
+  clearTimeout(_advSearchTimer);
+  q = (q||'').trim();
+  var box = document.getElementById('adv-search-results');
+  if (q.length < 3) { box.classList.remove('open'); return; }
+  _advSearchTimer = setTimeout(function(){ advSearchRun(q); }, 320);
+}
+
+async function advSearchRun(q){
+  var box = document.getElementById('adv-search-results');
+  box.innerHTML = '<div class="advs-empty">\u23F3 Buscando\u2026</div>';
+  box.classList.add('open');
+  try {
+    var res = await SB.rpc('trr_buscar', { p_q: q, p_lim: 12 });
+    if (res.error) throw new Error(res.error.message||'erro');
+    var items = res.data || [];
+    _advSearchLast = items;
+    if (!items.length) { box.innerHTML = '<div class="advs-empty">Nada encontrado para \u201c'+esc(q)+'\u201d</div>'; return; }
+    var h = '';
+    items.forEach(function(it, i){
+      h += '<div class="advs-item" onclick="advSearchGo('+i+')">'
+        + '<div class="advs-item-ico">'+(it.tipo==='cli'?'\uD83D\uDFE3':'\uD83C\uDFAF')+'</div>'
+        + '<div><div class="advs-item-n">'+esc(it.nome||it.cod||'\u2013')+'</div>'
+        + '<div class="advs-item-s">'+(it.tipo==='cli'?'Cliente TRR \u00b7 '+esc(it.cod||''):'Prospect CAR')
+        + ' \u00b7 '+esc(it.municipio||'')+'/'+esc(it.uf||'')
+        + (it.area_ha?' \u00b7 '+Number(it.area_ha).toLocaleString('pt-BR',{maximumFractionDigits:0})+' ha':'')+'</div></div></div>';
+    });
+    box.innerHTML = h;
+  } catch(e) {
+    box.innerHTML = '<div class="advs-empty">\u274C '+esc(e.message||String(e))+'</div>';
+  }
+}
+
+function advSearchGo(i){
+  var it = _advSearchLast[i];
+  if (!it || !it.lat) return;
+  document.getElementById('adv-search-results').classList.remove('open');
+  document.getElementById('adv-search').value = it.nome || it.cod || '';
+  if (!advMap) initAdvMap();
+  if (!_advSearchLayer) _advSearchLayer = L.layerGroup().addTo(advMap);
+  _advSearchLayer.clearLayers();
+  var mk = L.marker([it.lat, it.lon], { zIndexOffset: 2000 }).addTo(_advSearchLayer);
+  var pop = '<div style="font-size:12.5px;min-width:180px"><b>'+esc(it.nome||it.cod||'\u2013')+'</b><br>'
+    + (it.tipo==='cli' ? '\uD83D\uDFE3 Cliente TRR \u00b7 '+esc(it.cod||'') : '\uD83C\uDFAF Prospect CAR')
+    + ' \u00b7 '+esc(it.municipio||'')+'/'+esc(it.uf||'')
+    + (it.area_ha?'<br>\uD83D\uDCD0 '+Number(it.area_ha).toLocaleString('pt-BR',{maximumFractionDigits:0})+' ha':'')
+    + '<div style="display:flex;gap:6px;margin-top:8px">'
+    + (it.tipo==='car' ? '<button class="intel-btn" style="margin-top:0" onclick="openIntel('+it.id+')">\uD83D\uDD0E An\u00e1lise</button>' : '')
+    + '<a class="intel-btn" style="margin-top:0;text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+it.lat+','+it.lon+'">\uD83E\uDDED Navegar</a>'
+    + '</div></div>';
+  mk.bindPopup(pop).openPopup();
+  advMap.setView([it.lat, it.lon], 14, { animate: true });
+}
+
+document.addEventListener('click', function(e){
+  var w = e.target.closest ? e.target.closest('.adv-search-wrap') : null;
+  if (!w) { var b = document.getElementById('adv-search-results'); if (b) b.classList.remove('open'); }
+});
 
 </script>
 

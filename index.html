@@ -2994,10 +2994,28 @@ function intelAnalyze(d){
   var conf = diff/tot > 0.45 ? 'alta' : (diff/tot > 0.2 ? 'media' : 'baixa');
 
   var porte = area >= 500 ? 'muito grande' : area >= 200 ? 'grande' : area >= 50 ? 'm\u00e9dio' : 'pequeno';
+
+  // Bacia leiteira (vacas ordenhadas/rebanho \u2014 IBGE PPM 2024) e m\u00f3dulos fiscais (SICAR/INCRA)
+  var dairyShare = (m && m.rebanho_bovino) ? (m.vacas_ordenhadas||0)/m.rebanho_bovino : 0;
+  var mfHa = (m && m.modulo_fiscal_ha) ? Number(m.modulo_fiscal_ha) : null;
+  var mf = (mfHa && area) ? area/mfHa : null;
+  var mfCls = mf==null ? null : mf < 1 ? 'minif\u00fandio' : mf < 4 ? 'pequena \u2014 perfil PRONAF' : mf <= 15 ? 'm\u00e9dia \u2014 perfil PRONAMP' : 'grande propriedade';
+
   var principal, secundaria, whySec;
   if (isPec) {
-    principal = area < 80 ? 'Pecu\u00e1ria leiteira / mista' : 'Pecu\u00e1ria de corte (cria/recria/engorda)';
+    var leiteForte = dairyShare >= 0.08;
+    var pequenaProp = mf != null ? mf < 4 : area < 100;
+    if (leiteForte && pequenaProp) {
+      principal = 'Pecu\u00e1ria leiteira';
+      why.unshift(Math.round(dairyShare*100)+'% do rebanho municipal \u00e9 ordenhado \u2014 bacia leiteira ('+Number(m.vacas_ordenhadas).toLocaleString('pt-BR')+' vacas)');
+    } else if (dairyShare >= 0.04 && pequenaProp) {
+      principal = 'Pecu\u00e1ria leiteira / mista';
+    } else {
+      principal = 'Pecu\u00e1ria de corte (cria/recria/engorda)';
+      if (dairyShare < 0.03 && m) why.push('apenas '+Math.round(dairyShare*100)+'% do rebanho municipal \u00e9 ordenhado \u2014 corte domina');
+    }
     if (m && (m.soja_ha||0) > 3000 && area >= 200) { secundaria = 'Lavoura de soja (parte da \u00e1rea ou arrendamento)'; whySec = 'soja em expans\u00e3o no munic\u00edpio'; }
+    else if (principal === 'Pecu\u00e1ria leiteira') { secundaria = 'Milho/sorgo para silagem do gado de leite'; whySec = 'leite exige volumoso o ano todo'; }
     else { secundaria = 'Produ\u00e7\u00e3o de volumoso (silagem/feno) para o rebanho'; whySec = 'padr\u00e3o da pecu\u00e1ria da regi\u00e3o'; }
   } else {
     var temMilho = m && (m.milho_ha||0) > (m.soja_ha||0)*0.15;
@@ -3005,6 +3023,16 @@ function intelAnalyze(d){
     secundaria = 'Pecu\u00e1ria de corte em \u00e1reas de pasto remanescentes';
     whySec = 'integra\u00e7\u00e3o lavoura-pecu\u00e1ria comum no Vale do Araguaia';
   }
+
+  // Condicao do CAR (SICAR)
+  var condic = p.des_condic || null;
+  var condicInfo = null;
+  if (condic === 'CD' || condic === 'CA' || condic === 'CS')
+    condicInfo = {cls:'baixa', txt:'\u26A0\uFE0F CAR cancelado no SICAR \u2014 confirmar situa\u00e7\u00e3o do im\u00f3vel antes de investir na visita'};
+  else if (condic === 'NOT' || condic === 'REG' || condic === 'REV')
+    condicInfo = {cls:'media', txt:'\uD83D\uDCCB CAR com pend\u00eancia ambiental \u2014 dor real: acompanhamento t\u00e9cnico Din\u00e2mica ajuda a regularizar'};
+  else if (condic === 'OK' || condic === 'OKA')
+    condicInfo = {cls:'alta', txt:'\u2705 CAR analisado e regular \u2014 produtor organizado, bom pagador em potencial'};
 
   // Estimativas de consumo
   var cab = isPec ? Math.round(area*1.0) : Math.round(area*0.3);
@@ -3040,6 +3068,8 @@ function intelAnalyze(d){
     prods.push({i:'\uD83D\uDCA7', n:'Biofertilizante', w:'Nutri\u00e7\u00e3o foliar e de solo no arranque e enchimento de gr\u00e3o \u2014 resposta r\u00e1pida em produtividade.'});
     prods.push({i:'\u2697\uFE0F', n:'Aditivos', w:'Aditivo de combust\u00edvel para armazenagem na safra \u2014 diesel parado sem perder qualidade, motor protegido.'});
   }
+  if (principal === 'Pecu\u00e1ria leiteira') prods.unshift({i:'\uD83E\uDD5B', n:'Pacote bacia leiteira', w:'Sorgo BRS 716 + inoculante + biofertilizante no capim: mais leite por hectare na seca. Diesel do resfriador e do trator na porteira.'});
+  if (mf != null && mf < 4) prods.push({i:'\uD83C\uDFE6', n:'Or\u00e7amento enquadrado no PRONAF', w:'Propriedade at\u00e9 4 m\u00f3dulos fiscais \u2014 insumos e sementes podem entrar em cr\u00e9dito rural subsidiado. Argumento forte de fechamento.'});
   prods.push({i:'\uD83E\uDD1D', n:'Acompanhamento t\u00e9cnico Din\u00e2mica Agro', w:'Visita t\u00e9cnica para dimensionar tanque, consumo, an\u00e1lise de solo e manejo.'});
 
   // Score de conversao (0-100)
@@ -3059,7 +3089,9 @@ function intelAnalyze(d){
     else if (ex.dist_trr_km <= 120) score += 8;
   }
   if ((ex.mun_clientes||0) >= 20) { score += 10; scoreWhy.push('TRR forte na cidade ('+ex.mun_clientes+' clientes)'); }
-  score = Math.min(100, Math.round(score));
+  if (condic === 'CD' || condic === 'CA' || condic === 'CS') { score -= 25; scoreWhy.push('CAR cancelado (-25)'); }
+  else if (condic === 'NOT' || condic === 'REG' || condic === 'REV') { score += 5; scoreWhy.push('pend\u00eancia ambiental = porta de entrada'); }
+  score = Math.max(0, Math.min(100, Math.round(score)));
   var scoreCls = score >= 70 ? 'alta' : score >= 45 ? 'media' : 'baixa';
   var scoreLbl = score >= 70 ? '\uD83D\uDD25 Lead quente' : score >= 45 ? '\uD83C\uDF21\uFE0F Lead morno' : '\u2744\uFE0F Lead frio';
 
@@ -3075,7 +3107,8 @@ function intelAnalyze(d){
   return { p:p, m:m, mix:mix, viz:viz, contato:d.contato, isPec:isPec, conf:conf,
     principal:principal, secundaria:secundaria, why:why, whyLav:whyLav, whySec:whySec,
     porte:porte, cab:cab, dieselAno:dieselAno, gancho:gancho, prods:prods, msg:msg,
-    ex:ex, score:score, scoreCls:scoreCls, scoreLbl:scoreLbl, scoreWhy:scoreWhy };
+    ex:ex, score:score, scoreCls:scoreCls, scoreLbl:scoreLbl, scoreWhy:scoreWhy,
+    mf:mf, mfCls:mfCls, dairyShare:dairyShare, condicInfo:condicInfo };
 }
 
 function renderIntel(d){
@@ -3096,8 +3129,14 @@ function renderIntel(d){
     + (a.scoreWhy.length?'<div class="intel-score-why">'+esc(a.scoreWhy.slice(0,4).join(' \u00b7 '))+'</div>':'')
     + '</div><div class="intel-score-n">'+a.score+'<span style="font-size:12px;font-weight:700">/100</span></div></div>';
 
+  // Condicao do CAR
+  if (a.condicInfo) {
+    var cCol = a.condicInfo.cls==='baixa' ? '#fde4e1;border:1px solid #f3b6ae' : a.condicInfo.cls==='media' ? '#fdf0d4;border:1px solid #ecd9a0' : '#d9f2e4;border:1px solid #a8dfc2';
+    h += '<div style="background:'+cCol+';border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.45;margin-bottom:12px">'+a.condicInfo.txt+'</div>';
+  }
+
   // Atividade provavel
-  var whyTxt = (a.isPec ? a.why : a.whyLav).slice(0,3).join(' \u00b7 ');
+  var whyTxt = (a.isPec ? a.why : a.whyLav).slice(0,4).join(' \u00b7 ');
   h += '<div class="intel-sec"><div class="intel-sec-t">\uD83D\uDC04 Atividade prov\u00e1vel</div>'
     + '<div class="intel-atv"><div class="intel-atv-nome">'+a.principal
     + '<span class="intel-conf '+a.conf+'">'+confLbl[a.conf]+'</span></div>'
@@ -3113,6 +3152,7 @@ function renderIntel(d){
       : '<div class="intel-kpi"><div class="intel-kpi-l">\u00c1rea \u00fatil</div><div class="intel-kpi-v">'+Number(p.area_ha||0).toLocaleString('pt-BR',{maximumFractionDigits:0})+' ha</div></div>')
     + (a.ex.dist_trr_km != null ? '<div class="intel-kpi"><div class="intel-kpi-l">Dist. do TRR</div><div class="intel-kpi-v">'+a.ex.dist_trr_km+' km</div></div>' : '')
     + (a.ex.pct_area_mun ? '<div class="intel-kpi"><div class="intel-kpi-l">Porte no munic\u00edpio</div><div class="intel-kpi-v">Top '+(100-a.ex.pct_area_mun+1)+'%</div></div>' : '')
+    + (a.mf != null ? '<div class="intel-kpi"><div class="intel-kpi-l">M\u00f3dulos fiscais</div><div class="intel-kpi-v">'+a.mf.toLocaleString('pt-BR',{maximumFractionDigits:1})+'</div><div style="font-size:10px;color:var(--muted)">'+a.mfCls+'</div></div>' : '')
     + '</div><div style="font-size:11.5px;color:var(--muted);margin-top:7px">\uD83D\uDCC5 <b>Gancho da \u00e9poca:</b> '+a.gancho+'</div>'
     + (a.ex.cluster_3km ? '<div style="font-size:11.5px;color:var(--muted);margin-top:4px">\uD83D\uDDFA '+a.ex.cluster_3km+' im\u00f3veis CAR num raio de 3 km \u2014 rota rende mais visitas</div>' : '')
     + '</div>';
@@ -3129,7 +3169,10 @@ function renderIntel(d){
     h += '<div class="intel-sec"><div class="intel-sec-t">\uD83C\uDFDB Munic\u00edpio (IBGE 2024)</div>'
       + '<div class="intel-kpis">'
       + '<div class="intel-kpi"><div class="intel-kpi-l">Rebanho bovino</div><div class="intel-kpi-v">'+Number(a.m.rebanho_bovino||0).toLocaleString('pt-BR')+'</div></div>'
-      + '<div class="intel-kpi"><div class="intel-kpi-l">Lavoura total</div><div class="intel-kpi-v">'+Number(a.m.lavoura_total_ha||0).toLocaleString('pt-BR')+' ha</div></div></div>'
+      + '<div class="intel-kpi"><div class="intel-kpi-l">Lavoura total</div><div class="intel-kpi-v">'+Number(a.m.lavoura_total_ha||0).toLocaleString('pt-BR')+' ha</div></div>'
+      + (a.m.vacas_ordenhadas ? '<div class="intel-kpi"><div class="intel-kpi-l">Vacas ordenhadas</div><div class="intel-kpi-v">'+Number(a.m.vacas_ordenhadas).toLocaleString('pt-BR')+'</div><div style="font-size:10px;color:var(--muted)">'+Math.round(a.dairyShare*100)+'% do rebanho</div></div>' : '')
+      + (a.m.modulo_fiscal_ha ? '<div class="intel-kpi"><div class="intel-kpi-l">M\u00f3dulo fiscal</div><div class="intel-kpi-v">'+Number(a.m.modulo_fiscal_ha)+' ha</div></div>' : '')
+      + '</div>'
       + (lavs.length?'<div style="font-size:11.5px;color:var(--muted);margin-top:7px">'+lavs.join(' \u00b7 ')+'</div>':'')
       + '</div>';
   }

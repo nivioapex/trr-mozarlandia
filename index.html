@@ -293,6 +293,8 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-result-item{padding:11px 16px;border-bottom:1px solid #f0f2f5;cursor:pointer;transition:background .15s;}
 .adv-result-item:hover{background:#f5f0ff;}
 .adv-result-item-cli{background:#f5f3ff;border-left:3px solid #7c3aed;}
+.leaflet-popup-content-wrapper.adv-car-popup{border-radius:10px!important;padding:0!important;overflow:hidden;}
+.leaflet-popup-content-wrapper.adv-car-popup .leaflet-popup-content{margin:10px 12px 10px;}
 .adv-det-btn{display:block;width:calc(100% - 0px);margin:8px 0 2px;padding:7px 0;background:#7c3aed;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:background .15s;}
 .adv-det-btn:hover{background:#6d28d9;}
 #adv-detail-panel{position:absolute;top:0;right:-100%;width:100%;height:100%;background:#fff;z-index:20;overflow-y:auto;transition:right .25s cubic-bezier(.4,0,.2,1);border-left:1px solid #e5e7eb;}
@@ -1948,16 +1950,31 @@ function advRenderCarMarkers(items, trrProps) {
     var isClient = trrProps && trrProps.some(function(tp) {
       return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
     });
-    L.circleMarker([c.lat, c.lon], {
-      radius: isClient ? 7 : 5,
-      fillColor: isClient ? '#7c3aed' : (statusColor[c.status] || '#6b7785'),
-      color: '#fff', weight: isClient ? 2 : 1, fillOpacity: 0.88
-    }).addTo(advCarLayer)
-    .bindTooltip(
-      (isClient ? '&#x2705; Cliente TRR &middot; ' : '&#x1F3AF; ') +
-      esc(c.nom||c.cod||'\u2013') + '<br>' + (c.mun||'') + '<br>' + item.dist.toFixed(1) + ' km',
-      {sticky: true}
-    );
+    (function(markerIdx) {
+      var nomeMkr  = c.nom && c.nom !== 'SEM_REGISTRO' ? c.nom : (c.cod ? c.cod.split('-').slice(0,2).join('-')+'\u2026' : '\u2013');
+      var popupHtml = '<div style="min-width:170px;text-align:center;padding:4px 2px">'
+        + '<div style="font-size:13px;font-weight:800;color:#10243e;margin-bottom:2px">'
+        + (isClient ? '\uD83C\uDFE1 ' : '\uD83C\uDFAF ') + esc(nomeMkr)
+        + '</div>'
+        + '<div style="font-size:11px;color:#6b7785;margin-bottom:8px">\uD83D\uDCCD '
+        + esc(c.mun||'') + ' \u00B7 ' + item.dist.toFixed(1) + ' km</div>'
+        + '<button onclick=\'advShowDetalhes('+markerIdx+')\'  '
+        + 'style=\'background:#7c3aed;color:#fff;border:none;border-radius:7px;'
+        + 'padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer;width:100%\'>'
+        + '\uD83D\uDD0D Detalhes</button>'
+        + '</div>';
+      L.circleMarker([c.lat, c.lon], {
+        radius: isClient ? 7 : 5,
+        fillColor: isClient ? '#7c3aed' : (statusColor[c.status] || '#6b7785'),
+        color: '#fff', weight: isClient ? 2 : 1, fillOpacity: 0.88
+      }).addTo(advCarLayer)
+      .bindTooltip(
+        (isClient ? '&#x2705; Cliente TRR &middot; ' : '&#x1F3AF; ') +
+        esc(c.nom||c.cod||'\u2013') + '<br>' + (c.mun||'') + '<br>' + item.dist.toFixed(1) + ' km',
+        {sticky: true}
+      )
+      .bindPopup(popupHtml, {maxWidth: 220, className: 'adv-car-popup'});
+    })(items.indexOf(item));
   });
 }
 

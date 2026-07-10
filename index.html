@@ -345,6 +345,12 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   #campo-map{height:52vh;}
 }
 
+/* badge tipo de lead nos cards */
+.adv-tag-lead{font-weight:900;color:#fff !important;}
+.adv-tag-lead.q{background:#c2410c;}
+.adv-tag-lead.m{background:#b8860b;}
+.adv-tag-lead.f{background:#64748b;}
+
 /* ===== BUSCA GEORREFERENCIADA ===== */
 .adv-search-wrap{position:relative;flex:1 1 240px;min-width:200px;max-width:360px;}
 #adv-search{width:100%;box-sizing:border-box;border:1.5px solid #d8dee5;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;background:#fff;}
@@ -1999,6 +2005,35 @@ function advApplyFilters() {
   advRenderResults(filtered, trrProps);
 }
 
+
+// Score rapido de lead (mesmos pesos do painel, com o que o card ja tem)
+function advQuickScore(c, trrProps){
+  var s = 0;
+  if (c.contato) s += 25;                                    // contato desbloqueado
+  var dMin = Infinity;
+  (trrProps||[]).forEach(function(tp){
+    if (!tp.lat || !tp.lon) return;
+    var d = haversineKm(tp.lat, tp.lon, c.lat, c.lon);
+    if (d < dMin) dMin = d;
+  });
+  if (dMin <= 10) s += 20; else if (dMin <= 25) s += 10;     // prova social
+  var area = parseFloat(c.area)||0;
+  if (area >= 200) s += 15; else if (area >= 50) s += 8;     // porte
+  var dTrr = haversineKm(TRR_LAT, TRR_LON, c.lat, c.lon);
+  if (dTrr <= 60) s += 15; else if (dTrr <= 120) s += 8;     // logistica
+  window._advMunCli = window._advMunCli || {};
+  if (window._advMunCli[c.mun] === undefined && geoData && geoData.props) {
+    var seen = {};
+    geoData.props.forEach(function(p){ if ((p.mun||'')===c.mun && p.cli) seen[p.cli]=1; });
+    window._advMunCli[c.mun] = Object.keys(seen).length;
+  }
+  if ((window._advMunCli[c.mun]||0) >= 20) s += 10;          // forca no municipio
+  if (c.condic==='CD'||c.condic==='CA'||c.condic==='CS') s -= 25;  // CAR cancelado
+  else if (c.condic==='NOT'||c.condic==='REG'||c.condic==='REV') s += 5;
+  s = Math.max(0, Math.min(100, Math.round(s)));
+  return { s:s, cls: s>=70?'q':(s>=45?'m':'f'), lbl: s>=70?'\uD83D\uDD25 Quente':(s>=45?'\uD83C\uDF21\uFE0F Morno':'\u2744\uFE0F Frio') };
+}
+
 function advRenderResults(filtered, trrProps) {
   var resultsEl = document.getElementById('adv-results');
   if (!resultsEl) return;
@@ -2050,6 +2085,7 @@ function advRenderResults(filtered, trrProps) {
       + '</div>'
       // Tags
       + '<div class="adv-result-tags">'
+        + (!isClient ? (function(){ var q = advQuickScore(c, trrProps); return '<span class="adv-tag adv-tag-lead '+q.cls+'">'+q.lbl+' '+q.s+'</span>'; })() : '')
         + '<span class="adv-tag '+(statusTagCls[st]||'adv-tag-dist')+'">'+(statusLabel[st]||st)+'</span>'
         + '<span class="adv-tag adv-tag-dist">'+item.dist.toFixed(1)+' km</span>'
         + (c.area ? '<span class="adv-tag adv-tag-area">'+Number(c.area).toLocaleString('pt-BR',{maximumFractionDigits:0})+' ha</span>' : '')

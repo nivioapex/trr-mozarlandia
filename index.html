@@ -285,6 +285,9 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .map-layer-btn{border:none;background:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;color:#4b5563;transition:all .15s;white-space:nowrap;}
 .map-layer-btn.active{background:#7c3aed;color:#fff;}
 .map-layer-btn:hover:not(.active){background:#f3f0ff;color:#7c3aed;}
+.map-layer-ctrl-wrap{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+.map-overlay-ctrl{border-top:1px solid rgba(0,0,0,.12);padding-top:4px;}
+.map-overlay-ctrl .map-layer-btn{font-size:11px;}
 .adv-panel{background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;min-height:200px;max-height:560px;overflow-y:auto;}
 .adv-panel-hdr{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;padding:14px 18px;}
 .adv-panel-hdr-title{font-size:13.5px;font-weight:700;}
@@ -1800,47 +1803,83 @@ function renderProspClientes(muns) {
 
 // ── Seletor de Camadas do Mapa ──
 var TILE_DEFS = {
-  mapa:     { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',     attr:'Esri Topo',     maxZoom:18 },
-  satelite: { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',     attr:'Esri Imagery',  maxZoom:19 },
-  hidrico:  { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',attr:'Esri Physical', maxZoom:18 }
+  mapa:     { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',      attr:'Esri Topo',     maxZoom:18 },
+  satelite: { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',      attr:'Esri Imagery',  maxZoom:19 },
+  hidrico:  { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', attr:'Esri Physical', maxZoom:18 },
+  vicinais: { url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'© OpenStreetMap', maxZoom:19, sub:'abc' }
+};
+
+var OVERLAY_DEFS = {
+  estradas: { url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'© OSM', maxZoom:19, opacity:0.55, sub:'abc' }
 };
 
 function makeTileLayers() {
   var result = {};
   Object.keys(TILE_DEFS).forEach(function(key) {
     var d = TILE_DEFS[key];
-    result[key] = L.tileLayer(d.url, { attribution: d.attr, maxZoom: d.maxZoom });
+    result[key] = L.tileLayer(d.url, { attribution:d.attr, maxZoom:d.maxZoom, subdomains:d.sub||'abc' });
+  });
+  return result;
+}
+
+function makeOverlayLayers() {
+  var result = {};
+  Object.keys(OVERLAY_DEFS).forEach(function(key) {
+    var d = OVERLAY_DEFS[key];
+    result[key] = L.tileLayer(d.url, { attribution:d.attr, maxZoom:d.maxZoom, opacity:d.opacity||0.55, subdomains:d.sub||'abc' });
   });
   return result;
 }
 
 var LayerSwitcherControl = L.Control.extend({
   options: { position: 'topright' },
-  initialize: function(mapRef, tilesRef, opts) {
-    this._mapRef   = mapRef;
-    this._tilesRef = tilesRef;
+  initialize: function(mapRef, tilesRef, overlaysRef, opts) {
+    this._mapRef      = mapRef;
+    this._tilesRef    = tilesRef;
+    this._overlaysRef = overlaysRef || {};
     L.Control.prototype.initialize.call(this, opts);
   },
   onAdd: function() {
-    var self   = this;
-    var div    = L.DomUtil.create('div', 'map-layer-ctrl');
-    var labels = { mapa:'🗺 Mapa', satelite:'🛰 Satélite', hidrico:'🌊 Hídrico' };
-    L.DomEvent.disableClickPropagation(div);
-    ['mapa','satelite','hidrico'].forEach(function(key) {
-      var btn = L.DomUtil.create('button', 'map-layer-btn' + (key === 'mapa' ? ' active' : ''), div);
-      btn.textContent = labels[key];
+    var self = this;
+    var wrap = L.DomUtil.create('div', 'map-layer-ctrl-wrap');
+    L.DomEvent.disableClickPropagation(wrap);
+
+    // Base tiles (selecao unica)
+    var baseDiv = L.DomUtil.create('div', 'map-layer-ctrl', wrap);
+    var baseLabels = { mapa:'🗺 Mapa', satelite:'🛰 Satélite', hidrico:'🌊 Hírico', vicinais:'🛣 Vicinais' };
+    Object.keys(baseLabels).forEach(function(key) {
+      var btn = L.DomUtil.create('button', 'map-layer-btn' + (key === 'mapa' ? ' active' : ''), baseDiv);
+      btn.textContent = baseLabels[key];
       L.DomEvent.on(btn, 'click', function(e) {
         L.DomEvent.stop(e);
-        div.querySelectorAll('.map-layer-btn').forEach(function(b){ b.classList.remove('active'); });
+        baseDiv.querySelectorAll('.map-layer-btn').forEach(function(b){ b.classList.remove('active'); });
         btn.classList.add('active');
         Object.keys(self._tilesRef).forEach(function(k) {
           if (self._mapRef.hasLayer(self._tilesRef[k])) self._mapRef.removeLayer(self._tilesRef[k]);
         });
         self._tilesRef[key].addTo(self._mapRef);
         self._tilesRef[key].bringToBack();
+        Object.values(self._overlaysRef).forEach(function(ov) {
+          if (self._mapRef.hasLayer(ov)) ov.bringToFront();
+        });
       });
     });
-    return div;
+
+    // Overlays (multi-toggle)
+    var ovDiv = L.DomUtil.create('div', 'map-layer-ctrl map-overlay-ctrl', wrap);
+    var ovLabels = { estradas:'🛣 Estradas Rurais' };
+    Object.keys(ovLabels).forEach(function(key) {
+      var btn = L.DomUtil.create('button', 'map-layer-btn', ovDiv);
+      btn.textContent = ovLabels[key];
+      L.DomEvent.on(btn, 'click', function(e) {
+        L.DomEvent.stop(e);
+        var on = btn.classList.toggle('active');
+        if (on) { self._overlaysRef[key].addTo(self._mapRef); }
+        else if (self._mapRef.hasLayer(self._overlaysRef[key])) { self._mapRef.removeLayer(self._overlaysRef[key]); }
+      });
+    });
+
+    return wrap;
   }
 });
 // ── fim Seletor de Camadas ──
@@ -1851,7 +1890,9 @@ async function initAdvMap() {
   var advTiles = makeTileLayers();
   window._advTiles = advTiles;
   advTiles.mapa.addTo(advMap);
-  new LayerSwitcherControl(advMap, advTiles).addTo(advMap);
+  var advOverlays = makeOverlayLayers();
+  window._advOverlays = advOverlays;
+  new LayerSwitcherControl(advMap, advTiles, advOverlays).addTo(advMap);
   advCliLayer    = L.layerGroup().addTo(advMap);
   advRadiusLayer = L.layerGroup().addTo(advMap);
   advCarLayer    = L.layerGroup().addTo(advMap);
@@ -3059,7 +3100,9 @@ function initCampoMap() {
   var campoTiles = makeTileLayers();
   window._campoTiles = campoTiles;
   campoTiles.mapa.addTo(campoMap);
-  new LayerSwitcherControl(campoMap, campoTiles).addTo(campoMap);
+  var campoOverlays = makeOverlayLayers();
+  window._campoOverlays = campoOverlays;
+  new LayerSwitcherControl(campoMap, campoTiles, campoOverlays).addTo(campoMap);
   campoRadiusLayer = L.layerGroup().addTo(campoMap);
   campoCarLayer = L.layerGroup().addTo(campoMap);
   campoCliLayer = L.layerGroup().addTo(campoMap);

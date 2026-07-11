@@ -281,6 +281,10 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 #adv-map{height:560px;border-radius:var(--r);box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .adv-map-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:6px 16px;border-radius:16px;pointer-events:none;z-index:1000;white-space:nowrap;transition:opacity .4s;}
 .adv-map-hint.hidden{opacity:0;}
+.map-layer-ctrl{display:flex;gap:3px;background:rgba(255,255,255,.93);border-radius:8px;padding:4px 5px;box-shadow:0 1px 5px rgba(0,0,0,.25);}
+.map-layer-btn{border:none;background:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;color:#4b5563;transition:all .15s;white-space:nowrap;}
+.map-layer-btn.active{background:#7c3aed;color:#fff;}
+.map-layer-btn:hover:not(.active){background:#f3f0ff;color:#7c3aed;}
 .adv-panel{background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;min-height:200px;max-height:560px;overflow-y:auto;}
 .adv-panel-hdr{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;padding:14px 18px;}
 .adv-panel-hdr-title{font-size:13.5px;font-weight:700;}
@@ -1794,13 +1798,60 @@ function renderProspClientes(muns) {
 
 // ===== PROSP AVANCADA FUNCTIONS =====
 
-async function initAdvMap() {
+async // ── Seletor de Camadas do Mapa ──
+var TILE_DEFS = {
+  mapa:     { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',     attr:'Esri Topo',     maxZoom:18 },
+  satelite: { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',     attr:'Esri Imagery',  maxZoom:19 },
+  hidrico:  { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',attr:'Esri Physical', maxZoom:18 }
+};
+
+function makeTileLayers() {
+  var result = {};
+  Object.keys(TILE_DEFS).forEach(function(key) {
+    var d = TILE_DEFS[key];
+    result[key] = L.tileLayer(d.url, { attribution: d.attr, maxZoom: d.maxZoom });
+  });
+  return result;
+}
+
+var LayerSwitcherControl = L.Control.extend({
+  options: { position: 'topright' },
+  initialize: function(mapRef, tilesRef, opts) {
+    this._mapRef   = mapRef;
+    this._tilesRef = tilesRef;
+    L.Control.prototype.initialize.call(this, opts);
+  },
+  onAdd: function() {
+    var self   = this;
+    var div    = L.DomUtil.create('div', 'map-layer-ctrl');
+    var labels = { mapa:'🗺 Mapa', satelite:'🛰 Satélite', hidrico:'🌊 Hídrico' };
+    L.DomEvent.disableClickPropagation(div);
+    ['mapa','satelite','hidrico'].forEach(function(key) {
+      var btn = L.DomUtil.create('button', 'map-layer-btn' + (key === 'mapa' ? ' active' : ''), div);
+      btn.textContent = labels[key];
+      L.DomEvent.on(btn, 'click', function(e) {
+        L.DomEvent.stop(e);
+        div.querySelectorAll('.map-layer-btn').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        Object.keys(self._tilesRef).forEach(function(k) {
+          if (self._mapRef.hasLayer(self._tilesRef[k])) self._mapRef.removeLayer(self._tilesRef[k]);
+        });
+        self._tilesRef[key].addTo(self._mapRef);
+        self._tilesRef[key].bringToBack();
+      });
+    });
+    return div;
+  }
+});
+// ── fim Seletor de Camadas ──
+
+function initAdvMap() {
   if (advMap) { setTimeout(function(){advMap.invalidateSize();},150); return; }
   advMap = L.map('adv-map', {zoomControl:true, preferCanvas:true}).setView([-14.2,-50.2],7);
-  L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-    { attribution: 'Tiles © Esri — World Topo Map', maxZoom: 18 }
-  ).addTo(advMap);
+  var advTiles = makeTileLayers();
+  window._advTiles = advTiles;
+  advTiles.mapa.addTo(advMap);
+  new LayerSwitcherControl(advMap, advTiles).addTo(advMap);
   advCliLayer    = L.layerGroup().addTo(advMap);
   advRadiusLayer = L.layerGroup().addTo(advMap);
   advCarLayer    = L.layerGroup().addTo(advMap);
@@ -3005,9 +3056,10 @@ var campoRadius = 5, campoWatchId = null, campoPos = null, campoLastQuery = null
 function initCampoMap() {
   if (campoMap) { setTimeout(function(){ campoMap.invalidateSize(); }, 120); return; }
   campoMap = L.map('campo-map', { zoomControl:true, preferCanvas:true }).setView([TRR_LAT, TRR_LON], 11);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '&copy; OpenStreetMap'
-  }).addTo(campoMap);
+  var campoTiles = makeTileLayers();
+  window._campoTiles = campoTiles;
+  campoTiles.mapa.addTo(campoMap);
+  new LayerSwitcherControl(campoMap, campoTiles).addTo(campoMap);
   campoRadiusLayer = L.layerGroup().addTo(campoMap);
   campoCarLayer = L.layerGroup().addTo(campoMap);
   campoCliLayer = L.layerGroup().addTo(campoMap);

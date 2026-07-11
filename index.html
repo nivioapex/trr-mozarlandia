@@ -1845,7 +1845,7 @@ var LayerSwitcherControl = L.Control.extend({
 });
 // ── fim Seletor de Camadas ──
 
-function initAdvMap() {
+async function initAdvMap() {
   if (advMap) { setTimeout(function(){advMap.invalidateSize();},150); return; }
   advMap = L.map('adv-map', {zoomControl:true, preferCanvas:true}).setView([-14.2,-50.2],7);
   var advTiles = makeTileLayers();

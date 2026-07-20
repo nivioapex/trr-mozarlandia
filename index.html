@@ -1051,7 +1051,7 @@ function renderMap(data){
     byF[f].push({x:c.lon,y:c.lat,r:Math.max(4,Math.sqrt(Number(r.cnt))*2.5),municipio:r.municipio,cnt:Number(r.cnt),avgD:r.avg_dist});
   });
   var ds=FAIXAS.filter(function(f){return byF[f];}).map(function(f){return{label:f,data:byF[f],backgroundColor:FCOLS[f]+'bb',borderColor:FCOLS[f],borderWidth:1};});
-  ds.push({label:'★ TRR (Mozarlândia)',data:[{x:-50.5803,y:-14.7483,r:9}],backgroundColor:'#fff',borderColor:'#10243e',borderWidth:2.5});
+  ds.push({label:'★ TRR (Mozarlândia)',data:[{x:-50.54306,y:-14.74469,r:9}],backgroundColor:'#fff',borderColor:'#10243e',borderWidth:2.5});
   charts.map=new Chart(document.getElementById('ch-map'),{type:'bubble',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,padding:8}},tooltip:{callbacks:{label:function(c){var d=c.raw;return d.municipio?(d.municipio+': '+d.cnt+' prop. · '+d.avgD+' km'):'★ TRR – Mozarlândia';}}}},scales:{x:{title:{display:true,text:'Longitude (Leste →)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}},y:{title:{display:true,text:'Latitude (Sul ↓)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10}}}}}});
 }
 function renderMun(data){
@@ -1569,7 +1569,7 @@ function renderMapMarkers() {
     html: '<div style="background:#10243e;color:#f5a623;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;border:2px solid #f5a623;box-shadow:0 2px 8px rgba(0,0,0,.5);letter-spacing:0;line-height:1.1;text-align:center">TRR</div>',
     iconSize: [30, 30], iconAnchor: [15, 15], className: ''
   });
-  L.marker([-14.7483, -50.5803], { icon: trrIcon, zIndexOffset: 1000 })
+  L.marker([-14.74469, -50.54306], { icon: trrIcon, zIndexOffset: 1000 })
     .bindTooltip('<b>TRR Mozarlândia</b><br>Ponto de referência', { sticky: true })
     .bindPopup('<h4 class="lp-h">TRR Mozarlândia</h4><div class="lp-meta">GO-164, KM 166, Zona Urbana<br>Mozarlândia - GO · CEP 76700-000<br>Distribuidora de Combustíveis</div>', { maxWidth: 260 })
     .addTo(mapLayers);
@@ -1706,7 +1706,7 @@ var advRadiusLayer = null;
 var advCarLayer    = null;
 var advRouteLayer  = null;
 var advRadius      = 10;
-var TRR_LAT = -14.7483, TRR_LON = -50.5803;
+var TRR_LAT = -14.74469, TRR_LON = -50.54306;
 var _advAreaFilter = '';
 // Municipios do Vale do Araguaia (editavel)
 var VALE_ARAGUAIA = ['MOZARLANDIA','ARUANA','BRITANIA','JUSSARA','MATRINCHA','ARAGUAPAZ',
@@ -1720,7 +1720,7 @@ function advToggleVale(btn){
   renderAdvClientes();
   if (window._advNearby) advApplyFilters();
 }
-var TRR_LAT = -14.7483, TRR_LON = -50.5803;
+var TRR_LAT = -14.74469, TRR_LON = -50.54306;
 var prospData = null;
 var prospDrillData = null;
 var prospFilters = { q: '', uf: '', score: '', dist: '', semCli: false };

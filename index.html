@@ -382,6 +382,16 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-tag-lead.m{background:#b8860b;}
 .adv-tag-lead.f{background:#64748b;}
 
+/* ===== BIBLIOTECA DE FILTROS (Fase 1 / Epico 4) ===== */
+#filtros-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:400px;max-width:96vw;background:#fff;z-index:3200;box-shadow:-6px 0 28px rgba(0,0,0,.28);flex-direction:column;}
+#filtros-panel.open{display:flex;}
+.flt-btn{position:relative;border:1.5px solid #10243e;background:#fff;color:#10243e;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:800;cursor:pointer;}
+.flt-btn .flt-count{position:absolute;top:-7px;right:-7px;background:#e0762c;color:#fff;border-radius:50%;min-width:18px;height:18px;font-size:10.5px;font-weight:900;display:none;align-items:center;justify-content:center;padding:0 3px;}
+.flt-btn.on .flt-count{display:flex;}
+.flt-apply{width:100%;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;background:#10243e;color:#fff;}
+.flt-clear{width:100%;border:1.5px solid #d8dee5;background:#fff;border-radius:9px;padding:10px;font-size:12.5px;font-weight:800;cursor:pointer;color:var(--muted);margin-top:7px;}
+@media (max-width:640px){#filtros-panel{top:auto;left:0;right:0;bottom:0;width:100%;max-width:100%;height:88vh;border-radius:16px 16px 0 0;}}
+
 /* ===== RELATORIO DE VISITA (Fase 1) ===== */
 #visita-panel,#vlist-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:440px;max-width:96vw;background:#fff;z-index:3100;box-shadow:-6px 0 28px rgba(0,0,0,.28);flex-direction:column;}
 #visita-panel.open,#vlist-panel.open{display:flex;}
@@ -710,6 +720,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
       <span style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;">Região</span>
       <button id="adv-vale-btn" class="adv-radius-btn" onclick="advToggleVale(this)">🏞 Vale do Araguaia</button>
       <button class="adv-radius-btn" onclick="openVisitasList()">📋 Visitas</button>
+      <button class="flt-btn" id="flt-btn-adv" onclick="openFiltros()">⚙️ Filtros<span class="flt-count"></span></button>
     </div>
     <div class="adv-legend">
       <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#7c3aed;border:2px solid #fff;box-shadow:0 0 0 1.5px #7c3aed"></div>Cliente TRR</div>
@@ -774,6 +785,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
       <button class="campo-radius-btn" onclick="setCampoRadius(10,this)">10 km</button>
       <button class="campo-radius-btn" onclick="setCampoRadius(20,this)">20 km</button>
     </div>
+    <button class="flt-btn" id="flt-btn-campo" onclick="openFiltros()">⚙️ Filtros<span class="flt-count"></span></button>
     <label class="campo-follow"><input type="checkbox" id="campo-follow" checked> Seguir no mapa</label>
     <span id="campo-status" class="campo-status">GPS desligado</span>
   </div>
@@ -1986,6 +1998,7 @@ function renderAdvClientes() {
   props.forEach(function(p) {
     if (!p.lat || !p.lon) return;
     if (_advValeFilter && !advIsVale(p.mun)) return;
+    if (!fMatchCli(p)) return;
     count++;
     var av = p.ativa === true || p.ativa === 'true';
     var m = L.circleMarker([p.lat, p.lon], {
@@ -2160,6 +2173,7 @@ function advApplyFilters() {
   var filtered = nearby.filter(function(item) {
     var c = item.prop;
     if (_advValeFilter && !advIsVale(c.mun)) return false;
+    if (!fMatchCar({mun:c.mun, uf:c.uf, area:c.area, status:c.status, condic:c.condic, contato:c.contato, nome:c.nom})) return false;
     if (munVal && (c.mun||'').toLowerCase() !== munVal.toLowerCase()) return false;
     var area = parseFloat(c.area) || 0;
     if (areaVal==='lt50'    && area >= 50)             return false;
@@ -3218,13 +3232,16 @@ async function campoRefresh(force) {
     // Prospects CAR via RPC (raio no banco)
     var res = await SB.rpc('trr_campo_nearby', { p_lat: campoPos.lat, p_lon: campoPos.lon, p_km: campoRadius, p_lim: 300 });
     if (res.error) throw new Error(res.error.message || JSON.stringify(res.error));
-    var cars = res.data || [];
+    var cars = (res.data || []).filter(function(c){
+      return fMatchCar({mun:c.municipio, uf:c.uf, area:c.area_ha, status:c.status_car, condic:c.des_condic, contato:c.tem_contato, nome:c.nom_imovel});
+    });
 
     // Clientes TRR (geoData ja em memoria) dentro do raio
     var clis = [];
     if (geoData && geoData.props) {
       geoData.props.forEach(function(p){
         if (!p.lat || !p.lon) return;
+        if (!fMatchCli(p)) return;
         var d = haversineKm(campoPos.lat, campoPos.lon, p.lat, p.lon);
         if (d <= campoRadius) clis.push({ p:p, dist:d });
       });
@@ -3899,6 +3916,146 @@ async function openVisitasList(){
   }
 }
 
+
+/* ===== BIBLIOTECA DE FILTROS (FIL-01/02/03) ===== */
+var FILTROS_PADRAO = { areaMin:'', areaMax:'', status:[], condic:[], uf:[], mun:'', soContato:false, soNome:false, vale:false };
+var FILTROS = FILTROS_PADRAO;
+try { FILTROS = Object.assign({}, FILTROS_PADRAO, JSON.parse(sessionStorage.getItem('trr_filtros')||'{}')); } catch(e) {}
+
+function filtrosAtivos(){
+  var n = 0;
+  if (FILTROS.areaMin !== '' || FILTROS.areaMax !== '') n++;
+  if (FILTROS.status.length) n++;
+  if (FILTROS.condic.length) n++;
+  if (FILTROS.uf.length) n++;
+  if (FILTROS.mun) n++;
+  if (FILTROS.soContato) n++;
+  if (FILTROS.soNome) n++;
+  if (FILTROS.vale) n++;
+  return n;
+}
+
+function fCondGrupo(condic){
+  if (condic === 'OK' || condic === 'OKA') return 'regular';
+  if (condic === 'NOT' || condic === 'REG' || condic === 'REV') return 'pendencia';
+  if (condic === 'CD' || condic === 'CA' || condic === 'CS') return 'cancelado';
+  return 'sem_analise';
+}
+
+// Matcher para imoveis CAR (recebe objeto normalizado)
+function fMatchCar(c){
+  var area = parseFloat(c.area) || 0;
+  if (FILTROS.areaMin !== '' && area < parseFloat(FILTROS.areaMin)) return false;
+  if (FILTROS.areaMax !== '' && area > parseFloat(FILTROS.areaMax)) return false;
+  if (FILTROS.status.length && FILTROS.status.indexOf(c.status||'AT') < 0) return false;
+  if (FILTROS.condic.length && FILTROS.condic.indexOf(fCondGrupo(c.condic)) < 0) return false;
+  if (FILTROS.uf.length && FILTROS.uf.indexOf((c.uf||'').toUpperCase().trim()) < 0) return false;
+  if (FILTROS.mun && (c.mun||'').toUpperCase().indexOf(FILTROS.mun.toUpperCase()) < 0) return false;
+  if (FILTROS.soContato && !c.contato) return false;
+  if (FILTROS.soNome && !(c.nome && c.nome !== 'SEM_REGISTRO')) return false;
+  if (FILTROS.vale && !advIsVale(c.mun)) return false;
+  return true;
+}
+
+// Matcher para clientes TRR (aplica so o que faz sentido)
+function fMatchCli(p){
+  if (FILTROS.mun && (p.mun||'').toUpperCase().indexOf(FILTROS.mun.toUpperCase()) < 0) return false;
+  if (FILTROS.vale && !advIsVale(p.mun)) return false;
+  return true;
+}
+
+function openFiltros(){
+  var b = document.getElementById('filtros-body');
+  var chip = function(grupo, val, lbl, sel){
+    return '<span class="vis-chip'+(sel?' on':'')+'" data-g="'+grupo+'" data-v="'+val+'" onclick="this.classList.toggle(\'on\')">'+lbl+'</span>';
+  };
+  b.innerHTML =
+    '<div class="vis-grp"><label class="vis-lbl">Área (ha) — faixa configurável</label>'
+    + '<div class="vis-row"><input class="vis-in" id="f-amin" type="number" inputmode="numeric" placeholder="mínimo" value="'+FILTROS.areaMin+'">'
+    + '<input class="vis-in" id="f-amax" type="number" inputmode="numeric" placeholder="máximo" value="'+FILTROS.areaMax+'"></div></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Status CAR</label><div class="vis-chips">'
+    + chip('status','AT','Ativo',FILTROS.status.indexOf('AT')>=0)
+    + chip('status','PE','Pendente',FILTROS.status.indexOf('PE')>=0)
+    + chip('status','CA','Cancelado',FILTROS.status.indexOf('CA')>=0) + '</div></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Condição CAR / SEMAD</label><div class="vis-chips">'
+    + chip('condic','regular','✅ Regular',FILTROS.condic.indexOf('regular')>=0)
+    + chip('condic','pendencia','⚠️ Pendência',FILTROS.condic.indexOf('pendencia')>=0)
+    + chip('condic','cancelado','❌ Cancelado',FILTROS.condic.indexOf('cancelado')>=0)
+    + chip('condic','sem_analise','Aguardando análise',FILTROS.condic.indexOf('sem_analise')>=0) + '</div></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Estado</label><div class="vis-chips">'
+    + ['GO','MT','TO'].map(function(u){ return chip('uf',u,u,FILTROS.uf.indexOf(u)>=0); }).join('') + '</div></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Município (contém)</label><input class="vis-in" id="f-mun" value="'+esc(FILTROS.mun)+'" placeholder="ex: CRIXAS"></div>'
+    + '<div class="vis-grp"><div class="vis-chips">'
+    + chip('flag','soContato','📞 Só com contato',FILTROS.soContato)
+    + chip('flag','soNome','🏷 Só com nome',FILTROS.soNome)
+    + chip('flag','vale','🏞 Vale do Araguaia',FILTROS.vale) + '</div></div>'
+    + '<div style="height:8px"></div>'
+    + '<button class="flt-apply" onclick="aplicarFiltros()">Aplicar filtros</button>'
+    + '<button class="flt-clear" onclick="limparFiltros()">Limpar tudo</button>'
+    + '<div style="font-size:10.5px;color:var(--muted);margin-top:12px">FIL-02: este conjunto vale para o Modo Campo e a Prosp Avançada ao mesmo tempo. Clientes TRR respeitam município e região; imóveis CAR respeitam todos os campos.</div>';
+  document.getElementById('filtros-panel').classList.add('open');
+}
+
+function _fltColeta(){
+  var pega = function(g){
+    var out = [];
+    document.querySelectorAll('#filtros-body .vis-chip.on[data-g="'+g+'"]').forEach(function(c){ out.push(c.getAttribute('data-v')); });
+    return out;
+  };
+  var flags = pega('flag');
+  FILTROS = {
+    areaMin: document.getElementById('f-amin').value.trim(),
+    areaMax: document.getElementById('f-amax').value.trim(),
+    status: pega('status'),
+    condic: pega('condic'),
+    uf: pega('uf'),
+    mun: document.getElementById('f-mun').value.trim(),
+    soContato: flags.indexOf('soContato') >= 0,
+    soNome: flags.indexOf('soNome') >= 0,
+    vale: flags.indexOf('vale') >= 0
+  };
+  sessionStorage.setItem('trr_filtros', JSON.stringify(FILTROS));
+}
+
+function aplicarFiltros(){
+  _fltColeta();
+  // sincroniza o toggle Vale existente
+  _advValeFilter = FILTROS.vale;
+  var vb = document.getElementById('adv-vale-btn');
+  if (vb) vb.classList.toggle('active', FILTROS.vale);
+  document.getElementById('filtros-panel').classList.remove('open');
+  atualizaFiltroBadges();
+  // re-renderiza os dois mapas
+  if (typeof renderAdvClientes === 'function' && advCliLayer) renderAdvClientes();
+  if (window._advNearby) advApplyFilters();
+  if (campoPos) campoRefresh(true);
+}
+
+function limparFiltros(){
+  FILTROS = Object.assign({}, FILTROS_PADRAO, {status:[],condic:[],uf:[]});
+  sessionStorage.setItem('trr_filtros', JSON.stringify(FILTROS));
+  _advValeFilter = false;
+  var vb = document.getElementById('adv-vale-btn');
+  if (vb) vb.classList.remove('active');
+  atualizaFiltroBadges();
+  openFiltros();
+  if (typeof renderAdvClientes === 'function' && advCliLayer) renderAdvClientes();
+  if (window._advNearby) advApplyFilters();
+  if (campoPos) campoRefresh(true);
+}
+
+function atualizaFiltroBadges(){
+  var n = filtrosAtivos();
+  ['flt-btn-adv','flt-btn-campo'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (!b) return;
+    b.classList.toggle('on', n > 0);
+    var c = b.querySelector('.flt-count');
+    if (c) c.textContent = n;
+  });
+}
+try { atualizaFiltroBadges(); } catch(e) {}
+
 </script>
 
 <!-- Painel lateral de detalhe de propriedade -->
@@ -3946,6 +4103,17 @@ async function openVisitasList(){
     <button class="intel-close" onclick="document.getElementById('vlist-panel').classList.remove('open')">✕</button>
   </div>
   <div class="vis-body" id="vlist-body"></div>
+</div>
+
+
+<!-- ===== PAINEL BIBLIOTECA DE FILTROS ===== -->
+<div id="filtros-panel">
+  <div class="intel-hdr">
+    <div><div class="intel-title">⚙️ Filtros</div>
+    <div class="intel-sub">Aplicados a todos os mapas (Campo e Prosp Avançada)</div></div>
+    <button class="intel-close" onclick="document.getElementById('filtros-panel').classList.remove('open')">✕</button>
+  </div>
+  <div class="vis-body" id="filtros-body"></div>
 </div>
 
 </body>

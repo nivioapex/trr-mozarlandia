@@ -3413,26 +3413,50 @@ function intelAnalyze(d){
     ? 'Chuvas: manuten\u00e7\u00e3o de frota e planejamento da silagem antes da seca.'
     : 'Colheita da soja / plantio da safrinha: pico de consumo de diesel e lubrificantes.';
 
-  // Produtos recomendados (portfolio Dinamica TRR + Dinamica Agro)
+  // ===== NECESSIDADES + PORTFOLIO COMPLETO DINAMICA (12 parceiros) =====
+  var leiteira = principal === 'Pecu\u00e1ria leiteira';
+  var grande = mf != null ? mf > 15 : area >= 500;
+  var confinaSignal = isPec && !leiteira && grande && m && (m.rebanho_bovino||0) > 200000;
+
+  // Necessidades provaveis (dor -> solucao -> parceiro)
+  var needs = [];
+  if (isPec) {
+    needs.push({d:'Seca: cocho vazio e perda de peso do rebanho', s:'Silagem de sorgo BRS 716 (Embrapa) + inoculante', p:'Santo Isidoro + Dorf Ketal'});
+    needs.push({d:'Pasto degradado e lota\u00e7\u00e3o baixa', s:'Adubo org\u00e2nico + biofertilizante na reforma das \u00e1guas', p:'Grupo Organics + Biof\u00f3rmula'});
+    if (leiteira) needs.push({d:'Produtividade de leite baixa por vaca', s:'Suplementa\u00e7\u00e3o nutricional + silagem de milho/sorgo dupla aptid\u00e3o', p:'Biof\u00f3rmula + Land Sementes'});
+    if (confinaSignal) needs.push({d:'Confinamento: esterco acumulado vira passivo', s:'Servi\u00e7o no confinamento \u2014 esterco transformado em adubo org\u00e2nico (receita extra)', p:'Grupo Organics'});
+    if (grande) needs.push({d:'Gest\u00e3o do rebanho sem n\u00fameros', s:'Diagn\u00f3stico t\u00e9cnico, protocolos e balan\u00e7as/curral inteligente', p:'Pacheco Consultoria + Oxen Currais'});
+  } else {
+    needs.push({d:'M\u00e1quina parada na janela de plantio/colheita', s:'Diesel a granel programado + aditivo Milex (armazenagem sem perda)', p:'Din\u00e2mica TRR + Dorf Ketal'});
+    needs.push({d:'Custo de aduba\u00e7\u00e3o qu\u00edmica subindo', s:'Adubo org\u00e2nico + fertilizantes de alta efici\u00eancia', p:'Grupo Organics + Shimizu'});
+    needs.push({d:'Pulveriza\u00e7\u00e3o com \u00e1gua ruim = defensivo jogado fora', s:'Tratamento de \u00e1gua para pulveriza\u00e7\u00e3o (Programa Gota Certa)', p:'Shimizu Fertilizantes'});
+    needs.push({d:'Safrinha: escolher h\u00edbrido errado custa a safra', s:'Milho h\u00edbrido tolerante a enfezamento, dupla aptid\u00e3o', p:'Land Gen\u00e9tica & Sementes'});
+  }
+  if (grande) needs.push({d:'Capital de giro apertado na entressafra', s:'Cr\u00e9dito, antecipa\u00e7\u00e3o de receb\u00edveis e consultoria tribut\u00e1ria', p:'Banefort Group'});
+  if (condic === 'NOT' || condic === 'REG' || condic === 'REV') needs.push({d:'Pend\u00eancia ambiental no CAR', s:'Acompanhamento t\u00e9cnico para regulariza\u00e7\u00e3o \u2014 porta de entrada da visita', p:'Pacote Tecnol\u00f3gico Din\u00e2mica'});
+
+  // Produtos recomendados
   var prods = [
-    {i:'\u26FD', n:'Diesel S10/S500 a granel', w:'Entrega direta no tanque da fazenda \u2014 sem viagem a posto, sem gal\u00e3o. Estimativa: ~'+dieselAno.toLocaleString('pt-BR')+' L/ano.'},
-    {i:'\uD83D\uDEE2', n:'Lubrificantes, graxas e ARLA 32', w:'Manuten\u00e7\u00e3o preventiva de tratores'+(isPec?', caminh\u00f5es e ve\u00edculos da fazenda':' e colheitadeiras')+'.'}
+    {i:'\u26FD', n:'Diesel S500/S10, gasolina e etanol a granel', w:'Entrega rastreada no tanque da fazenda, base homologada Senador Canedo. Estimativa: ~'+dieselAno.toLocaleString('pt-BR')+' L/ano.', p:'Din\u00e2mica TRR'},
+    {i:'\uD83D\uDEE2', n:'Lubrificantes e ARLA 32', w:'Prote\u00e7\u00e3o de motor de tratores'+(isPec?', caminh\u00f5es e frota da fazenda':' e colheitadeiras')+' \u2014 linha completa de alta tecnologia.', p:'Din\u00e2mica Agro'},
+    {i:'\u2697\uFE0F', n:'Aditivos Milex para diesel', w:'Aditivo premium (mol\u00e9cula Comba\u00adtron): limpeza de bico, economia e prote\u00e7\u00e3o em diesel armazenado na fazenda.', p:'Dorf Ketal'}
   ];
   if (isPec) {
-    prods.push({i:'\uD83C\uDF31', n:'Sorgo forrageiro BRS 716 (Embrapa)', w:'Silagem de alto rendimento para a seca \u2014 tecnologia Din\u00e2mica Agro. Rebanho estimado: ~'+cab.toLocaleString('pt-BR')+' cab.'});
-    prods.push({i:'\uD83C\uDF3E', n:'Sementes de pastagem e forrageiras', w:'Reforma e recupera\u00e7\u00e3o de pasto degradado nas \u00e1guas.'});
-    prods.push({i:'\uD83C\uDF3F', n:'Adubo org\u00e2nico', w:'Reforma de pasto com custo menor que o qu\u00edmico \u2014 devolve mat\u00e9ria org\u00e2nica e vida ao solo. Aplicar nas \u00e1guas.'});
-    prods.push({i:'\uD83D\uDCA7', n:'Biofertilizante', w:'Arranque do capim ap\u00f3s reforma e refor\u00e7o do canavial/sorgo de silagem \u2014 mais prote\u00edna no cocho.'});
-    prods.push({i:'\u2697\uFE0F', n:'Aditivos (inoculante de silagem + combust\u00edvel)', w:'Inoculante reduz perda da silagem em at\u00e9 15%; aditivo de diesel protege bomba e bico em tanque de fazenda.'});
+    prods.push({i:'\uD83C\uDF31', n:'Sorgo Gig. Forrageiro BRS 716 h\u00edbrido', w:'Silagem de alto rendimento pra seca \u2014 gen\u00e9tica Embrapa. Rebanho estimado: ~'+cab.toLocaleString('pt-BR')+' cab.', p:'Santo Isidoro Sementes'});
+    prods.push({i:'\uD83C\uDF3F', n:'Adubo org\u00e2nico pronto', w:'Reforma de pasto e ro\u00e7as com custo menor que NPK qu\u00edmico \u2014 venda direta.', p:'Grupo Organics'});
+    prods.push({i:'\uD83D\uDC8A', n:'Suplementos nutricionais', w:'Vitaminas e suplementos comprovados pra gado de '+(leiteira?'leite':'corte')+' \u2014 mais sa\u00fade e performance do rebanho.', p:'Biof\u00f3rmula'});
+    if (grande || confinaSignal) prods.push({i:'\uD83D\uDC02', n:'Currais, balan\u00e7as e cochos', w:'Manejo com n\u00famero: balan\u00e7as, curral inteligente, cerca el\u00e9trica \u2014 20 anos de campo.', p:'Oxen Currais'});
+    if (confinaSignal) prods.push({i:'\u267B\uFE0F', n:'Servi\u00e7o no confinamento', w:'Transformam o esterco do confinamento em adubo org\u00e2nico de qualidade \u2014 passivo vira receita.', p:'Grupo Organics'});
+    prods.push({i:'\uD83D\uDCCB', n:'Consultoria pecu\u00e1ria (35 anos)', w:'Diagn\u00f3stico da fazenda, protocolos de manejo/nutri\u00e7\u00e3o e capacita\u00e7\u00e3o da equipe.', p:'Pacheco Consultoria'});
   } else {
-    prods.push({i:'\uD83C\uDF3E', n:'Sementes certificadas (soja/milho/sorgo)', w:'Portf\u00f3lio Din\u00e2mica Agro com acompanhamento t\u00e9cnico.'});
-    prods.push({i:'\uD83C\uDF3F', n:'Adubo org\u00e2nico', w:'Mat\u00e9ria org\u00e2nica e estrutura de solo \u2014 reduz a conta de NPK qu\u00edmico e melhora reten\u00e7\u00e3o de \u00e1gua no cerrado.'});
-    prods.push({i:'\uD83D\uDCA7', n:'Biofertilizante', w:'Nutri\u00e7\u00e3o foliar e de solo no arranque e enchimento de gr\u00e3o \u2014 resposta r\u00e1pida em produtividade.'});
-    prods.push({i:'\u2697\uFE0F', n:'Aditivos', w:'Aditivo de combust\u00edvel para armazenagem na safra \u2014 diesel parado sem perder qualidade, motor protegido.'});
+    prods.push({i:'\uD83C\uDF3D', n:'Milho h\u00edbrido safrinha', w:'Alta performance no Centro-Oeste, dupla aptid\u00e3o (gr\u00e3o e silagem), tolerante a enfezamento.', p:'Land Gen\u00e9tica & Sementes'});
+    prods.push({i:'\uD83C\uDF3F', n:'Adubo org\u00e2nico + fertilizantes', w:'Mat\u00e9ria org\u00e2nica no solo do cerrado + fertilizantes de alta efici\u00eancia \u2014 reduz a conta do qu\u00edmico.', p:'Organics + Shimizu'});
+    prods.push({i:'\uD83D\uDCA6', n:'Tratamento de \u00e1gua de pulveriza\u00e7\u00e3o', w:'Programa Gota Certa: \u00e1gua certa = defensivo rendendo o que promete.', p:'Shimizu Fertilizantes'});
   }
-  if (principal === 'Pecu\u00e1ria leiteira') prods.unshift({i:'\uD83E\uDD5B', n:'Pacote bacia leiteira', w:'Sorgo BRS 716 + inoculante + biofertilizante no capim: mais leite por hectare na seca. Diesel do resfriador e do trator na porteira.'});
-  if (mf != null && mf < 4) prods.push({i:'\uD83C\uDFE6', n:'Or\u00e7amento enquadrado no PRONAF', w:'Propriedade at\u00e9 4 m\u00f3dulos fiscais \u2014 insumos e sementes podem entrar em cr\u00e9dito rural subsidiado. Argumento forte de fechamento.'});
-  prods.push({i:'\uD83E\uDD1D', n:'Acompanhamento t\u00e9cnico Din\u00e2mica Agro', w:'Visita t\u00e9cnica para dimensionar tanque, consumo, an\u00e1lise de solo e manejo.'});
+  if (leiteira) prods.unshift({i:'\uD83E\uDD5B', n:'Pacote bacia leiteira', w:'BRS 716 + suplementa\u00e7\u00e3o Biof\u00f3rmula + milho silagem Land: mais leite por hectare na seca, diesel do resfriador garantido.', p:'Din\u00e2mica Agro'});
+  if (grande) prods.push({i:'\uD83C\uDFE6', n:'Solu\u00e7\u00f5es financeiras do agro', w:'Cr\u00e9dito independente de banco, antecipa\u00e7\u00e3o de receb\u00edveis, consultoria tribut\u00e1ria e compliance.', p:'Banefort Group'});
+  if (mf != null && mf < 4) prods.push({i:'\uD83C\uDFE6', n:'Or\u00e7amento enquadrado no PRONAF', w:'At\u00e9 4 m\u00f3dulos fiscais \u2014 insumos e sementes em cr\u00e9dito rural subsidiado. Argumento de fechamento.', p:'Din\u00e2mica Agro'});
+  prods.push({i:'\uD83E\uDD1D', n:'Pacote Tecnol\u00f3gico', w:'Avalia\u00e7\u00e3o t\u00e9cnica completa da propriedade com os melhores profissionais \u2014 melhor custo-benef\u00edcio por finalidade.', p:'Din\u00e2mica Agro'});
 
   // Score de conversao (0-100)
   var ex = d.extras || {};
@@ -3470,7 +3494,7 @@ function intelAnalyze(d){
     principal:principal, secundaria:secundaria, why:why, whyLav:whyLav, whySec:whySec,
     porte:porte, cab:cab, dieselAno:dieselAno, gancho:gancho, prods:prods, msg:msg,
     ex:ex, score:score, scoreCls:scoreCls, scoreLbl:scoreLbl, scoreWhy:scoreWhy,
-    mf:mf, mfCls:mfCls, dairyShare:dairyShare, condicInfo:condicInfo };
+    mf:mf, mfCls:mfCls, dairyShare:dairyShare, condicInfo:condicInfo, needs:needs };
 }
 
 function renderIntel(d){
@@ -3548,10 +3572,22 @@ function renderIntel(d){
     h += '</div>';
   }
 
+  // Necessidades identificadas
+  if (a.needs && a.needs.length) {
+    h += '<div class="intel-sec"><div class="intel-sec-t">\uD83C\uDFAF Necessidades identificadas</div>';
+    a.needs.forEach(function(n){
+      h += '<div class="intel-prod" style="border-left:3px solid #e0762c"><div><div class="intel-prod-n">'+n.d+'</div>'
+        + '<div class="intel-prod-w">\u2192 '+n.s+' <b style="color:#1c7c54">('+n.p+')</b></div></div></div>';
+    });
+    h += '</div>';
+  }
+
   // Produtos
   h += '<div class="intel-sec"><div class="intel-sec-t">\uD83D\uDECD O que oferecer</div>';
   a.prods.forEach(function(pr){
-    h += '<div class="intel-prod"><div class="intel-prod-ico">'+pr.i+'</div><div><div class="intel-prod-n">'+pr.n+'</div><div class="intel-prod-w">'+pr.w+'</div></div></div>';
+    h += '<div class="intel-prod"><div class="intel-prod-ico">'+pr.i+'</div><div><div class="intel-prod-n">'+pr.n
+      + (pr.p?' <span style="font-size:10px;font-weight:700;color:#1c7c54;background:#f2fbf6;border-radius:10px;padding:1px 7px;vertical-align:1px">'+pr.p+'</span>':'')
+      + '</div><div class="intel-prod-w">'+pr.w+'</div></div></div>';
   });
   h += '</div>';
 

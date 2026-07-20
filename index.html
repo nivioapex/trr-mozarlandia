@@ -382,6 +382,32 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-tag-lead.m{background:#b8860b;}
 .adv-tag-lead.f{background:#64748b;}
 
+/* ===== RELATORIO DE VISITA (Fase 1) ===== */
+#visita-panel,#vlist-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:440px;max-width:96vw;background:#fff;z-index:3100;box-shadow:-6px 0 28px rgba(0,0,0,.28);flex-direction:column;}
+#visita-panel.open,#vlist-panel.open{display:flex;}
+.vis-body{flex:1;overflow-y:auto;padding:14px 16px;}
+.vis-grp{margin-bottom:13px;}
+.vis-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:5px;display:block;}
+.vis-in,.vis-sel,.vis-ta{width:100%;box-sizing:border-box;border:1.5px solid #d8dee5;border-radius:8px;padding:9px 11px;font-size:13.5px;outline:none;background:#fff;font-family:inherit;}
+.vis-in:focus,.vis-sel:focus,.vis-ta:focus{border-color:#10243e;}
+.vis-ta{min-height:64px;resize:vertical;}
+.vis-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.vis-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.vis-chip{border:1.5px solid #d8dee5;background:#fff;border-radius:20px;padding:6px 13px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--muted);user-select:none;}
+.vis-chip.on{background:#10243e;color:#fff;border-color:#10243e;}
+.vis-clima{display:flex;align-items:center;gap:8px;background:#eef6ff;border-radius:8px;padding:8px 12px;font-size:12.5px;color:#1e5687;font-weight:600;}
+.vis-save{width:100%;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:900;cursor:pointer;background:#1c7c54;color:#fff;margin-top:4px;}
+.vis-save:disabled{opacity:.6;}
+.vis-prevenda{display:flex;align-items:center;gap:9px;background:#fff8f2;border:1.5px dashed #e0762c;border-radius:9px;padding:11px 12px;font-size:13.5px;font-weight:800;color:#9a4c0e;cursor:pointer;user-select:none;}
+.vis-sec-hdr{font-size:12px;font-weight:900;color:#10243e;border-bottom:2px solid #eef1f4;padding-bottom:4px;margin:18px 0 10px;}
+.vis-card{background:var(--card);border-radius:10px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:9px;border-left:4px solid #1c7c54;}
+.vis-card.pv{border-left-color:#e0762c;}
+.vis-card-t{font-weight:800;font-size:13.5px;}
+.vis-card-s{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.vis-fotos-prev{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+.vis-fotos-prev img{width:56px;height:56px;object-fit:cover;border-radius:7px;border:1px solid #e5e9ee;}
+@media (max-width:640px){#visita-panel,#vlist-panel{top:auto;left:0;right:0;bottom:0;width:100%;max-width:100%;height:92vh;border-radius:16px 16px 0 0;}}
+
 /* ===== BUSCA GEORREFERENCIADA ===== */
 .adv-search-wrap{position:relative;flex:1 1 240px;min-width:200px;max-width:360px;}
 #adv-search{width:100%;box-sizing:border-box;border:1.5px solid #d8dee5;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;background:#fff;}
@@ -683,6 +709,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
     <div style="display:flex;flex-direction:column;gap:3px;">
       <span style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;">Região</span>
       <button id="adv-vale-btn" class="adv-radius-btn" onclick="advToggleVale(this)">🏞 Vale do Araguaia</button>
+      <button class="adv-radius-btn" onclick="openVisitasList()">📋 Visitas</button>
     </div>
     <div class="adv-legend">
       <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#7c3aed;border:2px solid #fff;box-shadow:0 0 0 1.5px #7c3aed"></div>Cliente TRR</div>
@@ -3264,11 +3291,13 @@ function campoRenderList(clis, prospects) {
   var navBtn = function(lat, lon) {
     return '<a class="campo-nav-btn" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+lat+','+lon+'" onclick="event.stopPropagation()">\uD83E\uDDED Navegar</a>';
   };
-  clis.slice(0, 15).forEach(function(x){
+  window._campoClis = clis;
+  clis.slice(0, 15).forEach(function(x, _ci){
     html += '<div class="campo-card cli" onclick="campoMap.setView(['+x.p.lat+','+x.p.lon+'],14)">' +
       '<div class="campo-card-nome">\uD83D\uDFE3 '+esc(x.p.cli||'\u2013')+'</div>' +
       '<div class="campo-card-sub">'+esc(x.p.prop||'')+(x.p.mun?' \u00b7 '+esc(x.p.mun):'')+'</div>' +
-      '<div class="campo-card-foot"><span class="campo-card-dist">'+x.dist.toFixed(1)+' km</span>'+navBtn(x.p.lat,x.p.lon)+'</div></div>';
+      '<div class="campo-card-foot"><span class="campo-card-dist">'+x.dist.toFixed(1)+' km</span>'+
+      '<span style="display:flex;gap:6px"><button class="campo-nav-btn" style="background:#1c7c54" onclick="event.stopPropagation();campoVisitaCli('+_ci+')">\uD83D\uDCDD Visita</button>'+navBtn(x.p.lat,x.p.lon)+'</span></div></div>';
   });
   var statusLbl = {'AT':'Ativo','PE':'Pendente','CA':'Cancelado'};
   prospects.slice(0, 40).forEach(function(c){
@@ -3504,6 +3533,7 @@ function renderIntel(d){
   }
   var a = intelAnalyze(d);
   var p = a.p;
+  window._visitaCtx = { car_id: p.id, nome_fazenda: (p.nom_imovel && p.nom_imovel !== 'SEM_REGISTRO') ? p.nom_imovel : '', lat: p.lat, lon: p.lon };
   document.getElementById('intel-title').textContent = (p.nom_imovel && p.nom_imovel!=='SEM_REGISTRO' ? p.nom_imovel : 'Im\u00f3vel CAR');
   document.getElementById('intel-sub').textContent = (p.municipio||'')+'/'+(p.uf||'')+' \u00b7 '+(p.area_ha?Number(p.area_ha).toLocaleString('pt-BR',{maximumFractionDigits:0})+' ha \u00b7 porte '+a.porte:'')+' \u00b7 CAR '+(p.status_car||'');
 
@@ -3609,7 +3639,9 @@ function renderIntel(d){
   h += '</div></div>';
 
   if (p.lat && p.lon) {
-    h += '<div class="intel-sec"><a class="intel-act-btn" style="width:100%;justify-content:center" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lon+'">\uD83E\uDDED Navegar at\u00e9 a propriedade</a></div>';
+    h += '<div class="intel-sec" style="display:flex;gap:8px;flex-direction:column">'
+      + '<button class="intel-act-btn wa" style="width:100%;justify-content:center;border:none" onclick="openVisita(window._visitaCtx)">\uD83D\uDCDD Registrar visita</button>'
+      + '<a class="intel-act-btn" style="width:100%;justify-content:center" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lon+'">\uD83E\uDDED Navegar at\u00e9 a propriedade</a></div>';
   }
 
   h += '<div style="font-size:10px;color:var(--muted);padding-bottom:10px">Estimativas geradas por cruzamento CAR \u00d7 IBGE (PPM/PAM 2024) \u00d7 base de clientes TRR. Confirmar na visita.</div>';
@@ -3686,6 +3718,187 @@ document.addEventListener('click', function(e){
   if (!w) { var b = document.getElementById('adv-search-results'); if (b) b.classList.remove('open'); }
 });
 
+
+/* ===== FASE 1: RELATORIO DE VISITA + PROSPECCAO POS PRE-VENDA ===== */
+function campoVisitaCli(i){
+  var x = (window._campoClis||[])[i];
+  if (!x) return;
+  openVisita({ car_id:null, cliente_id:null, nome_cliente:x.p.cli||'', nome_fazenda:x.p.prop||'', lat:x.p.lat, lon:x.p.lon });
+}
+
+function closeVisita(){ document.getElementById('visita-panel').classList.remove('open'); }
+
+var _visSN = '<option value="">\u2014</option><option value="true">Sim</option><option value="false">N\u00e3o</option>';
+var _visClima = null, _visFotos = [];
+
+function openVisita(ctx){
+  ctx = ctx || {};
+  window._visitaAtual = ctx;
+  _visClima = null; _visFotos = [];
+  document.getElementById('visita-panel').classList.add('open');
+  document.getElementById('visita-sub').textContent = (ctx.nome_fazenda||'Nova visita') + ' \u00b7 ' + new Date().toLocaleString('pt-BR');
+  var b = document.getElementById('visita-body');
+  b.innerHTML =
+    '<div class="vis-clima" id="vis-clima">\u23F3 Buscando clima da posi\u00e7\u00e3o\u2026</div>'
+    + '<div class="vis-sec-hdr">CLIENTE</div>'
+    + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">Nome do cliente</label><input class="vis-in" id="v-cli" value="'+esc(ctx.nome_cliente||'')+'"></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Nome da fazenda</label><input class="vis-in" id="v-faz" value="'+esc(ctx.nome_fazenda||'')+'"></div></div>'
+    + '<div class="vis-sec-hdr">COMBUST\u00cdVEL E TANQUES</div>'
+    + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">\u00daltima compra de combust\u00edvel</label><input class="vis-in" id="v-ult" placeholder="ex: h\u00e1 2 meses / posto X"></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Tancagem da fazenda (L)</label><input class="vis-in" id="v-tanc" type="number" inputmode="numeric"></div></div>'
+    + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">Conserva\u00e7\u00e3o dos tanques</label><select class="vis-sel" id="v-cons"><option value="">\u2014</option><option value="pessimo">P\u00e9ssimo</option><option value="ruim">Ruim</option><option value="medio">M\u00e9dio</option><option value="bom">Bom</option><option value="otimo">\u00d3timo</option></select></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Precisa manuten\u00e7\u00e3o?</label><select class="vis-sel" id="v-manu">'+_visSN+'</select></div></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Principais maquin\u00e1rios <span style="text-transform:none;font-weight:600">(gatilho: aditivos/lubrificantes)</span></label><textarea class="vis-ta" id="v-maq" placeholder="ex: 2 tratores JD 6110, 1 colheitadeira, caminh\u00e3o..."></textarea></div>'
+    + '<div class="vis-sec-hdr">PECU\u00c1RIA</div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Tipo de cria\u00e7\u00e3o (m\u00faltiplo)</label><div class="vis-chips" id="v-cria">'
+    + ['cria','recria','engorda','confinamento'].map(function(t){return '<span class="vis-chip" data-v="'+t+'" onclick="this.classList.toggle(\'on\')">'+t+'</span>';}).join('')
+    + '</div></div>'
+    + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">Quantas cabe\u00e7as?</label><input class="vis-in" id="v-cab" type="number" inputmode="numeric"></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Estado do curral</label><select class="vis-sel" id="v-curral"><option value="">\u2014</option><option>P\u00e9ssimo</option><option>Ruim</option><option>M\u00e9dio</option><option>Bom</option><option>\u00d3timo</option></select></div></div>'
+    + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">Treinamento no manejo?</label><select class="vis-sel" id="v-trein">'+_visSN+'</select></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Faz TIP?</label><select class="vis-sel" id="v-tip">'+_visSN+'</select></div></div>'
+    + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">Ra\u00e7\u00e3o</label><select class="vis-sel" id="v-racao"><option value="">\u2014</option><option value="compra">Compra</option><option value="fabrica">Tem f\u00e1brica</option><option value="nao">N\u00e3o usa</option></select></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Faz ILP?</label><select class="vis-sel" id="v-ilp">'+_visSN+'</select></div></div>'
+    + '<div class="vis-sec-hdr">AGRICULTURA E ESTRUTURA</div>'
+    + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">Agricultura (ha)</label><input class="vis-in" id="v-agri" type="number" inputmode="numeric"></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Tem piv\u00f4?</label><select class="vis-sel" id="v-pivo">'+_visSN+'</select></div></div>'
+    + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">Energia el\u00e9trica</label><select class="vis-sel" id="v-ener"><option value="">\u2014</option><option>Monof\u00e1sica</option><option>Trif\u00e1sica</option><option>Gerador diesel</option><option>Solar</option><option>Baterias</option></select></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Aguardando proc. ambiental?</label><select class="vis-sel" id="v-amb">'+_visSN+'</select></div></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Situa\u00e7\u00e3o dos pulverizadores</label><input class="vis-in" id="v-pulv" placeholder="ex: 1 autopropelido ok, barra precisa rever bicos"></div>'
+    + '<div class="vis-sec-hdr">FECHAMENTO</div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Fotos da visita</label><input type="file" id="v-fotos" accept="image/*" capture="environment" multiple onchange="visFotosPrev(this)"><div class="vis-fotos-prev" id="v-fotos-prev"></div></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Resumo da visita</label><textarea class="vis-ta" id="v-resumo"></textarea></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Pr\u00f3ximos passos</label><textarea class="vis-ta" id="v-prox"></textarea></div>'
+    + '<label class="vis-prevenda"><input type="checkbox" id="v-pv" style="width:19px;height:19px"> \uD83E\uDD1D Pr\u00e9-venda realizada nesta visita</label>'
+    + '<div style="height:10px"></div>'
+    + '<button class="vis-save" id="v-save" onclick="salvarVisita()">\u2714 Salvar visita</button>'
+    + '<div id="v-msg" style="margin-top:10px"></div><div style="height:30px"></div>';
+  visBuscaClima(ctx.lat, ctx.lon);
+}
+
+async function visBuscaClima(lat, lon){
+  var el = document.getElementById('vis-clima');
+  if (lat == null && campoPos) { lat = campoPos.lat; lon = campoPos.lon; }
+  if (lat == null) { el.textContent = '\uD83C\uDF24 Clima: sem coordenada'; return; }
+  try {
+    var r = await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m');
+    var j = await r.json(); var c = j.current || {};
+    _visClima = { temp_c: c.temperature_2m, umidade_pct: c.relative_humidity_2m, chuva_mm: c.precipitation, vento_kmh: c.wind_speed_10m, quando: new Date().toISOString() };
+    el.textContent = '\uD83C\uDF24 ' + c.temperature_2m + '\u00b0C \u00b7 umidade ' + c.relative_humidity_2m + '% \u00b7 chuva ' + c.precipitation + ' mm \u00b7 vento ' + Math.round(c.wind_speed_10m) + ' km/h';
+  } catch(e) { el.textContent = '\uD83C\uDF24 Clima indispon\u00edvel'; }
+}
+
+function visFotosPrev(inp){
+  _visFotos = Array.prototype.slice.call(inp.files || []);
+  var pv = document.getElementById('v-fotos-prev');
+  pv.innerHTML = '';
+  _visFotos.slice(0,6).forEach(function(f){
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    pv.appendChild(img);
+  });
+}
+
+function _v(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; }
+function _vb(id){ var v = _v(id); return v === '' ? null : v; }
+
+async function salvarVisita(){
+  var btn = document.getElementById('v-save');
+  var msg = document.getElementById('v-msg');
+  btn.disabled = true; btn.textContent = '\u23F3 Salvando\u2026';
+  var ctx = window._visitaAtual || {};
+  try {
+    // Upload de fotos
+    var fotoUrls = [];
+    for (var i = 0; i < Math.min(_visFotos.length, 6); i++) {
+      var f = _visFotos[i];
+      var path = 'v' + Date.now() + '_' + i + '.' + (f.name.split('.').pop() || 'jpg');
+      var up = await SB.storage.from('visitas').upload(path, f);
+      if (!up.error) {
+        var pu = SB.storage.from('visitas').getPublicUrl(path);
+        fotoUrls.push(pu.data.publicUrl);
+      }
+    }
+    var criacao = [];
+    document.querySelectorAll('#v-cria .vis-chip.on').forEach(function(c){ criacao.push(c.getAttribute('data-v')); });
+    var payload = {
+      car_id: ctx.car_id || '', cliente_id: ctx.cliente_id || '',
+      nome_cliente: _v('v-cli'), nome_fazenda: _v('v-faz'),
+      lat: ctx.lat != null ? String(ctx.lat) : (campoPos ? String(campoPos.lat) : ''),
+      lon: ctx.lon != null ? String(ctx.lon) : (campoPos ? String(campoPos.lon) : ''),
+      clima: _visClima,
+      ultima_compra_combustivel: _v('v-ult'), tancagem_l: _v('v-tanc'),
+      conservacao_tanques: _v('v-cons'), manutencao_tanques: _vb('v-manu'),
+      maquinarios: _v('v-maq'), tipo_criacao: criacao.length ? criacao : undefined,
+      qtd_cabecas: _v('v-cab'), agricultura_ha: _v('v-agri'),
+      tem_pivo: _vb('v-pivo'), estado_curral: _v('v-curral'), energia: _v('v-ener'),
+      treinamento_manejo: _vb('v-trein'), faz_tip: _vb('v-tip'), racao: _v('v-racao'),
+      faz_ilp: _vb('v-ilp'), situacao_pulverizadores: _v('v-pulv'),
+      aguardando_ambiental: _vb('v-amb'), fotos: fotoUrls,
+      resumo: _v('v-resumo'), proximos_passos: _v('v-prox'),
+      pre_venda: document.getElementById('v-pv').checked
+    };
+    var res = await SB.rpc('trr_visita_salvar', { p_token: SESSION.token, p: payload });
+    if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+
+    var h = '<div style="background:#d9f2e4;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:700;color:#1c7c54">\u2714 Visita salva com sucesso!</div>';
+    // REL-05: gatilho de oferta por maquinario
+    if (payload.maquinarios) {
+      h += '<div style="background:#fff8f2;border:1px solid #fde8d2;border-radius:9px;padding:10px 13px;font-size:12.5px;margin-top:9px">\uD83D\uDCA1 <b>Gatilho de oferta:</b> maquin\u00e1rio anotado \u2014 oferecer <b>aditivos Milex</b> (Dorf Ketal) e <b>lubrificantes/ARLA</b> na sequ\u00eancia.</div>';
+    }
+    // PROS-01: prospeccao pos pre-venda
+    var plat = parseFloat(payload.lat), plon = parseFloat(payload.lon);
+    if (payload.pre_venda && !isNaN(plat)) {
+      h += '<div class="vis-sec-hdr">\uD83C\uDFAF PROSPECTE NO ENTORNO (p\u00f3s pr\u00e9-venda)</div><div id="v-vizinhos">\u23F3 Buscando fazendas num raio de 10 km\u2026</div>';
+    }
+    document.getElementById('v-msg').innerHTML = h;
+    btn.textContent = '\u2714 Salva';
+    if (payload.pre_venda && !isNaN(plat)) {
+      var nb = await SB.rpc('trr_campo_nearby', { p_lat: plat, p_lon: plon, p_km: 10, p_lim: 30 });
+      var vz = (nb.data || []).filter(function(c){ return c.id !== ctx.car_id; }).slice(0, 8);
+      var vh = vz.length ? '' : '<div style="font-size:12px;color:var(--muted)">Nenhum im\u00f3vel CAR no raio.</div>';
+      vz.forEach(function(c){
+        vh += '<div class="vis-card"><div class="vis-card-t">\uD83C\uDFAF ' + esc(c.nom_imovel || c.cod_imovel || '\u2013') + '</div>'
+          + '<div class="vis-card-s">' + esc(c.municipio||'') + ' \u00b7 ' + (c.area_ha ? Number(c.area_ha).toFixed(0) + ' ha \u00b7 ' : '') + Number(c.dist_km).toFixed(1) + ' km daqui</div>'
+          + '<button class="intel-btn" onclick="closeVisita();openIntel(' + c.id + ')">\uD83D\uDD0E An\u00e1lise de venda</button></div>';
+      });
+      var vv = document.getElementById('v-vizinhos');
+      if (vv) vv.innerHTML = vh;
+    }
+  } catch(e) {
+    msg.innerHTML = '<div style="background:#fde4e1;border-radius:9px;padding:11px;font-size:12.5px;color:#a4243b">\u274C ' + esc(e.message || String(e)) + '</div>';
+    btn.disabled = false; btn.textContent = '\u2714 Salvar visita';
+  }
+}
+
+async function openVisitasList(){
+  var p = document.getElementById('vlist-panel');
+  var b = document.getElementById('vlist-body');
+  p.classList.add('open');
+  b.innerHTML = '<div class="intel-loading">\u23F3 Carregando\u2026</div>';
+  try {
+    var res = await SB.rpc('trr_visitas_listar', { p_token: SESSION.token, p_lim: 50 });
+    if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+    var vs = res.data || [];
+    document.getElementById('vlist-sub').textContent = vs.length + ' visita(s)';
+    if (!vs.length) { b.innerHTML = '<div class="intel-loading">Nenhuma visita registrada ainda.<br>Use \uD83D\uDCDD Registrar visita no painel de an\u00e1lise ou nos cards do Modo Campo.</div>'; return; }
+    var h = '';
+    vs.forEach(function(v){
+      var dt = new Date(v.created_at).toLocaleString('pt-BR');
+      h += '<div class="vis-card' + (v.pre_venda ? ' pv' : '') + '">'
+        + '<div class="vis-card-t">' + (v.pre_venda ? '\uD83E\uDD1D ' : '') + esc(v.nome_fazenda || v.nome_cliente || 'Visita') + '</div>'
+        + '<div class="vis-card-s">' + dt + ' \u00b7 ' + esc(v.criado_por || '') + (v.clima && v.clima.temp_c != null ? ' \u00b7 ' + v.clima.temp_c + '\u00b0C' : '') + '</div>'
+        + (v.resumo ? '<div style="font-size:12.5px;margin-top:6px">' + esc(v.resumo) + '</div>' : '')
+        + (v.proximos_passos ? '<div style="font-size:12px;margin-top:5px;color:#9a4c0e"><b>Pr\u00f3ximos passos:</b> ' + esc(v.proximos_passos) + '</div>' : '')
+        + ((v.fotos && v.fotos.length) ? '<div class="vis-fotos-prev">' + v.fotos.map(function(u){ return '<a href="' + u + '" target="_blank"><img src="' + u + '"></a>'; }).join('') + '</div>' : '')
+        + '</div>';
+    });
+    b.innerHTML = h;
+  } catch(e) {
+    b.innerHTML = '<div class="intel-loading">\u274C ' + esc(e.message || String(e)) + '</div>';
+  }
+}
+
 </script>
 
 <!-- Painel lateral de detalhe de propriedade -->
@@ -3713,6 +3926,26 @@ document.addEventListener('click', function(e){
     <button class="intel-close" onclick="closeIntel()">✕</button>
   </div>
   <div class="intel-body" id="intel-body"></div>
+</div>
+
+
+<!-- ===== PAINEL RELATORIO DE VISITA ===== -->
+<div id="visita-panel">
+  <div class="intel-hdr">
+    <div><div class="intel-title">📝 Relatório de Visita</div>
+    <div class="intel-sub" id="visita-sub"></div></div>
+    <button class="intel-close" onclick="closeVisita()">✕</button>
+  </div>
+  <div class="vis-body" id="visita-body"></div>
+</div>
+<!-- ===== PAINEL LISTA DE VISITAS ===== -->
+<div id="vlist-panel">
+  <div class="intel-hdr">
+    <div><div class="intel-title">📋 Visitas Registradas</div>
+    <div class="intel-sub" id="vlist-sub"></div></div>
+    <button class="intel-close" onclick="document.getElementById('vlist-panel').classList.remove('open')">✕</button>
+  </div>
+  <div class="vis-body" id="vlist-body"></div>
 </div>
 
 </body>

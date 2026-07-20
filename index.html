@@ -382,6 +382,13 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-tag-lead.m{background:#b8860b;}
 .adv-tag-lead.f{background:#64748b;}
 
+/* ===== FICHA DO CLIENTE (CAD-01) ===== */
+#ficha-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:460px;max-width:96vw;background:#fff;z-index:3150;box-shadow:-6px 0 28px rgba(0,0,0,.28);flex-direction:column;}
+#ficha-panel.open{display:flex;}
+.fc-kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:12.5px;}
+.fc-kv b{text-align:right;}
+.fc-edit-btn{border:1.5px solid #10243e;background:#fff;color:#10243e;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:800;cursor:pointer;width:100%;margin-top:4px;}
+
 /* ===== BIBLIOTECA DE FILTROS (Fase 1 / Epico 4) ===== */
 #filtros-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:400px;max-width:96vw;background:#fff;z-index:3200;box-shadow:-6px 0 28px rgba(0,0,0,.28);flex-direction:column;}
 #filtros-panel.open{display:flex;}
@@ -2274,6 +2281,7 @@ function advRenderResults(filtered, trrProps) {
         + (isClient ? '<span class="adv-tag adv-tag-cli">✅ Cliente TRR</span>' : '')
       + '</div>'
       + (c.id && !isClient ? '<button class="intel-btn" onclick="openIntel('+c.id+')">🔎 Análise de venda</button>' : '')
+      + (isClient && clientTp && clientTp.id ? '<button class="intel-btn" onclick="openFicha('+clientTp.id+')">\uD83D\uDCC7 Ficha do cliente</button>' : '')
       + '<button class="adv-det-btn" onclick="event.stopPropagation();advShowDetalhes('+filtered.indexOf(item)+')">🔍 Detalhes</button>'
       + '</div>';
   });
@@ -3314,7 +3322,7 @@ function campoRenderList(clis, prospects) {
       '<div class="campo-card-nome">\uD83D\uDFE3 '+esc(x.p.cli||'\u2013')+'</div>' +
       '<div class="campo-card-sub">'+esc(x.p.prop||'')+(x.p.mun?' \u00b7 '+esc(x.p.mun):'')+'</div>' +
       '<div class="campo-card-foot"><span class="campo-card-dist">'+x.dist.toFixed(1)+' km</span>'+
-      '<span style="display:flex;gap:6px"><button class="campo-nav-btn" style="background:#1c7c54" onclick="event.stopPropagation();campoVisitaCli('+_ci+')">\uD83D\uDCDD Visita</button>'+navBtn(x.p.lat,x.p.lon)+'</span></div></div>';
+      '<span style="display:flex;gap:6px"><button class="campo-nav-btn" onclick="event.stopPropagation();openFicha('+x.p.id+')">\uD83D\uDCC7 Ficha</button><button class="campo-nav-btn" style="background:#1c7c54" onclick="event.stopPropagation();campoVisitaCli('+_ci+')">\uD83D\uDCDD Visita</button>'+navBtn(x.p.lat,x.p.lon)+'</span></div></div>';
   });
   var statusLbl = {'AT':'Ativo','PE':'Pendente','CA':'Cancelado'};
   prospects.slice(0, 40).forEach(function(c){
@@ -3723,7 +3731,7 @@ function advSearchGo(i){
     + ' \u00b7 '+esc(it.municipio||'')+'/'+esc(it.uf||'')
     + (it.area_ha?'<br>\uD83D\uDCD0 '+Number(it.area_ha).toLocaleString('pt-BR',{maximumFractionDigits:0})+' ha':'')
     + '<div style="display:flex;gap:6px;margin-top:8px">'
-    + (it.tipo==='car' ? '<button class="intel-btn" style="margin-top:0" onclick="openIntel('+it.id+')">\uD83D\uDD0E An\u00e1lise</button>' : '')
+    + (it.tipo==='car' ? '<button class="intel-btn" style="margin-top:0" onclick="openIntel('+it.id+')">\uD83D\uDD0E An\u00e1lise</button>' : '<button class="intel-btn" style="margin-top:0" onclick="openFicha('+it.id+')">\uD83D\uDCC7 Ficha</button>')
     + '<a class="intel-btn" style="margin-top:0;text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+it.lat+','+it.lon+'">\uD83E\uDDED Navegar</a>'
     + '</div></div>';
   mk.bindPopup(pop).openPopup();
@@ -4056,6 +4064,123 @@ function atualizaFiltroBadges(){
 }
 try { atualizaFiltroBadges(); } catch(e) {}
 
+
+/* ===== FICHA DO CLIENTE - 27 CAMPOS (CAD-01) ===== */
+function _fkv(l, v){ return '<div class="fc-kv"><span style="color:var(--muted)">'+l+'</span><b>'+(v==null||v===''?'\u2014':v)+'</b></div>'; }
+
+async function openFicha(id){
+  var p = document.getElementById('ficha-panel');
+  var b = document.getElementById('ficha-body');
+  p.classList.add('open');
+  b.innerHTML = '<div class="intel-loading">\u23F3 Carregando ficha\u2026</div>';
+  try {
+    var res = await SB.rpc('trr_cliente_ficha', { p_token: SESSION.token, p_id: id });
+    if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+    renderFicha(res.data);
+  } catch(e) { b.innerHTML = '<div class="intel-loading">\u274C '+esc(e.message||String(e))+'</div>'; }
+}
+
+function renderFicha(d){
+  var c = d.cliente, car = d.car, vs = d.visitas||[];
+  window._fichaAtual = d;
+  document.getElementById('ficha-title').textContent = '\uD83D\uDCC7 ' + (c.cliente||'Cliente');
+  document.getElementById('ficha-sub').textContent = (c.propriedade||'') + ' \u00b7 ' + (c.municipio||'') + '/' + (c.uf||'');
+  var uso = c.uso_solo || {};
+  var usoLbl = {algodao:'Algod\u00e3o',cana:'Cana',soja:'Soja',milho:'Milho',outros:'Outros',pastagem:'Pastagem',rios_lagos:'Rios/lagos',vegetacao_app:'Vegeta\u00e7\u00e3o/APP',degrad_interm:'Degrad. interm.',degrad_severa:'Degrad. severa'};
+  var usoTxt = Object.keys(usoLbl).filter(function(k){return uso[k];}).map(function(k){return usoLbl[k]+' '+uso[k]+' ha';}).join(' \u00b7 ');
+  var h = ''
+    + '<div class="vis-sec-hdr">IDENTIFICA\u00c7\u00c3O</div>'
+    + _fkv('N\u00ba do cliente', c.id_propriedade) + _fkv('Nome', c.cliente)
+    + _fkv('CPF/CNPJ', c.cpf_cnpj) + _fkv('Inscri\u00e7\u00e3o estadual', c.inscricao_estadual)
+    + _fkv('Inscri\u00e7\u00e3o INCRA', c.inscricao_incra)
+    + _fkv('Telefone', c.telefone ? '<a href="https://wa.me/55'+String(c.telefone).replace(/\D/g,'')+'" target="_blank">'+esc(c.telefone)+'</a>' : null)
+    + _fkv('E-mail', c.email) + _fkv('Anivers\u00e1rio', c.aniversario ? new Date(c.aniversario+'T12:00').toLocaleDateString('pt-BR') : null)
+    + _fkv('Como chegou ao TRR', c.como_chegou) + _fkv('Indica\u00e7\u00e3o banc\u00e1ria/comercial', c.indicacao_bancaria)
+    + '<div class="vis-sec-hdr">LOCALIZA\u00c7\u00c3O</div>'
+    + _fkv('Coordenada', (c.lat!=null ? Number(c.lat).toFixed(5)+', '+Number(c.lon).toFixed(5) : null))
+    + _fkv('Rota', c.rota) + _fkv('Munic\u00edpio/UF', (c.municipio||'')+'/'+(c.uf||''))
+    + _fkv('Dist\u00e2ncia do TRR', c.dist_trr_km ? Number(c.dist_trr_km).toFixed(0)+' km ('+(c.faixa_dist_trr||'')+')' : null)
+    + '<div class="vis-sec-hdr">CAR / SEMAD</div>'
+    + (car ? _fkv('Im\u00f3vel CAR', car.nom_imovel || car.cod_imovel)
+           + _fkv('Status CAR', car.status_car)
+           + _fkv('Condi\u00e7\u00e3o', ({OK:'\u2705 Regular',OKA:'\u2705 Regular c/ ativos',NOT:'\u26A0 Notifica\u00e7\u00e3o',REG:'\u26A0 Regulariza\u00e7\u00e3o',REV:'\u26A0 Revis\u00e3o',CD:'\u274C Canc. duplicidade',CA:'\u274C Canc. administrativo',CS:'\u274C Canc. solicita\u00e7\u00e3o'})[car.des_condic] || 'Aguardando an\u00e1lise')
+           + _fkv('\u00c1rea CAR', car.area_ha ? Number(car.area_ha).toLocaleString('pt-BR',{maximumFractionDigits:0})+' ha' : null)
+       : '<div style="font-size:12px;color:var(--muted);padding:6px 0">Nenhum im\u00f3vel CAR encontrado a menos de ~200 m</div>')
+    + '<div class="vis-sec-hdr">ATIVIDADE E ESTRUTURA</div>'
+    + _fkv('Atividade principal (CNAE)', c.atividade_principal) + _fkv('Atividade secund\u00e1ria', c.cnae_secundario)
+    + _fkv('Tipo de cria\u00e7\u00e3o', (c.tipo_criacao||[]).join(', ') || null)
+    + _fkv('Energia', (c.energia||[]).join(', ') || null)
+    + _fkv('Piv\u00f4s', c.pivos_num != null ? c.pivos_num + (c.pivos_ha ? ' ('+c.pivos_ha+' ha)' : '') : null)
+    + _fkv('Tancagem', c.tancagem_l ? Number(c.tancagem_l).toLocaleString('pt-BR')+' L' : null)
+    + _fkv('Uso do solo (14.x)', usoTxt || null)
+    + '<div class="vis-sec-hdr">COMERCIAL</div>'
+    + _fkv('\u00daltima compra', '\uD83D\uDD52 aguardando dados de vendas (Fase 2)')
+    + _fkv('Recorr\u00eancia safra/entressafra', '\uD83D\uDD52 Fase 2')
+    + _fkv('Total vendido / Curva ABC', '\uD83D\uDD52 Fase 2')
+    + '<div class="vis-sec-hdr">VISITAS ('+vs.length+')</div>';
+  if (vs.length) vs.forEach(function(v){
+    h += '<div class="vis-card'+(v.pre_venda?' pv':'')+'"><div class="vis-card-t">'+(v.pre_venda?'\uD83E\uDD1D ':'')+new Date(v.created_at).toLocaleDateString('pt-BR')+'</div>'
+      + '<div class="vis-card-s">'+esc(v.criado_por||'')+(v.resumo?' \u00b7 '+esc(v.resumo):'')+'</div></div>';
+  });
+  else h += '<div style="font-size:12px;color:var(--muted)">Nenhuma visita registrada.</div>';
+  h += '<div style="height:8px"></div>'
+    + '<button class="fc-edit-btn" onclick="editarFicha()">\u270F Editar cadastro</button>'
+    + '<button class="intel-act-btn wa" style="width:100%;justify-content:center;border:none;margin-top:8px" onclick="document.getElementById(\'ficha-panel\').classList.remove(\'open\');openVisita({cliente_id:'+c.id_propriedade+', nome_cliente:\''+esc((c.cliente||'').replace(/'/g,''))+'\', nome_fazenda:\''+esc((c.propriedade||'').replace(/'/g,''))+'\', lat:'+(c.lat||'null')+', lon:'+(c.lon||'null')+'})">\uD83D\uDCDD Registrar visita</button>'
+    + '<div style="height:24px"></div>';
+  document.getElementById('ficha-body').innerHTML = h;
+}
+
+function editarFicha(){
+  var c = (window._fichaAtual||{}).cliente; if (!c) return;
+  var uso = c.uso_solo || {};
+  var inp = function(id,l,v,tipo){ return '<div class="vis-grp"><label class="vis-lbl">'+l+'</label><input class="vis-in" id="'+id+'" type="'+(tipo||'text')+'" value="'+esc(v==null?'':String(v))+'"></div>'; };
+  var b = document.getElementById('ficha-body');
+  b.innerHTML = '<div class="vis-sec-hdr">EDITAR CADASTRO \u2014 '+esc(c.cliente||'')+'</div>'
+    + '<div class="vis-row">'+inp('e-tel','Telefone',c.telefone)+inp('e-mail','E-mail',c.email)+'</div>'
+    + '<div class="vis-row">'+inp('e-doc','CPF/CNPJ',c.cpf_cnpj)+inp('e-ie','Inscri\u00e7\u00e3o estadual',c.inscricao_estadual)+'</div>'
+    + '<div class="vis-row">'+inp('e-rota','Rota (n\u00ba)',c.rota,'number')+inp('e-aniv','Anivers\u00e1rio',c.aniversario,'date')+'</div>'
+    + inp('e-cnae2','Atividade secund\u00e1ria (CNAE)',c.cnae_secundario)
+    + '<div class="vis-grp"><label class="vis-lbl">Tipo de cria\u00e7\u00e3o</label><div class="vis-chips" id="e-cria">'
+    + ['cria','recria','engorda','confinamento'].map(function(t){ return '<span class="vis-chip'+(((c.tipo_criacao||[]).indexOf(t)>=0)?' on':'')+'" data-v="'+t+'" onclick="this.classList.toggle(\'on\')">'+t+'</span>'; }).join('')+'</div></div>'
+    + '<div class="vis-grp"><label class="vis-lbl">Energia</label><div class="vis-chips" id="e-ener">'
+    + ['Monof\u00e1sica','Trif\u00e1sica','Gerador diesel','Solar','Baterias'].map(function(t){ return '<span class="vis-chip'+(((c.energia||[]).indexOf(t)>=0)?' on':'')+'" data-v="'+t+'" onclick="this.classList.toggle(\'on\')">'+t+'</span>'; }).join('')+'</div></div>'
+    + '<div class="vis-row">'+inp('e-pivn','N\u00ba de piv\u00f4s',c.pivos_num,'number')+inp('e-pivh','\u00c1rea de piv\u00f4s (ha)',c.pivos_ha,'number')+'</div>'
+    + '<div class="vis-row">'+inp('e-tanc','Tancagem (L)',c.tancagem_l,'number')+inp('e-como','Como chegou ao TRR',c.como_chegou)+'</div>'
+    + inp('e-indb','Indica\u00e7\u00e3o banc\u00e1ria/comercial',c.indicacao_bancaria)
+    + '<div class="vis-sec-hdr">USO DO SOLO (ha)</div><div class="vis-row">'
+    + inp('u-soja','Soja',uso.soja,'number')+inp('u-milho','Milho',uso.milho,'number')+'</div><div class="vis-row">'
+    + inp('u-algodao','Algod\u00e3o',uso.algodao,'number')+inp('u-cana','Cana',uso.cana,'number')+'</div><div class="vis-row">'
+    + inp('u-pastagem','Pastagem',uso.pastagem,'number')+inp('u-outros','Outros',uso.outros,'number')+'</div><div class="vis-row">'
+    + inp('u-rios_lagos','Rios e lagos',uso.rios_lagos,'number')+inp('u-vegetacao_app','Vegeta\u00e7\u00e3o/APP',uso.vegetacao_app,'number')+'</div><div class="vis-row">'
+    + inp('u-degrad_interm','Degrad. intermedi\u00e1ria',uso.degrad_interm,'number')+inp('u-degrad_severa','Degrad. severa',uso.degrad_severa,'number')+'</div>'
+    + '<button class="vis-save" onclick="salvarFicha('+c.id_propriedade+')">\u2714 Salvar cadastro</button>'
+    + '<button class="flt-clear" onclick="openFicha('+c.id_propriedade+')">Cancelar</button>'
+    + '<div id="e-msg" style="margin-top:8px"></div><div style="height:24px"></div>';
+}
+
+async function salvarFicha(id){
+  var chips = function(sel){ var o=[]; document.querySelectorAll(sel+' .vis-chip.on').forEach(function(c){o.push(c.getAttribute('data-v'));}); return o; };
+  var g = function(i){ var e=document.getElementById(i); return e?e.value.trim():''; };
+  var uso = {};
+  ['soja','milho','algodao','cana','pastagem','outros','rios_lagos','vegetacao_app','degrad_interm','degrad_severa'].forEach(function(k){
+    var v = g('u-'+k); if (v !== '') uso[k] = parseFloat(v);
+  });
+  var p = { telefone:g('e-tel'), email:g('e-mail'), cpf_cnpj:g('e-doc'), inscricao_estadual:g('e-ie'),
+    rota:g('e-rota'), aniversario:g('e-aniv'), cnae_secundario:g('e-cnae2'),
+    tipo_criacao:chips('#e-cria'), energia:chips('#e-ener'),
+    pivos_num:g('e-pivn'), pivos_ha:g('e-pivh'), tancagem_l:g('e-tanc'),
+    como_chegou:g('e-como'), indicacao_bancaria:g('e-indb'),
+    uso_solo: Object.keys(uso).length ? uso : undefined };
+  try {
+    var res = await SB.rpc('trr_cliente_salvar', { p_token: SESSION.token, p_id: id, p: p });
+    if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+    geoData = null; // forca recarga dos dados de clientes
+    openFicha(id);
+  } catch(e) {
+    document.getElementById('e-msg').innerHTML = '<div style="background:#fde4e1;border-radius:8px;padding:9px;font-size:12px;color:#a4243b">\u274C '+esc(e.message||String(e))+'</div>';
+  }
+}
+
 </script>
 
 <!-- Painel lateral de detalhe de propriedade -->
@@ -4114,6 +4239,17 @@ try { atualizaFiltroBadges(); } catch(e) {}
     <button class="intel-close" onclick="document.getElementById('filtros-panel').classList.remove('open')">✕</button>
   </div>
   <div class="vis-body" id="filtros-body"></div>
+</div>
+
+
+<!-- ===== PAINEL FICHA DO CLIENTE ===== -->
+<div id="ficha-panel">
+  <div class="intel-hdr">
+    <div><div class="intel-title" id="ficha-title">📇 Ficha do Cliente</div>
+    <div class="intel-sub" id="ficha-sub"></div></div>
+    <button class="intel-close" onclick="document.getElementById('ficha-panel').classList.remove('open')">✕</button>
+  </div>
+  <div class="vis-body" id="ficha-body"></div>
 </div>
 
 </body>

@@ -281,6 +281,13 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 #adv-map{height:560px;border-radius:var(--r);box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .adv-map-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:6px 16px;border-radius:16px;pointer-events:none;z-index:1000;white-space:nowrap;transition:opacity .4s;}
 .adv-map-hint.hidden{opacity:0;}
+.map-layer-ctrl{display:flex;gap:3px;background:rgba(255,255,255,.93);border-radius:8px;padding:4px 5px;box-shadow:0 1px 5px rgba(0,0,0,.25);}
+.map-layer-btn{border:none;background:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;color:#4b5563;transition:all .15s;white-space:nowrap;}
+.map-layer-btn.active{background:#7c3aed;color:#fff;}
+.map-layer-btn:hover:not(.active){background:#f3f0ff;color:#7c3aed;}
+.map-layer-ctrl-wrap{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+.map-overlay-ctrl{border-top:1px solid rgba(0,0,0,.12);padding-top:4px;}
+.map-overlay-ctrl .map-layer-btn{font-size:11px;}
 .adv-panel{background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;min-height:200px;max-height:560px;overflow-y:auto;}
 .adv-panel-hdr{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;padding:14px 18px;}
 .adv-panel-hdr-title{font-size:13.5px;font-weight:700;}
@@ -293,6 +300,30 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-result-item{padding:11px 16px;border-bottom:1px solid #f0f2f5;cursor:pointer;transition:background .15s;}
 .adv-result-item:hover{background:#f5f0ff;}
 .adv-result-item-cli{background:#f5f3ff;border-left:3px solid #7c3aed;}
+.adv-det-btn{display:block;width:calc(100% - 0px);margin:8px 0 2px;padding:7px 0;background:#7c3aed;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:background .15s;}
+.adv-det-btn:hover{background:#6d28d9;}
+#adv-detail-panel{display:none;background:#fff;overflow-y:auto;}
+#adv-detail-panel.open{display:block;}
+.adv-det-hdr{display:flex;align-items:center;gap:8px;padding:14px 16px 10px;border-bottom:1px solid #f0f2f5;position:sticky;top:0;background:#fff;z-index:2;}
+.adv-det-back{background:none;border:none;font-size:20px;cursor:pointer;color:#6b7785;padding:0 4px;line-height:1;}
+.adv-det-title{font-size:14px;font-weight:800;color:#10243e;flex:1;line-height:1.3;}
+.adv-det-body{padding:14px 16px;}
+.adv-det-row{margin-bottom:10px;}
+.adv-det-lbl{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.adv-det-val{font-size:13px;color:#1c2733;font-weight:600;word-break:break-all;}
+.adv-det-val a{color:#7c3aed;text-decoration:none;}
+.adv-det-val a:hover{text-decoration:underline;}
+.adv-det-divider{border:none;border-top:1px solid #f0f2f5;margin:12px 0;}
+.adv-det-actions{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.adv-det-act-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
+.adv-det-act-wpp{background:#22c55e;color:#fff;}
+.adv-det-act-wpp:hover{background:#16a34a;}
+.adv-det-act-rota{background:#e0762c;color:#fff;}
+.adv-det-act-rota:hover{background:#c96020;}
+.adv-det-act-rr{background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;}
+.adv-det-act-rr:hover{background:#ede9fe;}
+.adv-det-badge-cli{display:inline-block;background:#7c3aed;color:#fff;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;margin-bottom:10px;}
+.adv-det-badge-car{display:inline-block;background:#f0f9ff;color:#0369a1;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;margin-bottom:10px;border:1px solid #bae6fd;}
 .adv-result-name{font-size:13px;font-weight:700;color:#1c2733;margin-bottom:2px;line-height:1.3;}
 .adv-result-cod{font-size:11px;font-family:monospace;color:#9ca3af;font-weight:400;}
 .adv-result-cli{font-size:11px;color:#7c3aed;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -688,7 +719,14 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
           <button class="adv-filt-btn" onclick="advSetAreaFilter(this,'gt500')">&gt; 500 ha</button>
         </div>
       </div>
-      <div id="adv-results">
+      <div id="adv-detail-panel">
+  <div class="adv-det-hdr">
+    <button class="adv-det-back" onclick="advCloseDetalhes()">&#8592;</button>
+    <div class="adv-det-title" id="adv-det-title">Detalhes</div>
+  </div>
+  <div class="adv-det-body" id="adv-det-body"></div>
+</div>
+<div id="adv-results">
         <div class="adv-empty">
           <div class="adv-empty-ico">🗺️</div>
           <div class="adv-empty-txt">Clique em qualquer cliente roxo no mapa para ver os imoveis CAR dentro do raio selecionado.</div>
@@ -1776,13 +1814,98 @@ function renderProspClientes(muns) {
 
 // ===== PROSP AVANCADA FUNCTIONS =====
 
+// ── Seletor de Camadas do Mapa ──
+var TILE_DEFS = {
+  mapa:     { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',      attr:'Esri Topo',     maxZoom:18 },
+  satelite: { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',      attr:'Esri Imagery',  maxZoom:19 },
+  hidrico:  { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', attr:'Esri Physical', maxZoom:18 },
+  vicinais: { url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'© OpenStreetMap', maxZoom:19, sub:'abc' }
+};
+
+var OVERLAY_DEFS = {
+  estradas: { url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'© OSM', maxZoom:19, opacity:0.55, sub:'abc' }
+};
+
+function makeTileLayers() {
+  var result = {};
+  Object.keys(TILE_DEFS).forEach(function(key) {
+    var d = TILE_DEFS[key];
+    result[key] = L.tileLayer(d.url, { attribution:d.attr, maxZoom:d.maxZoom, subdomains:d.sub||'abc' });
+  });
+  return result;
+}
+
+function makeOverlayLayers() {
+  var result = {};
+  Object.keys(OVERLAY_DEFS).forEach(function(key) {
+    var d = OVERLAY_DEFS[key];
+    result[key] = L.tileLayer(d.url, { attribution:d.attr, maxZoom:d.maxZoom, opacity:d.opacity||0.55, subdomains:d.sub||'abc' });
+  });
+  return result;
+}
+
+var LayerSwitcherControl = L.Control.extend({
+  options: { position: 'topright' },
+  initialize: function(mapRef, tilesRef, overlaysRef, opts) {
+    this._mapRef      = mapRef;
+    this._tilesRef    = tilesRef;
+    this._overlaysRef = overlaysRef || {};
+    L.Control.prototype.initialize.call(this, opts);
+  },
+  onAdd: function() {
+    var self = this;
+    var wrap = L.DomUtil.create('div', 'map-layer-ctrl-wrap');
+    L.DomEvent.disableClickPropagation(wrap);
+
+    // Base tiles (selecao unica)
+    var baseDiv = L.DomUtil.create('div', 'map-layer-ctrl', wrap);
+    var baseLabels = { mapa:'🗺 Mapa', satelite:'🛰 Satélite', hidrico:'🌊 Hírico', vicinais:'🛣 Vicinais' };
+    Object.keys(baseLabels).forEach(function(key) {
+      var btn = L.DomUtil.create('button', 'map-layer-btn' + (key === 'mapa' ? ' active' : ''), baseDiv);
+      btn.textContent = baseLabels[key];
+      L.DomEvent.on(btn, 'click', function(e) {
+        L.DomEvent.stop(e);
+        baseDiv.querySelectorAll('.map-layer-btn').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        Object.keys(self._tilesRef).forEach(function(k) {
+          if (self._mapRef.hasLayer(self._tilesRef[k])) self._mapRef.removeLayer(self._tilesRef[k]);
+        });
+        self._tilesRef[key].addTo(self._mapRef);
+        self._tilesRef[key].bringToBack();
+        Object.values(self._overlaysRef).forEach(function(ov) {
+          if (self._mapRef.hasLayer(ov)) ov.bringToFront();
+        });
+      });
+    });
+
+    // Overlays (multi-toggle)
+    var ovDiv = L.DomUtil.create('div', 'map-layer-ctrl map-overlay-ctrl', wrap);
+    var ovLabels = { estradas:'🛣 Estradas Rurais' };
+    Object.keys(ovLabels).forEach(function(key) {
+      var btn = L.DomUtil.create('button', 'map-layer-btn', ovDiv);
+      btn.textContent = ovLabels[key];
+      L.DomEvent.on(btn, 'click', function(e) {
+        L.DomEvent.stop(e);
+        var on = btn.classList.toggle('active');
+        if (on) { self._overlaysRef[key].addTo(self._mapRef); }
+        else if (self._mapRef.hasLayer(self._overlaysRef[key])) { self._mapRef.removeLayer(self._overlaysRef[key]); }
+      });
+    });
+
+    return wrap;
+  }
+});
+// ── fim Seletor de Camadas ──
+
 async function initAdvMap() {
   if (advMap) { setTimeout(function(){advMap.invalidateSize();},150); return; }
   advMap = L.map('adv-map', {zoomControl:true, preferCanvas:true}).setView([-14.2,-50.2],7);
-  L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-    { attribution: 'Tiles © Esri — World Topo Map', maxZoom: 18 }
-  ).addTo(advMap);
+  var advTiles = makeTileLayers();
+  window._advTiles = advTiles;
+  advTiles.mapa.addTo(advMap);
+  var advOverlays = makeOverlayLayers();
+  window._advOverlays = advOverlays;
+  new LayerSwitcherControl(advMap, advTiles, advOverlays).addTo(advMap);
   advCliLayer    = L.layerGroup().addTo(advMap);
   advRadiusLayer = L.layerGroup().addTo(advMap);
   advCarLayer    = L.layerGroup().addTo(advMap);
@@ -1868,6 +1991,7 @@ async function advSelectClient(p) {
   if (!advRadiusLayer || !advCarLayer) return;
   advRadiusLayer.clearLayers();
   advCarLayer.clearLayers();
+  advCloseDetalhes();
   var km = advRadius;
   var hint = document.getElementById('adv-hint');
   if (hint) hint.classList.add('hidden');
@@ -1929,16 +2053,19 @@ function advRenderCarMarkers(items, trrProps) {
     var isClient = trrProps && trrProps.some(function(tp) {
       return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
     });
-    L.circleMarker([c.lat, c.lon], {
-      radius: isClient ? 7 : 5,
-      fillColor: isClient ? '#7c3aed' : (statusColor[c.status] || '#6b7785'),
-      color: '#fff', weight: isClient ? 2 : 1, fillOpacity: 0.88
-    }).addTo(advCarLayer)
-    .bindTooltip(
-      (isClient ? '&#x2705; Cliente TRR &middot; ' : '&#x1F3AF; ') +
-      esc(c.nom||c.cod||'\u2013') + '<br>' + (c.mun||'') + '<br>' + item.dist.toFixed(1) + ' km',
-      {sticky: true}
-    );
+    (function(markerIdx) {
+      L.circleMarker([c.lat, c.lon], {
+        radius: isClient ? 7 : 5,
+        fillColor: isClient ? '#7c3aed' : (statusColor[c.status] || '#6b7785'),
+        color: '#fff', weight: isClient ? 2 : 1, fillOpacity: 0.88
+      }).addTo(advCarLayer)
+      .bindTooltip(
+        (isClient ? '&#x2705; Cliente TRR &middot; ' : '&#x1F3AF; ') +
+        esc(c.nom||c.cod||'\u2013') + '<br>' + (c.mun||'') + '<br>' + item.dist.toFixed(1) + ' km',
+        {sticky: true}
+      )
+      .on('click', function() { advShowDetalhes(markerIdx); });
+    })(items.indexOf(item));
   });
 }
 
@@ -2058,6 +2185,7 @@ function advRenderResults(filtered, trrProps) {
     return;
   }
   var tipoLabel = {'IRU':'Imóvel Rural','AST':'Assentamento','PCT':'Parcelamento','POD':'Posseiro','REC':'Reconhecimento'};
+  window._advFilteredItems = filtered;
   var h = ''; var maxShow = 150;
   filtered.slice(0, maxShow).forEach(function(item) {
     var c = item.prop; var st = c.status||'AT';
@@ -2084,7 +2212,7 @@ function advRenderResults(filtered, trrProps) {
         + '</div>';
     }
 
-    h += '<div class="adv-result-item' + (isClient ? ' adv-result-item-cli' : '') + '">'
+    h += '<div class="adv-result-item' + (isClient ? ' adv-result-item-cli' : '') + '" data-idx="'+filtered.indexOf(item)+'">'
       // Ícone + nome principal
       + '<div class="adv-result-name">'
         + (isClient ? '🏡 ' : '🎯 ')
@@ -2105,12 +2233,138 @@ function advRenderResults(filtered, trrProps) {
         + (isClient ? '<span class="adv-tag adv-tag-cli">✅ Cliente TRR</span>' : '')
       + '</div>'
       + (c.id && !isClient ? '<button class="intel-btn" onclick="openIntel('+c.id+')">🔎 Análise de venda</button>' : '')
-    + '</div>';
+      + '<button class="adv-det-btn" onclick="event.stopPropagation();advShowDetalhes('+filtered.indexOf(item)+')">🔍 Detalhes</button>'
+      + '</div>';
   });
   if (filtered.length > maxShow)
     h += '<div class="adv-results-footer">+'+(filtered.length-maxShow)+' imóveis. Filtre para refinar.</div>';
   resultsEl.innerHTML = h;
 }
+
+
+// ── Painel de Detalhes da Propriedade CAR ──
+function advShowDetalhes(idx) {
+  var items = window._advFilteredItems || [];
+  var trrProps = window._advTrrProps || [];
+  if (!items[idx]) return;
+  var item = items[idx];
+  var c = item.prop;
+
+  // Detectar se é cliente TRR
+  var clientTp = trrProps.find(function(tp) {
+    return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
+  });
+  var isClient = !!clientTp;
+
+  var nomeCar  = c.nom && c.nom !== 'SEM_REGISTRO' ? c.nom : null;
+  var nomeTrr  = clientTp ? (clientTp.prop || clientTp.cli || null) : null;
+  var nomeExib = nomeCar || nomeTrr || c.cod || '–';
+
+  var statusLabel = {'AT':'✅ Ativo','PE':'⏳ Pendente','CA':'❌ Cancelado'};
+  var tipoLabel   = {'IRU':'Imóvel Rural','AST':'Assentamento','PCT':'Parcelamento','POD':'Posseiro','REC':'Reconhecimento'};
+
+  var codFull = c.cod || '–';
+  var linkRR  = c.cod ? 'https://www.registrorural.com.br/imoveis/car-' + c.cod + '/' : null;
+
+  // Montar HTML do corpo
+  var body = '';
+
+  if (isClient)
+    body += '<div class="adv-det-badge-cli">✅ Cliente TRR</div> ';
+  else
+    body += '<div class="adv-det-badge-car">📋 CAR Público</div>';
+  body += '<br>';
+
+  if (isClient && clientTp) {
+    body += '<div class="adv-det-row"><div class="adv-det-lbl">Cliente TRR</div>'
+      + '<div class="adv-det-val">' + esc(clientTp.cli||'–') + '</div></div>';
+    if (clientTp.prop)
+      body += '<div class="adv-det-row"><div class="adv-det-lbl">Propriedade (cadastro TRR)</div>'
+        + '<div class="adv-det-val">' + esc(clientTp.prop) + '</div></div>';
+  }
+
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Nome da Propriedade</div>'
+    + '<div class="adv-det-val">' + esc(nomeExib) + '</div></div>';
+
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Código CAR</div>'
+    + '<div class="adv-det-val" style="font-family:monospace;font-size:11px;">' + esc(codFull) + '</div></div>';
+
+  body += '<hr class="adv-det-divider">';
+
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Município / UF</div>'
+    + '<div class="adv-det-val">📍 ' + esc(c.mun||'–') + (c.uf ? ' / ' + esc(c.uf) : '') + '</div></div>';
+
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Tipo</div>'
+    + '<div class="adv-det-val">' + esc(tipoLabel[c.tipo]||c.tipo||'–') + '</div></div>';
+
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Status CAR</div>'
+    + '<div class="adv-det-val">' + esc(statusLabel[c.status]||c.status||'–') + '</div></div>';
+
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Área</div>'
+    + '<div class="adv-det-val">' + (c.area ? Number(c.area).toLocaleString('pt-BR',{maximumFractionDigits:1}) + ' ha' : '–') + '</div></div>';
+
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Distância do TRR</div>'
+    + '<div class="adv-det-val">🛣 ' + item.dist.toFixed(1) + ' km</div></div>';
+
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Coordenadas</div>'
+    + '<div class="adv-det-val" style="font-size:12px;">' + (c.lat||'?') + ', ' + (c.lon||'?') + '</div></div>';
+
+  if (linkRR) {
+    body += '<div class="adv-det-row"><div class="adv-det-lbl">Registro Rural</div>'
+      + '<div class="adv-det-val"><a href="' + linkRR + '" target="_blank" rel="noopener">🔗 Ver ficha completa</a></div></div>';
+  }
+
+  body += '<hr class="adv-det-divider">';
+
+  // Ações
+  body += '<div class="adv-det-actions">';
+
+  // Botão Rota no mapa
+  body += '<button class="adv-det-act-btn adv-det-act-rota" onclick="advCloseDetalhes();advDrawRoute({lat:' + c.lat + ',lon:' + c.lon + '})">'
+    + '🗺 Traçar rota no mapa</button>';
+
+  // Botão WhatsApp (abordagem rápida)
+  var wppMsg = encodeURIComponent(
+    'Olá! Gostaria de saber mais sobre abastecimento de combustível e insumos na propriedade ' + nomeExib + ' (' + (c.mun||'') + '). Pode me passar mais informações?'
+  );
+  body += '<a class="adv-det-act-btn adv-det-act-wpp" href="https://wa.me/?text=' + wppMsg + '" target="_blank" rel="noopener">'
+    + '💬 Abordagem WhatsApp</a>';
+
+  // Botão Análise de venda (se tiver id e não for cliente)
+  if (c.id && !isClient)
+    body += '<button class="adv-det-act-btn adv-det-act-rr" onclick="openIntel(' + c.id + ')">'
+      + '🔎 Análise de venda</button>';
+
+  body += '</div>';
+
+  // Exibir painel
+  var panel = document.getElementById('adv-detail-panel');
+  var titleEl = document.getElementById('adv-det-title');
+  var bodyEl  = document.getElementById('adv-det-body');
+  if (!panel || !bodyEl) return;
+  if (titleEl) titleEl.textContent = nomeExib.length > 35 ? nomeExib.slice(0,33)+'…' : nomeExib;
+  bodyEl.innerHTML = body;
+  // Ocultar resultados e mostrar painel de detalhes
+  var results    = document.getElementById('adv-results');
+  var filterBar  = document.getElementById('adv-filter-bar');
+  var routeBadge = document.getElementById('adv-route-badge');
+  if (results)    results.style.display    = 'none';
+  if (filterBar)  filterBar.style.display  = 'none';
+  if (routeBadge) routeBadge.style.display = 'none';
+  panel.classList.add('open');
+}
+
+function advCloseDetalhes() {
+  var panel      = document.getElementById('adv-detail-panel');
+  var results    = document.getElementById('adv-results');
+  var filterBar  = document.getElementById('adv-filter-bar');
+  var routeBadge = document.getElementById('adv-route-badge');
+  if (panel) panel.classList.remove('open');
+  if (results)    results.style.display    = '';
+  if (filterBar && (window._advNearby||[]).length) filterBar.style.display = '';
+  if (routeBadge) routeBadge.style.display = '';
+}
+// ── fim painel Detalhes ──
 
 function advShowResults(p, nearby, km, trrProps) {
   // Salvar estado para reuso pelos filtros
@@ -2856,9 +3110,12 @@ var campoRadius = 5, campoWatchId = null, campoPos = null, campoLastQuery = null
 function initCampoMap() {
   if (campoMap) { setTimeout(function(){ campoMap.invalidateSize(); }, 120); return; }
   campoMap = L.map('campo-map', { zoomControl:true, preferCanvas:true }).setView([TRR_LAT, TRR_LON], 11);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '&copy; OpenStreetMap'
-  }).addTo(campoMap);
+  var campoTiles = makeTileLayers();
+  window._campoTiles = campoTiles;
+  campoTiles.mapa.addTo(campoMap);
+  var campoOverlays = makeOverlayLayers();
+  window._campoOverlays = campoOverlays;
+  new LayerSwitcherControl(campoMap, campoTiles, campoOverlays).addTo(campoMap);
   campoRadiusLayer = L.layerGroup().addTo(campoMap);
   campoCarLayer = L.layerGroup().addTo(campoMap);
   campoCliLayer = L.layerGroup().addTo(campoMap);

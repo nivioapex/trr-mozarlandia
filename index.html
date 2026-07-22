@@ -2539,114 +2539,86 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function advShowNearby(lat, lon) {
+async function advShowNearby(lat, lon) {
   _advNearbyLat = lat; _advNearbyLon = lon;
   if (!advClickLayer) advClickLayer = L.layerGroup().addTo(advMap);
   advClickLayer.clearLayers();
-  var km = parseFloat(document.getElementById('adv-nearby-km') ?
-    document.getElementById('adv-nearby-km').value : 10) || 10;
+
+  var km = parseFloat(
+    document.getElementById('adv-nearby-km')
+    ? document.getElementById('adv-nearby-km').value : 10
+  ) || 10;
 
   // Pin central + circulo de raio
   L.circleMarker([lat, lon], {
-    radius:8, color:'#e0762c', fillColor:'#e0762c', fillOpacity:1,
-    weight:2.5, pane:'markerPane'
+    radius:9, color:'#e0762c', fillColor:'#e0762c', fillOpacity:1, weight:2.5
   }).addTo(advClickLayer).bindTooltip('&#128205; Ponto selecionado', {sticky:true});
   L.circle([lat, lon], {
-    radius: km * 1000, color:'#e0762c', weight:1.5, opacity:0.6,
+    radius: km*1000, color:'#e0762c', weight:1.5, opacity:0.6,
     fillColor:'#e0762c', fillOpacity:0.06, dashArray:'8 5'
   }).addTo(advClickLayer);
 
-  // Coletar propriedades dentro do raio (respeita o filtro ativo)
-  var all      = window._advFilteredItems || [];
-  var trrProps = window._advTrrProps || [];
-  var results  = [];
-  all.forEach(function(item, idx) {
-    var c = item.prop;
-    if (!c.lat || !c.lon) return;
-    var d = haversineKm(lat, lon, c.lat, c.lon);
-    if (d <= km) results.push({ item:item, idx:idx, dist:d });
-  });
-  results.sort(function(a,b){ return a.dist - b.dist; });
-
-  // Cores por status
-  var COR_CLI  = '#10b981';  // verde  — cliente TRR
-  var COR_AT   = '#e0762c';  // laranja — CAR ativo
-  var COR_PE   = '#c9980a';  // amarelo — pendente
-  var COR_CA   = '#a4243b';  // vermelho — cancelado
-
-  var statusLabel = {AT:'Ativo', PE:'Pendente', CA:'Cancelado'};
-  var tipoLabel   = {IRU:'Imovel Rural',AST:'Assentamento',PCT:'Parcelamento',POD:'Posseiro',REC:'Reconhecimento'};
-
-  results.forEach(function(r) {
-    var c = r.item.prop;
-    var cliTp = trrProps.find(function(tp) {
-      return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
-    });
-    var isCli = !!cliTp;
-    var cor = isCli ? COR_CLI
-      : c.status === 'PE' ? COR_PE
-      : c.status === 'CA' ? COR_CA : COR_AT;
-
-    var nome  = c.nom && c.nom !== 'SEM_REGISTRO' ? c.nom : (c.cod || 'Sem nome');
-    var area  = c.area_ha ? parseFloat(c.area_ha).toFixed(0) + ' ha' : '–';
-    var dist  = r.dist < 1 ? (r.dist*1000).toFixed(0)+' m' : r.dist.toFixed(1)+' km';
-    var mun   = (c.mun || '') + (c.uf ? '/' + c.uf : '');
-    var tipo  = tipoLabel[c.tipo] || c.tipo || '–';
-    var stLbl = statusLabel[c.status] || c.status || '–';
-    var stIco = c.status==='AT' ? '&#9989;' : c.status==='PE' ? '&#9203;' : '&#10060;';
-    var linkRR = c.cod ? 'https://www.registrorural.com.br/imoveis/car-'+c.cod+'/' : '';
-    var gmaps  = 'https://maps.google.com/?q='+c.lat+','+c.lon;
-
-    // Montar popup HTML
-    var ph = '<div class="adv-car-popup">';
-    ph += '<div class="adv-car-popup-hdr">';
-    ph +=   '<div class="adv-car-popup-nome">' + nome + '</div>';
-    ph +=   '<div class="adv-car-popup-badge ' + (isCli ? 'cli' : 'car') + '">'
-           + (isCli ? '&#9989; TRR' : '&#128203; CAR') + '</div>';
-    ph += '</div>';
-
-    if (isCli && cliTp && cliTp.cli)
-      ph += '<div class="adv-car-popup-dist" style="color:#065f46;font-weight:700;">Cliente: ' + cliTp.cli + '</div>';
-
-    ph += '<div class="adv-car-popup-dist">&#128205; ' + dist + ' do ponto selecionado</div>';
-
-    ph += '<div class="adv-car-popup-rows">';
-    if (mun) ph += '<span class="adv-car-popup-lbl">Municipio</span><span class="adv-car-popup-val">&#128205; ' + mun + '</span>';
-    ph += '<span class="adv-car-popup-lbl">Area</span><span class="adv-car-popup-val">&#127919; ' + area + '</span>';
-    ph += '<span class="adv-car-popup-lbl">Status</span><span class="adv-car-popup-val">' + stIco + ' ' + stLbl + '</span>';
-    ph += '<span class="adv-car-popup-lbl">Tipo</span><span class="adv-car-popup-val">' + tipo + '</span>';
-    ph += '</div>';
-
-    ph += '<hr class="adv-car-popup-sep">';
-    ph += '<div class="adv-car-popup-btns">';
-    ph +=   '<button class="adv-car-popup-btn primary" onclick="advShowDetalhes('+r.idx+')">&#128203; Detalhes completos</button>';
-    if (linkRR)
-      ph += '<a class="adv-car-popup-btn secondary" href="'+linkRR+'" target="_blank" style="text-decoration:none;">&#127758; CAR</a>';
-    ph +=   '<a class="adv-car-popup-btn secondary" href="'+gmaps+'" target="_blank" style="text-decoration:none;">&#128247; Maps</a>';
-    ph += '</div>';
-    ph += '</div>';
-
-    (function(ridx, rph, rlat, rlon, rcor, risCli){
-      L.circleMarker([rlat, rlon], {
-        radius: risCli ? 9 : 7,
-        color:'#fff', weight:2,
-        fillColor: rcor, fillOpacity:0.92
-      })
-      .addTo(advClickLayer)
-      .bindPopup(rph, {maxWidth:280, minWidth:240, className:'adv-car-popup-wrap'})
-      .on('click', function(e) { L.DomEvent.stop(e); this.openPopup(); });
-    })(r.idx, ph, c.lat, c.lon, cor, isCli);
-  });
-
-  // Atualizar badge
+  // Badge loading
   var panel = document.getElementById('adv-nearby-panel');
   var title = document.getElementById('adv-nearby-title');
-  if (panel) {
-    title.textContent = results.length + ' propriedade' + (results.length !== 1 ? 's' : '');
-    panel.style.display = 'flex';
+  if (panel) { if(title) title.textContent = 'Buscando...'; panel.style.display = 'flex'; }
+
+  // Carregar CARs: reusar cache de municipios ja carregados,
+  // ou buscar sem filtro de municipio (cache key = __all__)
+  window._advCarCache = window._advCarCache || {};
+  var allCar = [];
+  var cacheKeys = Object.keys(window._advCarCache);
+  if (cacheKeys.length > 0) {
+    // Reusar tudo que ja foi carregado
+    cacheKeys.forEach(function(k) {
+      var arr = advCarProps(window._advCarCache[k]);
+      arr.forEach(function(c) {
+        if (!allCar.some(function(x){ return x.cod === c.cod; })) allCar.push(c);
+      });
+    });
+  } else {
+    // Nenhum cache ainda — buscar sem municipio (retorna todos do estado)
+    try {
+      var res = await SB.rpc('trr_car_geo', {p_uf: null, p_mun: null, p_status: null});
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      window._advCarCache['__all__'] = res.data;
+      allCar = advCarProps(res.data);
+    } catch(e) {
+      if (panel && title) title.textContent = 'Erro ao carregar';
+      console.error('advShowNearby error:', e);
+      return;
+    }
   }
-  // Zoom para mostrar o circulo inteiro
-  try { advMap.fitBounds(L.circle([lat,lon],{radius:km*1000}).getBounds(), {padding:[30,30], maxZoom:13}); } catch(e){}
+
+  // Filtrar pelo raio
+  var nearby = [];
+  allCar.forEach(function(c) {
+    if (!c.lat || !c.lon) return;
+    var d = haversineKm(lat, lon, c.lat, c.lon);
+    if (d <= km) nearby.push({ prop:c, dist:d });
+  });
+  nearby.sort(function(a,b){ return a.dist - b.dist; });
+
+  // Usar infraestrutura existente para plotar + abrir detalhes
+  var trrProps = (geoData && geoData.props) || [];
+  window._advTrrProps     = trrProps;
+  window._advFilteredItems = nearby;   // indices para advShowDetalhes
+
+  advRenderCarMarkers(nearby, trrProps); // plota em advCarLayer
+
+  // Atualizar badge
+  if (panel && title) {
+    title.textContent = nearby.length
+      + ' propriedade' + (nearby.length !== 1 ? 's' : '');
+  }
+
+  // Zoom para enquadrar o circulo
+  try {
+    advMap.fitBounds(
+      L.circle([lat,lon],{radius:km*1000}).getBounds(),
+      {padding:[30,30], maxZoom:13}
+    );
+  } catch(e){}
 }
 
 function advCloseNearby() {

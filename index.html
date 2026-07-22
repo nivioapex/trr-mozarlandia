@@ -308,6 +308,37 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-det-back{background:none;border:none;font-size:20px;cursor:pointer;color:#6b7785;padding:0 4px;line-height:1;}
 .adv-det-title{font-size:14px;font-weight:800;color:#10243e;flex:1;line-height:1.3;}
 .adv-det-body{padding:14px 16px;}
+.adv-sat-section{margin-top:14px;border:1px solid #e8f0fe;border-radius:10px;overflow:hidden;}
+.adv-sat-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(135deg,#1a3a5c 0%,#1e5631 100%);color:#fff;cursor:pointer;font-size:13px;font-weight:700;user-select:none;}
+.adv-sat-header:hover{opacity:.9;}
+.adv-sat-toggle{margin-left:auto;font-size:16px;transition:transform .2s;}
+.adv-sat-body{display:none;padding:0;}
+.adv-sat-body.open{display:block;}
+#adv-sat-minimap{height:200px;width:100%;background:#e5e7eb;}
+.adv-sat-links{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 6px;background:#f8fafc;border-bottom:1px solid #e8f0fe;}
+.adv-sat-link{font-size:11px;color:#1a56db;text-decoration:none;background:#eff6ff;padding:3px 8px;border-radius:12px;border:1px solid #bfdbfe;white-space:nowrap;}
+.adv-sat-link:hover{background:#dbeafe;}
+.adv-sat-feat-title{font-size:11px;font-weight:700;color:#374151;padding:10px 12px 6px;text-transform:uppercase;letter-spacing:.5px;}
+.adv-sat-features{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;padding:0 12px 10px;}
+.adv-sat-feat-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1.5px solid #d1d5db;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:11.5px;color:#374151;font-weight:500;transition:all .15s;text-align:left;}
+.adv-sat-feat-btn:hover{border-color:#6366f1;background:#eef2ff;}
+.adv-sat-feat-btn.active{border-color:#16a34a;background:#f0fdf4;color:#15803d;font-weight:700;}
+.adv-sat-feat-btn .feat-icon{font-size:16px;line-height:1;}
+.adv-sat-rec-title{font-size:11px;font-weight:700;color:#374151;padding:10px 12px 6px;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f0f2f5;}
+.adv-rec-empty{padding:6px 12px 10px;font-size:12px;color:#9ca3af;font-style:italic;}
+.adv-rec-item{display:flex;align-items:flex-start;gap:8px;padding:6px 12px;border-bottom:1px solid #f9fafb;}
+.adv-rec-item:last-child{border-bottom:none;padding-bottom:10px;}
+.adv-rec-prio{background:#16a34a;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;}
+.adv-rec-prio.prio-2{background:#0284c7;}
+.adv-rec-prio.prio-3{background:#7c3aed;}
+.adv-rec-info{flex:1;}
+.adv-rec-parceiro{font-size:12px;font-weight:700;color:#10243e;display:block;}
+.adv-rec-produto{font-size:11px;color:#6b7785;}
+.adv-script-section{margin:0 12px 12px;border:1px solid #bbf7d0;border-radius:8px;overflow:hidden;}
+.adv-script-hdr{background:#f0fdf4;padding:7px 10px;font-size:11px;font-weight:700;color:#15803d;display:flex;align-items:center;gap:6px;}
+.adv-script-txt{padding:8px 10px;font-size:11.5px;line-height:1.6;color:#374151;background:#fff;white-space:pre-wrap;word-break:break-word;}
+.adv-script-copy{display:block;width:calc(100% - 24px);margin:0 12px 12px;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;}
+.adv-script-copy:hover{background:#15803d;}
 .adv-det-row{margin-bottom:10px;}
 .adv-det-lbl{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
 .adv-det-val{font-size:13px;color:#1c2733;font-weight:600;word-break:break-all;}
@@ -2292,6 +2323,185 @@ function advRenderResults(filtered, trrProps) {
 
 
 // ── Painel de Detalhes da Propriedade CAR ──
+// ── Análise de Satélite ──
+var FEATURE_PRODUCTS = {
+  pivos:        { icon:'💧', label:'Pivôs de Irrigação',   hint:'Círculos no campo — irrigação intensiva',
+    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S10 (bombeamento contínuo)'},
+         {p:2,par:'Dinâmica Agro',prod:'Lubrificantes para bombas'},
+         {p:3,par:'Shimizu Fertilizantes',prod:'Programa Gota Certa'},
+         {p:4,par:'Land Genética',prod:'Sementes milho híbrido'}]},
+  talhoes:      { icon:'🌾', label:'Talhões de Lavoura',   hint:'Retângulos de culturas diferentes',
+    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S500/S10 (frota agrícola)'},
+         {p:2,par:'Land Genética',prod:'Sementes milho — safrinha'},
+         {p:3,par:'Santo Isidoro',prod:'Sementes sorgo BRS 716'},
+         {p:4,par:'Shimizu Fertilizantes',prod:'Fertilizantes linha completa'},
+         {p:5,par:'DORF KETAL',prod:'MileX — aditivo que reduz consumo'}]},
+  currais:      { icon:'🐄', label:'Currais / Piquetes',   hint:'Cercados geométricos, presença de gado',
+    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S500/S10'},
+         {p:2,par:'Biofórmula',prod:'Suplementos Nutricionais Animais'},
+         {p:3,par:'Oxen Currais',prod:'Currais inteligentes e Ferragens'},
+         {p:4,par:'Pacheco Consultoria',prod:'Diagnóstico de rebanho'}]},
+  silos:        { icon:'🏗', label:'Silos / Armazéns',     hint:'Estruturas cilíndricas ou galpões',
+    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel (alta demanda safra)'},
+         {p:2,par:'Dinâmica Agro',prod:'Lubrificantes industriais'},
+         {p:3,par:'Banefort Group',prod:'Antecipação de Recebíveis'}]},
+  confinamentos:{ icon:'🐮', label:'Confinamentos',        hint:'Estrutura densa com cochos e sombrites',
+    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S500/S10 (volume alto)'},
+         {p:2,par:'Biofórmula',prod:'Suplementos Nutricionais'},
+         {p:3,par:'Grupo Organics',prod:'Esterco → Adubo (Serviço no Confinamento)'},
+         {p:4,par:'Pacheco Consultoria',prod:'Gestão e protocolo de rebanho'},
+         {p:5,par:'Banefort Group',prod:'Capital de giro / crédito rural'}]},
+  estradas:     { icon:'🛣', label:'Estradas Internas',   hint:'Rede viária dentro da propriedade',
+    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel (frota interna grande)'},
+         {p:2,par:'Dinâmica Agro',prod:'Lubrificantes e Arla32'}]},
+  sede:         { icon:'🏠', label:'Sede da Fazenda',     hint:'Construção principal e jardins',
+    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel + pacote de combustíveis'},
+         {p:2,par:'Dinâmica Agro',prod:'Pacote Tecnológico Completo'}]},
+  barragens:    { icon:'🌊', label:'Barragens / Lagos',   hint:'Espelhos d'água represados',
+    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel (bombeamento)'},
+         {p:2,par:'Shimizu Fertilizantes',prod:'Programa Gota Certa — irrigação'},
+         {p:3,par:'Biofórmula',prod:'Suplementos para gado bebedor'}]},
+  maquinas:     { icon:'🚜', label:'Máquinas em Campo',   hint:'Tratores/colheitadeiras visíveis',
+    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S10 — demanda IMEDIATA'},
+         {p:2,par:'Dinâmica Agro',prod:'Lubrificantes e Arla32'},
+         {p:3,par:'DORF KETAL',prod:'MileX — reduz consumo em frota pesada'}]}
+};
+
+var _advSatMap = null;
+
+function advToggleSat() {
+  var body = document.getElementById('adv-sat-body');
+  var icon = document.getElementById('adv-sat-icon');
+  if (!body) return;
+  var opening = !body.classList.contains('open');
+  body.classList.toggle('open', opening);
+  if (icon) icon.textContent = opening ? '▲' : '▼';
+  if (opening) {
+    setTimeout(function() {
+      if (_advSatMap) _advSatMap.invalidateSize();
+    }, 50);
+  }
+}
+
+function advInitSatMap(lat, lon, nome, area) {
+  var container = document.getElementById('adv-sat-minimap');
+  if (!container) return;
+  if (_advSatMap) { _advSatMap.remove(); _advSatMap = null; }
+  var m = L.map('adv-sat-minimap', {
+    zoomControl:true, attributionControl:false,
+    scrollWheelZoom:false, dragging:true
+  });
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {maxZoom:19}).addTo(m);
+  // Zoom baseado na área: pequena=15, média=14, grande=13
+  var zoom = area > 5000 ? 12 : area > 1000 ? 13 : area > 200 ? 14 : 15;
+  m.setView([lat, lon], zoom);
+  L.circleMarker([lat,lon],{radius:8,color:'#22c55e',fillColor:'#86efac',fillOpacity:.7,weight:2}).addTo(m);
+  _advSatMap = m;
+  // Links externos para fontes satélite
+  var llat = lat.toFixed(6), llon = lon.toFixed(6);
+  var nomeEnc = encodeURIComponent(nome || '');
+  document.getElementById('adv-sat-links').innerHTML =
+    '<a class="adv-sat-link" href="https://earth.google.com/web/search/' + llat + ',' + llon + '" target="_blank">🌍 Google Earth</a>' +
+    '<a class="adv-sat-link" href="https://www.bing.com/maps?cp=' + llat + '~' + llon + '&lvl=15&style=h" target="_blank">🗺 Bing Satélite</a>' +
+    '<a class="adv-sat-link" href="https://www.sentinel-hub.com/explore/eobrowser/?zoom=14&lat=' + llat + '&lng=' + llon + '" target="_blank">🛰 Sentinel-2</a>' +
+    '<a class="adv-sat-link" href="https://mapbiomas.org" target="_blank">🌿 MapBiomas</a>' +
+    '<a class="adv-sat-link" href="https://glovis.usgs.gov/" target="_blank">📡 Landsat/USGS</a>';
+}
+
+function advSatToggleFeat(btn, key) {
+  btn.classList.toggle('active');
+  advUpdateSatRecs();
+}
+
+function advUpdateSatRecs() {
+  var actives = [];
+  document.querySelectorAll('.adv-sat-feat-btn.active').forEach(function(b){
+    actives.push(b.getAttribute('data-feat'));
+  });
+  // Agregar produtos por parceiro
+  var map = {};
+  actives.forEach(function(feat){
+    var fp = FEATURE_PRODUCTS[feat];
+    if (!fp) return;
+    fp.rec.forEach(function(r){
+      if (!map[r.par]) map[r.par] = {par:r.par, prod:r.prod, prio:r.p};
+      else if (r.p < map[r.par].prio) { map[r.par].prod = r.prod; map[r.par].prio = r.p; }
+    });
+  });
+  var sorted = Object.values(map).sort(function(a,b){return a.prio-b.prio;});
+  var recEl = document.getElementById('adv-sat-recs');
+  if (!recEl) return;
+  if (!sorted.length) {
+    recEl.innerHTML = '<div class="adv-rec-empty">Marque as características visíveis no satélite para ver os produtos recomendados.</div>';
+  } else {
+    var html = '';
+    sorted.slice(0,6).forEach(function(r, i){
+      var cls = i===0?'':i===1?' prio-2':' prio-3';
+      html += '<div class="adv-rec-item"><div class="adv-rec-prio' + cls + '">' + (i+1) + '</div>'
+            + '<div class="adv-rec-info"><span class="adv-rec-parceiro">' + r.par + '</span>'
+            + '<span class="adv-rec-produto">' + r.prod + '</span></div></div>';
+    });
+    recEl.innerHTML = html;
+  }
+  // Gerar script WhatsApp
+  advGenSatScript(actives, sorted);
+}
+
+function advGenSatScript(features, recs) {
+  var scEl = document.getElementById('adv-script-txt');
+  if (!scEl) return;
+  var nome = document.getElementById('adv-det-title') ? document.getElementById('adv-det-title').textContent : 'sua fazenda';
+  if (!features.length) {
+    scEl.textContent = 'Marque as características da propriedade acima para gerar o script personalizado.';
+    return;
+  }
+  var labels = features.map(function(f){ return FEATURE_PRODUCTS[f] ? FEATURE_PRODUCTS[f].label : f; }).join(', ');
+  var top3 = recs.slice(0,3).map(function(r){ return r.prod + ' (' + r.par + ')'; });
+  var script = 'Olá! Meu nome é [SEU NOME], da Dinâmica Agro.
+
+';
+  // Personalizar abertura por tipo de propriedade
+  var hasConfinamento = features.indexOf('confinamentos') >= 0;
+  var hasPivo = features.indexOf('pivos') >= 0;
+  var hasTalhao = features.indexOf('talhoes') >= 0;
+  var hasCurral = features.indexOf('currais') >= 0 || hasConfinamento;
+  if (hasPivo || hasTalhao) {
+    script += 'Trabalho com fornecimento de diesel direto na fazenda pela Dinâmica TRR — produto de base homologada em Senador Canedo (GO), com rastreamento e entrega pontual. Para uma operação de lavoura como a sua, garantia de abastecimento é produtividade na hora certa.';
+  } else if (hasCurral) {
+    script += 'Trabalho com abastecimento de diesel pela Dinâmica TRR, direto na sua fazenda. Mas além do combustível, temos soluções completas para pecuária: suplemento nutricional, consultoria técnica e estrutura de curral.';
+  } else {
+    script += 'Trabalho com abastecimento de diesel e insumos agrícolas para propriedades da região. Entregamos direto na fazenda com qualidade e pontualidade garantidas.';
+  }
+  script += '
+
+Vi que a propriedade "' + nome + '" tem potencial para algumas soluções que representamos:
+';
+  top3.forEach(function(t, i){ script += '
+' + (i+1) + '. ' + t; });
+  if (hasConfinamento) {
+    script += '
+
+Um diferencial que vale mencionar: a Grupo Organics transforma o esterco do seu próprio confinamento em adubo orgânico certificado — zero desperdício, zero custo extra.';
+  }
+  script += '
+
+Posso passar uma proposta sem compromisso? Quando é melhor para uma ligação rápida?
+
+📞 (62) 99808-2802 | Dinâmica Agro';
+  scEl.textContent = script;
+}
+
+function advCopyScript() {
+  var el = document.getElementById('adv-script-txt');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(function(){
+    var btn = document.querySelector('.adv-script-copy');
+    if (btn) { btn.textContent = '✅ Copiado!'; setTimeout(function(){ btn.textContent = '📋 Copiar script para WhatsApp'; }, 2000); }
+  });
+}
+// ── fim Análise de Satélite ──
+
 function advShowDetalhes(idx) {
   var items = window._advFilteredItems || [];
   var trrProps = window._advTrrProps || [];
@@ -2386,6 +2596,31 @@ function advShowDetalhes(idx) {
 
   body += '</div>';
 
+  // Seção de análise de satélite
+  body += '<div class="adv-sat-section">';
+  body += '<div class="adv-sat-header" onclick="advToggleSat()">';
+  body += '🛰 Análise de Satélite & Enriquecimento do Lead';
+  body += '<span class="adv-sat-toggle" id="adv-sat-icon">▼</span></div>';
+  body += '<div class="adv-sat-body" id="adv-sat-body">';
+  body += '<div id="adv-sat-minimap"></div>';
+  body += '<div class="adv-sat-links" id="adv-sat-links"></div>';
+  body += '<div class="adv-sat-feat-title">🔍 O que você vê nesta propriedade? (clique para marcar)</div>';
+  body += '<div class="adv-sat-features">';
+  Object.keys(FEATURE_PRODUCTS).forEach(function(key) {
+    var f = FEATURE_PRODUCTS[key];
+    body += '<button class="adv-sat-feat-btn" data-feat="' + key + '" onclick="advSatToggleFeat(this,'' + key + '')" title="' + f.hint + '">'
+          + '<span class="feat-icon">' + f.icon + '</span>' + f.label + '</button>';
+  });
+  body += '</div>';
+  body += '<div class="adv-sat-rec-title">📦 Produtos Recomendados</div>';
+  body += '<div id="adv-sat-recs"><div class="adv-rec-empty">Marque as características acima para ver recomendações.</div></div>';
+  body += '<div class="adv-script-section">';
+  body += '<div class="adv-script-hdr">💬 Script WhatsApp Personalizado</div>';
+  body += '<div class="adv-script-txt" id="adv-script-txt">Marque as características da propriedade para gerar o script.</div>';
+  body += '</div>';
+  body += '<button class="adv-script-copy" onclick="advCopyScript()">📋 Copiar script para WhatsApp</button>';
+  body += '</div></div>';
+
   // Exibir painel
   var panel = document.getElementById('adv-detail-panel');
   var titleEl = document.getElementById('adv-det-title');
@@ -2393,6 +2628,8 @@ function advShowDetalhes(idx) {
   if (!panel || !bodyEl) return;
   if (titleEl) titleEl.textContent = nomeExib.length > 35 ? nomeExib.slice(0,33)+'…' : nomeExib;
   bodyEl.innerHTML = body;
+  // Inicializar mini-mapa de satélite
+  setTimeout(function(){ advInitSatMap(c.lat, c.lon, nomeExib, c.area || 0); }, 80);
   // Ocultar resultados e mostrar painel de detalhes
   var results    = document.getElementById('adv-results');
   var filterBar  = document.getElementById('adv-filter-bar');
@@ -2404,6 +2641,7 @@ function advShowDetalhes(idx) {
 }
 
 function advCloseDetalhes() {
+  if (_advSatMap) { _advSatMap.remove(); _advSatMap = null; }
   var panel      = document.getElementById('adv-detail-panel');
   var results    = document.getElementById('adv-results');
   var filterBar  = document.getElementById('adv-filter-bar');

@@ -1709,6 +1709,11 @@ function renderMapMarkers() {
     .bindPopup('<h4 class="lp-h">TRR Mozarlândia</h4><div class="lp-meta">GO-164, KM 166, Zona Urbana<br>Mozarlândia - GO · CEP 76700-000<br>Distribuidora de Combustíveis</div>', { maxWidth: 260 })
     .addTo(mapLayers);
 
+  L.marker([TRR2_LAT, TRR2_LON], { icon: trrIcon, zIndexOffset: 1000 })
+    .bindTooltip('<b>TRR São Miguel do Araguaia</b><br>Ponto de referência', { sticky: true })
+    .bindPopup('<h4 class="lp-h">TRR São Miguel do Araguaia</h4><div class="lp-meta">Av. José Pereira do Nascimento, 5224<br>Centro, São Miguel do Araguaia - GO<br>Distribuidora de Combustíveis</div>', { maxWidth: 260 })
+    .addTo(mapLayers);
+
   if (!geoData) return;
 
   if (mapView === 'mun') {
@@ -1844,6 +1849,7 @@ var advClickLayer  = null;
 var _advNearbyLat  = null, _advNearbyLon = null;
 var advRadius      = 10;
 var TRR_LAT = -14.74469, TRR_LON = -50.54306;
+var TRR2_LAT = -13.2742, TRR2_LON = -50.1631; // São Miguel do Araguaia
 var _advAreaFilter = '';
 // Municipios do Vale do Araguaia (editavel)
 var VALE_ARAGUAIA = ['MOZARLANDIA','ARUANA','BRITANIA','JUSSARA','MATRINCHA','ARAGUAPAZ',
@@ -1858,6 +1864,7 @@ function advToggleVale(btn){
   if (window._advNearby) advApplyFilters();
 }
 var TRR_LAT = -14.74469, TRR_LON = -50.54306;
+var TRR2_LAT = -13.2742, TRR2_LON = -50.1631; // São Miguel do Araguaia
 var prospData = null;
 var prospDrillData = null;
 var prospFilters = { q: '', uf: '', score: '', dist: '', semCli: false };
@@ -2714,8 +2721,8 @@ function advShowDetalhes(idx) {
   body += '<div class="adv-det-row"><div class="adv-det-lbl">Área</div>'
     + '<div class="adv-det-val">' + (c.area ? Number(c.area).toLocaleString('pt-BR',{maximumFractionDigits:1}) + ' ha' : '–') + '</div></div>';
 
-  body += '<div class="adv-det-row"><div class="adv-det-lbl">Distância do TRR</div>'
-    + '<div class="adv-det-val">🛣 ' + item.dist.toFixed(1) + ' km</div></div>';
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Distância das Unidades</div>'
+    + '<div class="adv-det-val">📍 Mozarlândia: ' + haversineKm(TRR_LAT, TRR_LON, c.lat, c.lon).toFixed(1) + ' km<br>📍 São Miguel: ' + haversineKm(TRR2_LAT, TRR2_LON, c.lat, c.lon).toFixed(1) + ' km</div></div>';
 
   body += '<div class="adv-det-row"><div class="adv-det-lbl">Coordenadas</div>'
     + '<div class="adv-det-val" style="font-size:12px;">' + (c.lat||'?') + ', ' + (c.lon||'?') + '</div></div>';

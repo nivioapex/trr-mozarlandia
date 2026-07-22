@@ -2748,20 +2748,6 @@ function advShowDetalhes(idx) {
 
   body += '</div>';
 
-  // Seção de análise de satélite
-  // Botao Analise IA
-  var _codS = (c.cod||'').replace(/['"\\]/g,'');
-  var _nomS = nomeExib.replace(/['"\\]/g,'');
-  var _munS = (c.mun||'').replace(/['"\\]/g,'');
-  var _tipS = (c.status||'').replace(/['"\\]/g,'');
-  body += '<div class="adv-ia-section">';
-  body += '<button class="adv-ia-btn"';
-  body += ' onclick="advAnaliseIA(\''+_codS+'\',';
-  body += (c.lat||0)+','+(c.lon||0)+','+(parseFloat(c.area)||0);
-  body += ',\''+_munS+'\',\''+_tipS+'\',\''+_nomS+'\')"';
-  body += '>🤖 Análise IA da Propriedade</button>';
-  body += '<div id="adv-ia-result" class="adv-ia-result"></div>';
-  body += '</div>';
 
   // Exibir painel
   var panel = document.getElementById('adv-detail-panel');
@@ -2780,8 +2766,8 @@ function advShowDetalhes(idx) {
   panel.classList.add('open');
 }
 
-function advAnaliseIA(cod, lat, lon, area, municipio, tipo, nome) {
-  var container = document.getElementById('adv-ia-result');
+function advAnaliseIA(cod, lat, lon, area, municipio, tipo, nome, ctId) {
+  var container = document.getElementById(ctId || 'adv-ia-result');
   if (!container) return;
   var CKEY = 'ia_v1_' + cod;
   try {
@@ -4145,6 +4131,18 @@ function renderIntel(d){
   }
 
   h += '<div style="font-size:10px;color:var(--muted);padding-bottom:10px">Estimativas geradas por cruzamento CAR \u00d7 IBGE (PPM/PAM 2024) \u00d7 base de clientes TRR. Confirmar na visita.</div>';
+  // Analise IA da Propriedade
+  var _iaCod = String(p.id || '').replace(/['"\\]/g, '');
+  var _iaNom = (p.nom_imovel && p.nom_imovel !== 'SEM_REGISTRO' ? p.nom_imovel : '').replace(/['"\\]/g, '');
+  var _iaMun = (p.municipio || '').replace(/['"\\]/g, '');
+  var _iaTip = (p.status || '').replace(/['"\\]/g, '');
+  h += '<div class="intel-sec adv-ia-section" style="margin-top:4px;padding:0 0 4px">';
+  h += '<button class="adv-ia-btn" onclick="advAnaliseIA(\'' + _iaCod + '\','
+    + (p.lat||0) + ',' + (p.lon||0) + ',' + (parseFloat(p.area_ha)||0) + ',\''
+    + _iaMun + '\',\'' + _iaTip + '\',\'' + _iaNom + '\',\'intel-ia-result\')">';
+  h += '\u{1F916} Análise IA da Propriedade</button>';
+  h += '<div id="intel-ia-result" class="adv-ia-result"></div>';
+  h += '</div>';
   document.getElementById('intel-body').innerHTML = h;
 }
 

@@ -285,6 +285,26 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-nearby-km{display:flex;align-items:center;gap:4px;}
 .adv-nearby-km input{width:40px;padding:1px 4px;font-size:11px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;text-align:center;}
 .adv-nearby-km input:focus{outline:none;border-color:#f5a623;}
+.adv-car-popup{font-family:inherit;font-size:13px;min-width:240px;}
+.adv-car-popup-hdr{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px;}
+.adv-car-popup-nome{font-weight:800;color:#10243e;font-size:13px;line-height:1.3;flex:1;}
+.adv-car-popup-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.adv-car-popup-badge.cli{background:#d1fae5;color:#065f46;}
+.adv-car-popup-badge.car{background:#e0f2fe;color:#075985;}
+.adv-car-popup-rows{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;font-size:12px;margin-bottom:10px;}
+.adv-car-popup-lbl{color:#6b7785;font-size:11px;white-space:nowrap;padding-top:1px;}
+.adv-car-popup-val{color:#10243e;font-weight:600;}
+.adv-car-popup-dist{font-size:11px;color:#6b7785;margin-bottom:8px;}
+.adv-car-popup-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.adv-car-popup-btn{flex:1;min-width:90px;padding:5px 8px;border-radius:6px;border:none;font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:opacity .15s;}
+.adv-car-popup-btn:hover{opacity:.85;}
+.adv-car-popup-btn.primary{background:#10243e;color:#fff;}
+.adv-car-popup-btn.secondary{background:#f0f2f5;color:#10243e;}
+.adv-car-popup-btn.whats{background:#25d366;color:#fff;}
+.adv-car-popup-sep{border:none;border-top:1px solid #f0f2f5;margin:8px 0;}
+/* Aumentar largura max do popup Leaflet para os CARs */
+.leaflet-popup-content-wrapper{border-radius:10px !important;box-shadow:0 4px 20px rgba(0,0,0,.18) !important;}
+.leaflet-popup-content{margin:14px 16px !important;}
 .adv-map-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:6px 16px;border-radius:16px;pointer-events:none;z-index:1000;white-space:nowrap;transition:opacity .4s;}
 .adv-map-hint.hidden{opacity:0;}
 .map-layer-ctrl{display:flex;gap:3px;background:rgba(255,255,255,.93);border-radius:8px;padding:4px 5px;box-shadow:0 1px 5px rgba(0,0,0,.25);}
@@ -2554,33 +2574,68 @@ function advShowNearby(lat, lon) {
   var COR_PE   = '#c9980a';  // amarelo — pendente
   var COR_CA   = '#a4243b';  // vermelho — cancelado
 
+  var statusLabel = {AT:'Ativo', PE:'Pendente', CA:'Cancelado'};
+  var tipoLabel   = {IRU:'Imovel Rural',AST:'Assentamento',PCT:'Parcelamento',POD:'Posseiro',REC:'Reconhecimento'};
+
   results.forEach(function(r) {
     var c = r.item.prop;
-    var isCli = trrProps.some(function(tp) {
+    var cliTp = trrProps.find(function(tp) {
       return Math.abs((tp.lat||0)-c.lat)<0.0015 && Math.abs((tp.lon||0)-c.lon)<0.0015;
     });
+    var isCli = !!cliTp;
     var cor = isCli ? COR_CLI
       : c.status === 'PE' ? COR_PE
       : c.status === 'CA' ? COR_CA : COR_AT;
-    var nome = c.nom && c.nom !== 'SEM_REGISTRO' ? c.nom : (c.cod || '–');
-    var area = c.area_ha ? parseFloat(c.area_ha).toFixed(0) + ' ha' : '–';
-    var dist = r.dist < 1 ? (r.dist*1000).toFixed(0)+' m' : r.dist.toFixed(1)+' km';
-    var tip  = (isCli ? '&#9989; Cliente TRR<br>' : '')
-      + '<b>' + nome + '</b><br>' + dist + ' &bull; ' + area;
 
-    (function(idx){
-      L.circleMarker([c.lat, c.lon], {
-        radius: isCli ? 8 : 6,
-        color:'#fff', weight:1.5,
-        fillColor: cor, fillOpacity:0.9
+    var nome  = c.nom && c.nom !== 'SEM_REGISTRO' ? c.nom : (c.cod || 'Sem nome');
+    var area  = c.area_ha ? parseFloat(c.area_ha).toFixed(0) + ' ha' : '–';
+    var dist  = r.dist < 1 ? (r.dist*1000).toFixed(0)+' m' : r.dist.toFixed(1)+' km';
+    var mun   = (c.mun || '') + (c.uf ? '/' + c.uf : '');
+    var tipo  = tipoLabel[c.tipo] || c.tipo || '–';
+    var stLbl = statusLabel[c.status] || c.status || '–';
+    var stIco = c.status==='AT' ? '&#9989;' : c.status==='PE' ? '&#9203;' : '&#10060;';
+    var linkRR = c.cod ? 'https://www.registrorural.com.br/imoveis/car-'+c.cod+'/' : '';
+    var gmaps  = 'https://maps.google.com/?q='+c.lat+','+c.lon;
+
+    // Montar popup HTML
+    var ph = '<div class="adv-car-popup">';
+    ph += '<div class="adv-car-popup-hdr">';
+    ph +=   '<div class="adv-car-popup-nome">' + nome + '</div>';
+    ph +=   '<div class="adv-car-popup-badge ' + (isCli ? 'cli' : 'car') + '">'
+           + (isCli ? '&#9989; TRR' : '&#128203; CAR') + '</div>';
+    ph += '</div>';
+
+    if (isCli && cliTp && cliTp.cli)
+      ph += '<div class="adv-car-popup-dist" style="color:#065f46;font-weight:700;">Cliente: ' + cliTp.cli + '</div>';
+
+    ph += '<div class="adv-car-popup-dist">&#128205; ' + dist + ' do ponto selecionado</div>';
+
+    ph += '<div class="adv-car-popup-rows">';
+    if (mun) ph += '<span class="adv-car-popup-lbl">Municipio</span><span class="adv-car-popup-val">&#128205; ' + mun + '</span>';
+    ph += '<span class="adv-car-popup-lbl">Area</span><span class="adv-car-popup-val">&#127919; ' + area + '</span>';
+    ph += '<span class="adv-car-popup-lbl">Status</span><span class="adv-car-popup-val">' + stIco + ' ' + stLbl + '</span>';
+    ph += '<span class="adv-car-popup-lbl">Tipo</span><span class="adv-car-popup-val">' + tipo + '</span>';
+    ph += '</div>';
+
+    ph += '<hr class="adv-car-popup-sep">';
+    ph += '<div class="adv-car-popup-btns">';
+    ph +=   '<button class="adv-car-popup-btn primary" onclick="advShowDetalhes('+r.idx+')">&#128203; Detalhes completos</button>';
+    if (linkRR)
+      ph += '<a class="adv-car-popup-btn secondary" href="'+linkRR+'" target="_blank" style="text-decoration:none;">&#127758; CAR</a>';
+    ph +=   '<a class="adv-car-popup-btn secondary" href="'+gmaps+'" target="_blank" style="text-decoration:none;">&#128247; Maps</a>';
+    ph += '</div>';
+    ph += '</div>';
+
+    (function(ridx, rph, rlat, rlon, rcor, risCli){
+      L.circleMarker([rlat, rlon], {
+        radius: risCli ? 9 : 7,
+        color:'#fff', weight:2,
+        fillColor: rcor, fillOpacity:0.92
       })
       .addTo(advClickLayer)
-      .bindTooltip(tip, {sticky:true})
-      .on('click', function(e) {
-        L.DomEvent.stop(e);
-        advShowDetalhes(idx);
-      });
-    })(r.idx);
+      .bindPopup(rph, {maxWidth:280, minWidth:240, className:'adv-car-popup-wrap'})
+      .on('click', function(e) { L.DomEvent.stop(e); this.openPopup(); });
+    })(r.idx, ph, c.lat, c.lon, cor, isCli);
   });
 
   // Atualizar badge

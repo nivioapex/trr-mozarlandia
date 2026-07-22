@@ -2458,40 +2458,26 @@ function advGenSatScript(features, recs) {
   }
   var labels = features.map(function(f){ return FEATURE_PRODUCTS[f] ? FEATURE_PRODUCTS[f].label : f; }).join(', ');
   var top3 = recs.slice(0,3).map(function(r){ return r.prod + ' (' + r.par + ')'; });
-  var script = 'Olá! Meu nome é [SEU NOME], da Dinâmica Agro.
-
-';
-  // Personalizar abertura por tipo de propriedade
+  var script = 'Ola! Meu nome e [SEU NOME], da Dinamica Agro.\n\n';
   var hasConfinamento = features.indexOf('confinamentos') >= 0;
   var hasPivo = features.indexOf('pivos') >= 0;
   var hasTalhao = features.indexOf('talhoes') >= 0;
   var hasCurral = features.indexOf('currais') >= 0 || hasConfinamento;
   if (hasPivo || hasTalhao) {
-    script += 'Trabalho com fornecimento de diesel direto na fazenda pela Dinâmica TRR — produto de base homologada em Senador Canedo (GO), com rastreamento e entrega pontual. Para uma operação de lavoura como a sua, garantia de abastecimento é produtividade na hora certa.';
+    script += 'Trabalho com fornecimento de diesel direto na fazenda pela Dinamica TRR - produto de base homologada em Senador Canedo (GO), com rastreamento e entrega pontual. Para uma operacao de lavoura como a sua, garantia de abastecimento e produtividade na hora certa.';
   } else if (hasCurral) {
-    script += 'Trabalho com abastecimento de diesel pela Dinâmica TRR, direto na sua fazenda. Mas além do combustível, temos soluções completas para pecuária: suplemento nutricional, consultoria técnica e estrutura de curral.';
+    script += 'Trabalho com abastecimento de diesel pela Dinamica TRR, direto na sua fazenda. Mas alem do combustivel, temos solucoes completas para pecuaria: suplemento nutricional, consultoria tecnica e estrutura de curral.';
   } else {
-    script += 'Trabalho com abastecimento de diesel e insumos agrícolas para propriedades da região. Entregamos direto na fazenda com qualidade e pontualidade garantidas.';
+    script += 'Trabalho com abastecimento de diesel e insumos agricolas para propriedades da regiao. Entregamos direto na fazenda com qualidade e pontualidade garantidas.';
   }
-  script += '
-
-Vi que a propriedade "' + nome + '" tem potencial para algumas soluções que representamos:
-';
-  top3.forEach(function(t, i){ script += '
-' + (i+1) + '. ' + t; });
+  script += '\n\nVi que a propriedade "' + nome + '" tem potencial para algumas solucoes que representamos:\n';
+  top3.forEach(function(t, i){ script += '\n' + (i+1) + '. ' + t; });
   if (hasConfinamento) {
-    script += '
-
-Um diferencial que vale mencionar: a Grupo Organics transforma o esterco do seu próprio confinamento em adubo orgânico certificado — zero desperdício, zero custo extra.';
+    script += '\n\nDiferencial: Grupo Organics transforma esterco do confinamento em adubo organico certificado - zero desperdicio.';
   }
-  script += '
-
-Posso passar uma proposta sem compromisso? Quando é melhor para uma ligação rápida?
-
-📞 (62) 99808-2802 | Dinâmica Agro';
+  script += '\n\nPosso enviar uma proposta sem compromisso?\n(62) 99808-2802 | Dinamica Agro';
   scEl.textContent = script;
 }
-
 function advCopyScript() {
   var el = document.getElementById('adv-script-txt');
   if (!el) return;
@@ -2608,7 +2594,7 @@ function advShowDetalhes(idx) {
   body += '<div class="adv-sat-features">';
   Object.keys(FEATURE_PRODUCTS).forEach(function(key) {
     var f = FEATURE_PRODUCTS[key];
-    body += '<button class="adv-sat-feat-btn" data-feat="' + key + '" onclick="advSatToggleFeat(this,'' + key + '')" title="' + f.hint + '">'
+    body += '<button class="adv-sat-feat-btn" data-feat="' + key + '" onclick="advSatToggleFeat(this,\' + key + \')" title="' + f.hint + '">'
           + '<span class="feat-icon">' + f.icon + '</span>' + f.label + '</button>';
   });
   body += '</div>';

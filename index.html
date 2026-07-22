@@ -545,6 +545,28 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 @media (max-width:640px){
   #intel-panel{top:auto;left:0;right:0;bottom:0;width:100%;max-width:100%;height:86vh;border-radius:16px 16px 0 0;}
 }
+
+/* ── IA Analysis ───────────────────── */
+.adv-ia-section{margin-top:14px;padding:12px 14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;}
+.adv-ia-btn{width:100%;padding:13px 0;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:opacity .2s;}
+.adv-ia-btn:hover{opacity:.9;}
+.adv-ia-btn:disabled{background:#9ca3af;cursor:not-allowed;opacity:.7;}
+.adv-ia-result{margin-top:10px;}
+.adv-ia-loading{text-align:center;padding:20px 10px;color:#7c3aed;font-size:13px;line-height:1.7;}
+.adv-ia-card{background:#fff;border:1px solid #e8f0fe;border-radius:8px;padding:12px 14px;margin-top:8px;}
+.adv-ia-card-title{font-weight:700;font-size:11px;color:#10243e;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px;}
+.adv-ia-tag{display:inline-block;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:2px 8px;font-size:12px;margin:2px 2px 2px 0;}
+.adv-ia-prod{display:flex;flex-direction:column;padding:7px 0;border-bottom:1px solid #f3f4f6;}
+.adv-ia-prod:last-child{border-bottom:none;}
+.adv-ia-prod-name{font-weight:600;font-size:13px;color:#10243e;}
+.adv-ia-prod-why{font-size:12px;color:#6b7280;margin-top:2px;line-height:1.5;}
+.adv-prio-alta{color:#059669;font-size:10px;font-weight:700;background:#d1fae5;border-radius:3px;padding:1px 5px;margin-left:5px;}
+.adv-prio-media{color:#d97706;font-size:10px;font-weight:700;background:#fef3c7;border-radius:3px;padding:1px 5px;margin-left:5px;}
+.adv-prio-baixa{color:#6b7280;font-size:10px;font-weight:700;background:#f3f4f6;border-radius:3px;padding:1px 5px;margin-left:5px;}
+.adv-ia-script{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;line-height:1.7;color:#14532d;white-space:pre-wrap;margin-top:4px;word-break:break-word;}
+.adv-ia-copy{width:100%;margin-top:8px;padding:9px 0;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
+.adv-ia-copy:hover{background:#15803d;}
+.adv-ia-diesel{margin-top:8px;font-size:12px;color:#6b7280;padding:4px 0;}
 </style>
 </head>
 <body>
@@ -926,10 +948,9 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 </div><!-- /wrap -->
 
 <script>
-var SB=supabase.createClient(
-  'https://keeqkmguljsddfmrqlld.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ'
-);
+var _ADV_URL='https://keeqkmguljsddfmrqlld.supabase.co';
+var _ADV_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ';
+var SB=supabase.createClient(_ADV_URL,_ADV_KEY);
 
 /* ===== AUTH ===== */
 var SESSION=null;
@@ -2728,29 +2749,19 @@ function advShowDetalhes(idx) {
   body += '</div>';
 
   // Seção de análise de satélite
-  body += '<div class="adv-sat-section">';
-  body += '<div class="adv-sat-header" onclick="advToggleSat()">';
-  body += '🛰 Análise de Satélite & Enriquecimento do Lead';
-  body += '<span class="adv-sat-toggle" id="adv-sat-icon">▼</span></div>';
-  body += '<div class="adv-sat-body" id="adv-sat-body">';
-  body += '<div id="adv-sat-minimap"></div>';
-  body += '<div class="adv-sat-links" id="adv-sat-links"></div>';
-  body += '<div class="adv-sat-feat-title">🔍 O que você vê nesta propriedade? (clique para marcar)</div>';
-  body += '<div class="adv-sat-features">';
-  Object.keys(FEATURE_PRODUCTS).forEach(function(key) {
-    var f = FEATURE_PRODUCTS[key];
-    body += '<button class="adv-sat-feat-btn" data-feat="' + key + '" onclick="advSatToggleFeat(this,\' + key + \')" title="' + f.hint + '">'
-          + '<span class="feat-icon">' + f.icon + '</span>' + f.label + '</button>';
-  });
+  // Botao Analise IA
+  var _codS = (c.cod||'').replace(/['"\\]/g,'');
+  var _nomS = nomeExib.replace(/['"\\]/g,'');
+  var _munS = (c.mun||'').replace(/['"\\]/g,'');
+  var _tipS = (c.status||'').replace(/['"\\]/g,'');
+  body += '<div class="adv-ia-section">';
+  body += '<button class="adv-ia-btn"';
+  body += ' onclick="advAnaliseIA(\''+_codS+'\',';
+  body += (c.lat||0)+','+(c.lon||0)+','+(parseFloat(c.area)||0);
+  body += ',\''+_munS+'\',\''+_tipS+'\',\''+_nomS+'\')"';
+  body += '>🤖 Análise IA da Propriedade</button>';
+  body += '<div id="adv-ia-result" class="adv-ia-result"></div>';
   body += '</div>';
-  body += '<div class="adv-sat-rec-title">📦 Produtos Recomendados</div>';
-  body += '<div id="adv-sat-recs"><div class="adv-rec-empty">Marque as características acima para ver recomendações.</div></div>';
-  body += '<div class="adv-script-section">';
-  body += '<div class="adv-script-hdr">💬 Script WhatsApp Personalizado</div>';
-  body += '<div class="adv-script-txt" id="adv-script-txt">Marque as características da propriedade para gerar o script.</div>';
-  body += '</div>';
-  body += '<button class="adv-script-copy" onclick="advCopyScript()">📋 Copiar script para WhatsApp</button>';
-  body += '</div></div>';
 
   // Exibir painel
   var panel = document.getElementById('adv-detail-panel');
@@ -2759,8 +2770,6 @@ function advShowDetalhes(idx) {
   if (!panel || !bodyEl) return;
   if (titleEl) titleEl.textContent = nomeExib.length > 35 ? nomeExib.slice(0,33)+'…' : nomeExib;
   bodyEl.innerHTML = body;
-  // Inicializar mini-mapa de satélite
-  setTimeout(function(){ advInitSatMap(c.lat, c.lon, nomeExib, c.area || 0); }, 80);
   // Ocultar resultados e mostrar painel de detalhes
   var results    = document.getElementById('adv-results');
   var filterBar  = document.getElementById('adv-filter-bar');
@@ -2770,6 +2779,103 @@ function advShowDetalhes(idx) {
   if (routeBadge) routeBadge.style.display = 'none';
   panel.classList.add('open');
 }
+
+function advAnaliseIA(cod, lat, lon, area, municipio, tipo, nome) {
+  var container = document.getElementById('adv-ia-result');
+  if (!container) return;
+  var CKEY = 'ia_v1_' + cod;
+  try {
+    var cached = localStorage.getItem(CKEY);
+    if (cached) {
+      var obj = JSON.parse(cached);
+      if (obj.ts && (Date.now() - obj.ts) < 86400000) {
+        advRenderIAResult(container, obj.data, cod); return;
+      }
+    }
+  } catch(e) {}
+  container.innerHTML = '<div class="adv-ia-loading">Analisando imagem de satelite com IA...<br><small>Aguarde alguns segundos</small></div>';
+  var btn = container.previousElementSibling;
+  if (btn) { btn.disabled = true; btn.textContent = 'Analisando...'; }
+  fetch(_ADV_URL + '/functions/v1/analisar-propriedade', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': _ADV_KEY,
+      'Authorization': 'Bearer ' + _ADV_KEY
+    },
+    body: JSON.stringify({
+      lat: lat, lon: lon, area_ha: area,
+      municipio: municipio, tipo: tipo, cod: cod, nome: nome
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error);
+    try { localStorage.setItem(CKEY, JSON.stringify({ ts: Date.now(), data: data })); } catch(e) {}
+    advRenderIAResult(container, data, cod);
+    if (btn) { btn.disabled = false; btn.textContent = '\u{1F916} Analise IA da Propriedade'; }
+  })
+  .catch(function(e) {
+    container.innerHTML = '<div style="color:#dc2626;padding:10px;font-size:13px;">Erro: ' + esc(e.message) + '</div>';
+    if (btn) { btn.disabled = false; btn.textContent = '\u{1F916} Tentar novamente'; }
+  });
+}
+
+function advRenderIAResult(container, data, cod) {
+  var h = '';
+  if (data.analise) {
+    h += '<div class="adv-ia-card">';
+    h += '<div class="adv-ia-card-title">Analise Geral</div>';
+    h += '<div style="font-size:13px;color:#374151;line-height:1.6;">' + esc(data.analise) + '</div>';
+    h += '</div>';
+  }
+  if (data.estruturas && data.estruturas.length) {
+    h += '<div class="adv-ia-card">';
+    h += '<div class="adv-ia-card-title">Estruturas Identificadas</div><div>';
+    data.estruturas.forEach(function(e) { h += '<span class="adv-ia-tag">' + esc(String(e)) + '</span>'; });
+    h += '</div>';
+    if (data.potencial_consumo && data.potencial_consumo.diesel_litros_mes) {
+      h += '<div class="adv-ia-diesel">Estimativa diesel: ~' + esc(String(data.potencial_consumo.diesel_litros_mes)) + ' L/mes</div>';
+    }
+    h += '</div>';
+  }
+  if (data.produtos_recomendados && data.produtos_recomendados.length) {
+    h += '<div class="adv-ia-card">';
+    h += '<div class="adv-ia-card-title">Produtos Recomendados</div>';
+    data.produtos_recomendados.forEach(function(p) {
+      var pc = p.prioridade === 'alta' ? 'adv-prio-alta' : (p.prioridade === 'media' ? 'adv-prio-media' : 'adv-prio-baixa');
+      h += '<div class="adv-ia-prod">';
+      h += '<div class="adv-ia-prod-name">' + esc(p.produto||'') + ' <span class="' + pc + '">' + esc(p.prioridade||'') + '</span></div>';
+      if (p.motivo) h += '<div class="adv-ia-prod-why">' + esc(p.motivo) + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+  if (data.script_whatsapp) {
+    var safeId = 'ia_scr_' + (cod||'x').replace(/[^a-zA-Z0-9_]/g,'_');
+    h += '<div class="adv-ia-card">';
+    h += '<div class="adv-ia-card-title">Script WhatsApp Pronto</div>';
+    h += '<div class="adv-ia-script" id="' + safeId + '">' + esc(data.script_whatsapp) + '</div>';
+    h += '<button class="adv-ia-copy" onclick="advCopyIAScript(\'' + safeId + '\')">Copiar para WhatsApp</button>';
+    h += '</div>';
+  }
+  container.innerHTML = h;
+}
+
+function advCopyIAScript(safeId) {
+  var el = document.getElementById(safeId);
+  if (!el) return;
+  var btn = el.nextElementSibling;
+  var ok = function() { if(btn){btn.textContent='Copiado!'; setTimeout(function(){btn.textContent='Copiar para WhatsApp';},2000);} };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(el.textContent||'').then(ok);
+  } else {
+    var r = document.createRange(); r.selectNodeContents(el);
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    document.execCommand('copy'); s.removeAllRanges(); ok();
+  }
+}
+
 
 function advCloseDetalhes() {
   if (_advSatMap) { _advSatMap.remove(); _advSatMap = null; }

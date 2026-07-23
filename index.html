@@ -2225,9 +2225,15 @@ async function advDrawRoute(p) {
   if (!advRouteLayer) return;
   advRouteLayer.clearLayers();
   try {
+    // Usar o TRR mais próximo como origem da rota
+    var _d1 = haversineKm(TRR_LAT,  TRR_LON,  p.lat, p.lon);
+    var _d2 = haversineKm(TRR2_LAT, TRR2_LON, p.lat, p.lon);
+    var _oLat  = _d1 <= _d2 ? TRR_LAT  : TRR2_LAT;
+    var _oLon  = _d1 <= _d2 ? TRR_LON  : TRR2_LON;
+    var _oNome = _d1 <= _d2 ? 'Mozarlândia' : 'São Miguel';
     var url = 'https://router.project-osrm.org/route/v1/driving/'
-      + TRR_LON + ',' + TRR_LAT + ';'
-      + p.lon   + ',' + p.lat
+      + _oLon + ',' + _oLat + ';'
+      + p.lon + ',' + p.lat
       + '?overview=full&geometries=geojson';
     var resp = await fetch(url);
     var data = await resp.json();
@@ -2258,7 +2264,7 @@ async function advDrawRoute(p) {
     var badge = document.getElementById('adv-route-badge');
     if (badge) {
       badge.innerHTML =
-        '<span style="font-size:11px;color:#6b7785">&#x1F6E3; Rota: </span>' +
+        '<span style="font-size:11px;color:#6b7785">&#x1F6E3; TRR ' + _oNome + ': </span>' +
         '<b style="color:#e0762c">' + distKm + ' km</b>' +
         '<span style="font-size:11px;color:#6b7785"> &middot; </span>' +
         '<b style="color:#10243e">' + durStr + '</b>';

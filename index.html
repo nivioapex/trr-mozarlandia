@@ -2063,6 +2063,10 @@ async function initAdvMap() {
   L.marker([TRR_LAT, TRR_LON], {icon: trrDivIcon, zIndexOffset:1000})
     .bindTooltip('<b>TRR Mozarlândia</b><br>Base de operações', {sticky:true})
     .addTo(advMap);
+  L.marker([TRR2_LAT, TRR2_LON], {icon:trrDivIcon, zIndexOffset:1000})
+    .bindTooltip('<b>TRR São Miguel do Araguaia</b><br>Base de operações', {sticky:true})
+    .bindPopup('<h4 class="lp-h">TRR São Miguel do Araguaia</h4><div class="lp-meta">Av. José Pereira do Nascimento, 5224<br>Centro, São Miguel do Araguaia - GO<br>Distribuidora de Combustíveis</div>', {maxWidth:260})
+    .addTo(advMap);
   // Carregar geoData se ainda nao disponivel (independente da aba Mapa)
   if (!geoData) {
     var el = document.getElementById('adv-cli-count');
@@ -3642,6 +3646,10 @@ function initCampoMap() {
     iconSize:[26,26], iconAnchor:[13,13], className:''
   });
   L.marker([TRR_LAT, TRR_LON], {icon:trrIcon, zIndexOffset:900}).bindTooltip('<b>TRR Mozarl\u00e2ndia</b>',{sticky:true}).addTo(campoMap);
+  L.marker([TRR2_LAT, TRR2_LON], {icon:trrIcon, zIndexOffset:900})
+    .bindTooltip('<b>TRR S\u00e3o Miguel do Araguaia</b>',{sticky:true})
+    .bindPopup('<h4 class="lp-h">TRR S\u00e3o Miguel do Araguaia</h4><div class="lp-meta">Av. Jos\u00e9 Pereira do Nascimento, 5224<br>Centro, S\u00e3o Miguel do Araguaia - GO<br>Distribuidora de Combust\u00edveis</div>', {maxWidth:260})
+    .addTo(campoMap);
   if (!geoData) {
     SB.rpc('trr_geo_all', {}).then(function(res){ if (!res.error) geoData = res.data; if (campoPos) campoRefresh(true); });
   }

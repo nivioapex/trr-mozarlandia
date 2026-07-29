@@ -3812,7 +3812,7 @@ function campoRenderList(clis, prospects) {
       '<div class="campo-card-nome">\uD83C\uDFAF '+esc(c.nom_imovel||c.cod_imovel||'\u2013')+'</div>' +
       '<div class="campo-card-sub">'+esc(c.municipio||'')+(c.area_ha?' \u00b7 '+Number(c.area_ha).toFixed(0)+' ha':'')+' \u00b7 CAR '+(statusLbl[c.status_car]||c.status_car||'')+'</div>' +
       '<div class="campo-card-foot"><span class="campo-card-dist">'+Number(c.dist_km).toFixed(1)+' km</span>'+
-      '<span style="display:flex;gap:6px"><button class="campo-nav-btn" style="background:#1c7c54" onclick="event.stopPropagation();openIntel('+c.id+')">🔎 Análise</button>'+navBtn(c.lat,c.lon)+'</span></div></div>';
+      '<span style="display:flex;gap:6px"><button class="campo-nav-btn" style="background:#1c7c54" onclick="event.stopPropagation();openIntel('+c.id+')">🔎 Análise</button>'+(c.cod_imovel?'<a class="campo-nav-btn" style="background:#1a6e42;text-decoration:none" target="_blank" rel="noopener" href="https://www.registrorural.com.br/imoveis/car-'+c.cod_imovel+'/" onclick="event.stopPropagation()">🏡 Reg. Rural</a>':'')+navBtn(c.lat,c.lon)+'</span></div></div>';
   });
   if (!html) html = '<div class="adv-empty" style="grid-column:1/-1"><div class="adv-empty-ico">\uD83C\uDF35</div><div class="adv-empty-txt">Nada num raio de '+campoRadius+' km. Aumente o raio ou continue dirigindo.</div></div>';
   el.innerHTML = html;

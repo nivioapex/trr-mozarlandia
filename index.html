@@ -389,115 +389,6 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .fc-kv b{text-align:right;}
 .fc-edit-btn{border:1.5px solid #10243e;background:#fff;color:#10243e;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:800;cursor:pointer;width:100%;margin-top:4px;}
 
-function imprimirVisita(v) {
-  if (!v) { alert('Dados da visita n\u00e3o dispon\u00edveis.'); return; }
-  var dt   = v.created_at ? new Date(v.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
-  var resp = v.criado_por || (SESSION && (SESSION.nome||SESSION.email)) || '';
-  var titulo = (v.nome_fazenda || v.nome_cliente || 'Visita');
-
-  var logoSvg = '<svg viewBox="0 0 260 80" xmlns="http://www.w3.org/2000/svg" style="height:60px">'
-    + '<path d="M4,4 L4,76 L32,76 Q72,76 72,40 Q72,4 32,4 Z" fill="#091929"/>'
-    + '<path d="M8,9 L8,71 L30,71 Q64,71 64,40 Q64,9 30,9 Z" fill="#0b1f3a"/>'
-    + '<polygon points="14,22 48,40 14,58" fill="#f5a623" opacity="0.35"/>'
-    + '<polygon points="20,25 54,40 20,55" fill="#ffc107" opacity="0.62"/>'
-    + '<polygon points="26,29 60,40 26,51" fill="#ffd740" opacity="0.96"/>'
-    + '<text x="84" y="38" font-family="Arial Black,Arial,sans-serif" font-size="21" font-weight="900"'
-    + ' font-style="italic" fill="white" letter-spacing="-0.5">Din\u00e2mica</text>'
-    + '<text x="84" y="64" font-family="Arial Black,Arial,sans-serif" font-size="28" font-weight="900"'
-    + ' fill="#f5a623" letter-spacing="4">TRR</text>'
-    + '<text x="84" y="75" font-family="Arial,sans-serif" font-size="8.5"'
-    + ' fill="rgba(255,255,255,0.5)" letter-spacing="0.4">Distribuidora de Combust\u00edveis</text>'
-    + '</svg>';
-
-  var row = function(lbl, val) {
-    if (val == null || val === '' || val === undefined) return '';
-    return '<tr><td style="font-size:10.5px;color:#555;font-weight:700;padding:5px 10px 5px 0;width:200px;vertical-align:top">'
-      + lbl + '</td><td style="font-size:13px;padding:5px 0">' + String(val) + '</td></tr>';
-  };
-  var yesno = function(b) { return b===true?'Sim':b===false?'N\u00e3o':''; };
-
-  var climatxt = '';
-  if (v.clima && v.clima.temp_c != null) {
-    climatxt = v.clima.temp_c + '\u00b0C' + (v.clima.condicao ? ' \u00b7 ' + v.clima.condicao : '');
-  }
-
-  var css = 'body{font-family:Arial,sans-serif;padding:24px;color:#111;max-width:800px;margin:0 auto}'
-    + '.hdr{background:#10243e;color:#fff;padding:16px 20px;border-radius:8px;'
-    + 'display:flex;align-items:center;gap:20px;margin-bottom:20px;page-break-inside:avoid}'
-    + '.hdr-info{flex:1}.hdr-title{font-size:20px;font-weight:900}'
-    + '.hdr-sub{font-size:11px;opacity:0.65;margin-top:4px}'
-    + '.sec{font-size:11px;font-weight:900;color:#10243e;border-bottom:2px solid #e8ecf0;'
-    + 'padding-bottom:4px;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.5px}'
-    + 'table{border-collapse:collapse;width:100%}'
-    + '.badge{background:#1c7c54;color:#fff;border-radius:4px;padding:2px 8px;'
-    + 'font-size:11px;font-weight:700;display:inline-block}'
-    + '.foto{width:130px;height:130px;object-fit:cover;border-radius:6px;border:1px solid #ddd}'
-    + '.footer{margin-top:30px;border-top:1px solid #eee;padding-top:10px;'
-    + 'font-size:10px;color:#999;text-align:center}'
-    + '@media print{button{display:none!important}body{padding:10px}.hdr{border-radius:4px}}';
-
-  var body = '<!DOCTYPE html><html><head><meta charset="utf-8">'
-    + '<title>Relat\u00f3rio de Visita \u2013 Din\u00e2mica TRR</title>'
-    + '<style>' + css + '</style></head><body>'
-    + '<div class="hdr"><div>' + logoSvg + '</div>'
-    + '<div class="hdr-info">'
-    + '<div class="hdr-title">' + titulo
-    + (v.pre_venda ? ' <span class="badge">\uD83E\uDD1D Pr\u00e9-venda</span>' : '') + '</div>'
-    + '<div class="hdr-sub">Relat\u00f3rio de Visita \u00b7 ' + dt
-    + (resp ? ' \u00b7 \uD83D\uDC64 ' + resp : '') + '</div>'
-    + '</div></div>'
-
-    + '<div class="sec">Identifica\u00e7\u00e3o</div><table>'
-    + row('Cliente', v.nome_cliente)
-    + row('Fazenda', v.nome_fazenda)
-    + row('Respons\u00e1vel', resp)
-    + row('Data da visita', dt)
-    + row('Clima', climatxt)
-    + '</table>'
-
-    + '<div class="sec">Combust\u00edvel e Tanques</div><table>'
-    + row('\u00daltima compra de combust\u00edvel', v.ultima_compra_combustivel)
-    + row('Tancagem (L)', v.tancagem_l)
-    + row('Conserva\u00e7\u00e3o dos tanques', v.conservacao_tanques)
-    + row('Manuten\u00e7\u00e3o necess\u00e1ria', yesno(v.manutencao_tanques))
-    + row('Principais maquin\u00e1rios', v.maquinarios)
-    + '</table>'
-
-    + '<div class="sec">Pecu\u00e1ria e Agricultura</div><table>'
-    + row('Tipo de cria\u00e7\u00e3o', Array.isArray(v.tipo_criacao) ? v.tipo_criacao.join(', ') : v.tipo_criacao)
-    + row('Quantidade de cabe\u00e7as', v.qtd_cabecas)
-    + row('Estado do curral', v.estado_curral)
-    + row('Agricultura (ha)', v.agricultura_ha)
-    + row('Tem piv\u00f4?', yesno(v.tem_pivo))
-    + row('Rac\u00e3o', v.racao)
-    + row('Faz ILP?', yesno(v.faz_ilp))
-    + row('Situa\u00e7\u00e3o pulverizadores', v.situacao_pulverizadores)
-    + row('Aguardando ambiental?', yesno(v.aguardando_ambiental))
-    + '</table>'
-
-    + '<div class="sec">Resumo e Pr\u00f3ximos Passos</div><table>'
-    + row('Resumo da visita', v.resumo)
-    + row('Pr\u00f3ximos passos', v.proximos_passos)
-    + '</table>'
-
-    + (v.fotos && v.fotos.length
-        ? '<div class="sec">Fotos (' + v.fotos.length + ')</div>'
-          + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'
-          + v.fotos.map(function(u){ return '<img class="foto" src="' + u + '">'; }).join('')
-          + '</div>'
-        : '')
-
-    + '<div class="footer">Din\u00e2mica TRR \u00b7 Distribuidora de Combust\u00edveis'
-    + ' \u00b7 Gerado em ' + new Date().toLocaleString('pt-BR') + '</div>'
-    + '<script>setTimeout(function(){window.print();},500);<\/script>'
-    + '</body></html>';
-
-  var w = window.open('', '_blank');
-  if (!w) { alert('Permita popups neste site para imprimir o relat\u00f3rio.'); return; }
-  w.document.write(body);
-  w.document.close();
-}
-
 
 
 /* ===== BIBLIOTECA DE FILTROS (Fase 1 / Epico 4) ===== */
@@ -4090,6 +3981,116 @@ async function openVisitasList(){
   } catch(e) {
     b.innerHTML = '<div class="intel-loading">\u274C ' + esc(e.message || String(e)) + '</div>';
   }
+}
+
+
+function imprimirVisita(v) {
+  if (!v) { alert('Dados da visita n\u00e3o dispon\u00edveis.'); return; }
+  var dt   = v.created_at ? new Date(v.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
+  var resp = v.criado_por || (SESSION && (SESSION.nome||SESSION.email)) || '';
+  var titulo = (v.nome_fazenda || v.nome_cliente || 'Visita');
+
+  var logoSvg = '<svg viewBox="0 0 260 80" xmlns="http://www.w3.org/2000/svg" style="height:60px">'
+    + '<path d="M4,4 L4,76 L32,76 Q72,76 72,40 Q72,4 32,4 Z" fill="#091929"/>'
+    + '<path d="M8,9 L8,71 L30,71 Q64,71 64,40 Q64,9 30,9 Z" fill="#0b1f3a"/>'
+    + '<polygon points="14,22 48,40 14,58" fill="#f5a623" opacity="0.35"/>'
+    + '<polygon points="20,25 54,40 20,55" fill="#ffc107" opacity="0.62"/>'
+    + '<polygon points="26,29 60,40 26,51" fill="#ffd740" opacity="0.96"/>'
+    + '<text x="84" y="38" font-family="Arial Black,Arial,sans-serif" font-size="21" font-weight="900"'
+    + ' font-style="italic" fill="white" letter-spacing="-0.5">Din\u00e2mica</text>'
+    + '<text x="84" y="64" font-family="Arial Black,Arial,sans-serif" font-size="28" font-weight="900"'
+    + ' fill="#f5a623" letter-spacing="4">TRR</text>'
+    + '<text x="84" y="75" font-family="Arial,sans-serif" font-size="8.5"'
+    + ' fill="rgba(255,255,255,0.5)" letter-spacing="0.4">Distribuidora de Combust\u00edveis</text>'
+    + '</svg>';
+
+  var row = function(lbl, val) {
+    if (val == null || val === '' || val === undefined) return '';
+    return '<tr><td style="font-size:10.5px;color:#555;font-weight:700;padding:5px 10px 5px 0;width:200px;vertical-align:top">'
+      + lbl + '</td><td style="font-size:13px;padding:5px 0">' + String(val) + '</td></tr>';
+  };
+  var yesno = function(b) { return b===true?'Sim':b===false?'N\u00e3o':''; };
+
+  var climatxt = '';
+  if (v.clima && v.clima.temp_c != null) {
+    climatxt = v.clima.temp_c + '\u00b0C' + (v.clima.condicao ? ' \u00b7 ' + v.clima.condicao : '');
+  }
+
+  var css = 'body{font-family:Arial,sans-serif;padding:24px;color:#111;max-width:800px;margin:0 auto}'
+    + '.hdr{background:#10243e;color:#fff;padding:16px 20px;border-radius:8px;'
+    + 'display:flex;align-items:center;gap:20px;margin-bottom:20px;page-break-inside:avoid}'
+    + '.hdr-info{flex:1}.hdr-title{font-size:20px;font-weight:900}'
+    + '.hdr-sub{font-size:11px;opacity:0.65;margin-top:4px}'
+    + '.sec{font-size:11px;font-weight:900;color:#10243e;border-bottom:2px solid #e8ecf0;'
+    + 'padding-bottom:4px;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.5px}'
+    + 'table{border-collapse:collapse;width:100%}'
+    + '.badge{background:#1c7c54;color:#fff;border-radius:4px;padding:2px 8px;'
+    + 'font-size:11px;font-weight:700;display:inline-block}'
+    + '.foto{width:130px;height:130px;object-fit:cover;border-radius:6px;border:1px solid #ddd}'
+    + '.footer{margin-top:30px;border-top:1px solid #eee;padding-top:10px;'
+    + 'font-size:10px;color:#999;text-align:center}'
+    + '@media print{button{display:none!important}body{padding:10px}.hdr{border-radius:4px}}';
+
+  var body = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+    + '<title>Relat\u00f3rio de Visita \u2013 Din\u00e2mica TRR</title>'
+    + '<style>' + css + '</style></head><body>'
+    + '<div class="hdr"><div>' + logoSvg + '</div>'
+    + '<div class="hdr-info">'
+    + '<div class="hdr-title">' + titulo
+    + (v.pre_venda ? ' <span class="badge">\uD83E\uDD1D Pr\u00e9-venda</span>' : '') + '</div>'
+    + '<div class="hdr-sub">Relat\u00f3rio de Visita \u00b7 ' + dt
+    + (resp ? ' \u00b7 \uD83D\uDC64 ' + resp : '') + '</div>'
+    + '</div></div>'
+
+    + '<div class="sec">Identifica\u00e7\u00e3o</div><table>'
+    + row('Cliente', v.nome_cliente)
+    + row('Fazenda', v.nome_fazenda)
+    + row('Respons\u00e1vel', resp)
+    + row('Data da visita', dt)
+    + row('Clima', climatxt)
+    + '</table>'
+
+    + '<div class="sec">Combust\u00edvel e Tanques</div><table>'
+    + row('\u00daltima compra de combust\u00edvel', v.ultima_compra_combustivel)
+    + row('Tancagem (L)', v.tancagem_l)
+    + row('Conserva\u00e7\u00e3o dos tanques', v.conservacao_tanques)
+    + row('Manuten\u00e7\u00e3o necess\u00e1ria', yesno(v.manutencao_tanques))
+    + row('Principais maquin\u00e1rios', v.maquinarios)
+    + '</table>'
+
+    + '<div class="sec">Pecu\u00e1ria e Agricultura</div><table>'
+    + row('Tipo de cria\u00e7\u00e3o', Array.isArray(v.tipo_criacao) ? v.tipo_criacao.join(', ') : v.tipo_criacao)
+    + row('Quantidade de cabe\u00e7as', v.qtd_cabecas)
+    + row('Estado do curral', v.estado_curral)
+    + row('Agricultura (ha)', v.agricultura_ha)
+    + row('Tem piv\u00f4?', yesno(v.tem_pivo))
+    + row('Rac\u00e3o', v.racao)
+    + row('Faz ILP?', yesno(v.faz_ilp))
+    + row('Situa\u00e7\u00e3o pulverizadores', v.situacao_pulverizadores)
+    + row('Aguardando ambiental?', yesno(v.aguardando_ambiental))
+    + '</table>'
+
+    + '<div class="sec">Resumo e Pr\u00f3ximos Passos</div><table>'
+    + row('Resumo da visita', v.resumo)
+    + row('Pr\u00f3ximos passos', v.proximos_passos)
+    + '</table>'
+
+    + (v.fotos && v.fotos.length
+        ? '<div class="sec">Fotos (' + v.fotos.length + ')</div>'
+          + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'
+          + v.fotos.map(function(u){ return '<img class="foto" src="' + u + '">'; }).join('')
+          + '</div>'
+        : '')
+
+    + '<div class="footer">Din\u00e2mica TRR \u00b7 Distribuidora de Combust\u00edveis'
+    + ' \u00b7 Gerado em ' + new Date().toLocaleString('pt-BR') + '</div>'
+    + '<script>setTimeout(function(){window.print();},500);<\/script>'
+    + '</body></html>';
+
+  var w = window.open('', '_blank');
+  if (!w) { alert('Permita popups neste site para imprimir o relat\u00f3rio.'); return; }
+  w.document.write(body);
+  w.document.close();
 }
 
 

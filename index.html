@@ -279,32 +279,6 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 @media(max-width:900px){.adv-layout{grid-template-columns:1fr;}}
 .adv-map-wrap{position:relative;}
 #adv-map{height:560px;border-radius:var(--r);box-shadow:0 2px 8px rgba(0,0,0,.12);}
-.adv-nearby-panel{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:1500;background:rgba(16,36,62,.92);color:#fff;border-radius:20px;padding:6px 14px;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,.3);backdrop-filter:blur(4px);}
-.adv-nearby-panel button{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;}
-.adv-nearby-panel button:hover{background:rgba(255,255,255,.35);}
-.adv-nearby-km{display:flex;align-items:center;gap:4px;}
-.adv-nearby-km input{width:40px;padding:1px 4px;font-size:11px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;text-align:center;}
-.adv-nearby-km input:focus{outline:none;border-color:#f5a623;}
-.adv-car-popup{font-family:inherit;font-size:13px;min-width:240px;}
-.adv-car-popup-hdr{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px;}
-.adv-car-popup-nome{font-weight:800;color:#10243e;font-size:13px;line-height:1.3;flex:1;}
-.adv-car-popup-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
-.adv-car-popup-badge.cli{background:#d1fae5;color:#065f46;}
-.adv-car-popup-badge.car{background:#e0f2fe;color:#075985;}
-.adv-car-popup-rows{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;font-size:12px;margin-bottom:10px;}
-.adv-car-popup-lbl{color:#6b7785;font-size:11px;white-space:nowrap;padding-top:1px;}
-.adv-car-popup-val{color:#10243e;font-weight:600;}
-.adv-car-popup-dist{font-size:11px;color:#6b7785;margin-bottom:8px;}
-.adv-car-popup-btns{display:flex;gap:6px;flex-wrap:wrap;}
-.adv-car-popup-btn{flex:1;min-width:90px;padding:5px 8px;border-radius:6px;border:none;font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:opacity .15s;}
-.adv-car-popup-btn:hover{opacity:.85;}
-.adv-car-popup-btn.primary{background:#10243e;color:#fff;}
-.adv-car-popup-btn.secondary{background:#f0f2f5;color:#10243e;}
-.adv-car-popup-btn.whats{background:#25d366;color:#fff;}
-.adv-car-popup-sep{border:none;border-top:1px solid #f0f2f5;margin:8px 0;}
-/* Aumentar largura max do popup Leaflet para os CARs */
-.leaflet-popup-content-wrapper{border-radius:10px !important;box-shadow:0 4px 20px rgba(0,0,0,.18) !important;}
-.leaflet-popup-content{margin:14px 16px !important;}
 .adv-map-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:6px 16px;border-radius:16px;pointer-events:none;z-index:1000;white-space:nowrap;transition:opacity .4s;}
 .adv-map-hint.hidden{opacity:0;}
 .map-layer-ctrl{display:flex;gap:3px;background:rgba(255,255,255,.93);border-radius:8px;padding:4px 5px;box-shadow:0 1px 5px rgba(0,0,0,.25);}
@@ -334,37 +308,6 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .adv-det-back{background:none;border:none;font-size:20px;cursor:pointer;color:#6b7785;padding:0 4px;line-height:1;}
 .adv-det-title{font-size:14px;font-weight:800;color:#10243e;flex:1;line-height:1.3;}
 .adv-det-body{padding:14px 16px;}
-.adv-sat-section{margin-top:14px;border:1px solid #e8f0fe;border-radius:10px;overflow:hidden;}
-.adv-sat-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(135deg,#1a3a5c 0%,#1e5631 100%);color:#fff;cursor:pointer;font-size:13px;font-weight:700;user-select:none;}
-.adv-sat-header:hover{opacity:.9;}
-.adv-sat-toggle{margin-left:auto;font-size:16px;transition:transform .2s;}
-.adv-sat-body{display:none;padding:0;}
-.adv-sat-body.open{display:block;}
-#adv-sat-minimap{height:200px;width:100%;background:#e5e7eb;}
-.adv-sat-links{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 6px;background:#f8fafc;border-bottom:1px solid #e8f0fe;}
-.adv-sat-link{font-size:11px;color:#1a56db;text-decoration:none;background:#eff6ff;padding:3px 8px;border-radius:12px;border:1px solid #bfdbfe;white-space:nowrap;}
-.adv-sat-link:hover{background:#dbeafe;}
-.adv-sat-feat-title{font-size:11px;font-weight:700;color:#374151;padding:10px 12px 6px;text-transform:uppercase;letter-spacing:.5px;}
-.adv-sat-features{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;padding:0 12px 10px;}
-.adv-sat-feat-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1.5px solid #d1d5db;border-radius:8px;background:#f9fafb;cursor:pointer;font-size:11.5px;color:#374151;font-weight:500;transition:all .15s;text-align:left;}
-.adv-sat-feat-btn:hover{border-color:#6366f1;background:#eef2ff;}
-.adv-sat-feat-btn.active{border-color:#16a34a;background:#f0fdf4;color:#15803d;font-weight:700;}
-.adv-sat-feat-btn .feat-icon{font-size:16px;line-height:1;}
-.adv-sat-rec-title{font-size:11px;font-weight:700;color:#374151;padding:10px 12px 6px;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid #f0f2f5;}
-.adv-rec-empty{padding:6px 12px 10px;font-size:12px;color:#9ca3af;font-style:italic;}
-.adv-rec-item{display:flex;align-items:flex-start;gap:8px;padding:6px 12px;border-bottom:1px solid #f9fafb;}
-.adv-rec-item:last-child{border-bottom:none;padding-bottom:10px;}
-.adv-rec-prio{background:#16a34a;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;}
-.adv-rec-prio.prio-2{background:#0284c7;}
-.adv-rec-prio.prio-3{background:#7c3aed;}
-.adv-rec-info{flex:1;}
-.adv-rec-parceiro{font-size:12px;font-weight:700;color:#10243e;display:block;}
-.adv-rec-produto{font-size:11px;color:#6b7785;}
-.adv-script-section{margin:0 12px 12px;border:1px solid #bbf7d0;border-radius:8px;overflow:hidden;}
-.adv-script-hdr{background:#f0fdf4;padding:7px 10px;font-size:11px;font-weight:700;color:#15803d;display:flex;align-items:center;gap:6px;}
-.adv-script-txt{padding:8px 10px;font-size:11.5px;line-height:1.6;color:#374151;background:#fff;white-space:pre-wrap;word-break:break-word;}
-.adv-script-copy{display:block;width:calc(100% - 24px);margin:0 12px 12px;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;}
-.adv-script-copy:hover{background:#15803d;}
 .adv-det-row{margin-bottom:10px;}
 .adv-det-lbl{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
 .adv-det-val{font-size:13px;color:#1c2733;font-weight:600;word-break:break-all;}
@@ -446,6 +389,117 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .fc-kv b{text-align:right;}
 .fc-edit-btn{border:1.5px solid #10243e;background:#fff;color:#10243e;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:800;cursor:pointer;width:100%;margin-top:4px;}
 
+function imprimirVisita(v) {
+  if (!v) { alert('Dados da visita n\u00e3o dispon\u00edveis.'); return; }
+  var dt   = v.created_at ? new Date(v.created_at).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
+  var resp = v.criado_por || (SESSION && (SESSION.nome||SESSION.email)) || '';
+  var titulo = (v.nome_fazenda || v.nome_cliente || 'Visita');
+
+  var logoSvg = '<svg viewBox="0 0 260 80" xmlns="http://www.w3.org/2000/svg" style="height:60px">'
+    + '<path d="M4,4 L4,76 L32,76 Q72,76 72,40 Q72,4 32,4 Z" fill="#091929"/>'
+    + '<path d="M8,9 L8,71 L30,71 Q64,71 64,40 Q64,9 30,9 Z" fill="#0b1f3a"/>'
+    + '<polygon points="14,22 48,40 14,58" fill="#f5a623" opacity="0.35"/>'
+    + '<polygon points="20,25 54,40 20,55" fill="#ffc107" opacity="0.62"/>'
+    + '<polygon points="26,29 60,40 26,51" fill="#ffd740" opacity="0.96"/>'
+    + '<text x="84" y="38" font-family="Arial Black,Arial,sans-serif" font-size="21" font-weight="900"'
+    + ' font-style="italic" fill="white" letter-spacing="-0.5">Din\u00e2mica</text>'
+    + '<text x="84" y="64" font-family="Arial Black,Arial,sans-serif" font-size="28" font-weight="900"'
+    + ' fill="#f5a623" letter-spacing="4">TRR</text>'
+    + '<text x="84" y="75" font-family="Arial,sans-serif" font-size="8.5"'
+    + ' fill="rgba(255,255,255,0.5)" letter-spacing="0.4">Distribuidora de Combust\u00edveis</text>'
+    + '</svg>';
+
+  var row = function(lbl, val) {
+    if (val == null || val === '' || val === undefined) return '';
+    return '<tr><td style="font-size:10.5px;color:#555;font-weight:700;padding:5px 10px 5px 0;width:200px;vertical-align:top">'
+      + lbl + '</td><td style="font-size:13px;padding:5px 0">' + String(val) + '</td></tr>';
+  };
+  var yesno = function(b) { return b===true?'Sim':b===false?'N\u00e3o':''; };
+
+  var climatxt = '';
+  if (v.clima && v.clima.temp_c != null) {
+    climatxt = v.clima.temp_c + '\u00b0C' + (v.clima.condicao ? ' \u00b7 ' + v.clima.condicao : '');
+  }
+
+  var css = 'body{font-family:Arial,sans-serif;padding:24px;color:#111;max-width:800px;margin:0 auto}'
+    + '.hdr{background:#10243e;color:#fff;padding:16px 20px;border-radius:8px;'
+    + 'display:flex;align-items:center;gap:20px;margin-bottom:20px;page-break-inside:avoid}'
+    + '.hdr-info{flex:1}.hdr-title{font-size:20px;font-weight:900}'
+    + '.hdr-sub{font-size:11px;opacity:0.65;margin-top:4px}'
+    + '.sec{font-size:11px;font-weight:900;color:#10243e;border-bottom:2px solid #e8ecf0;'
+    + 'padding-bottom:4px;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.5px}'
+    + 'table{border-collapse:collapse;width:100%}'
+    + '.badge{background:#1c7c54;color:#fff;border-radius:4px;padding:2px 8px;'
+    + 'font-size:11px;font-weight:700;display:inline-block}'
+    + '.foto{width:130px;height:130px;object-fit:cover;border-radius:6px;border:1px solid #ddd}'
+    + '.footer{margin-top:30px;border-top:1px solid #eee;padding-top:10px;'
+    + 'font-size:10px;color:#999;text-align:center}'
+    + '@media print{button{display:none!important}body{padding:10px}.hdr{border-radius:4px}}';
+
+  var body = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+    + '<title>Relat\u00f3rio de Visita \u2013 Din\u00e2mica TRR</title>'
+    + '<style>' + css + '</style></head><body>'
+    + '<div class="hdr"><div>' + logoSvg + '</div>'
+    + '<div class="hdr-info">'
+    + '<div class="hdr-title">' + titulo
+    + (v.pre_venda ? ' <span class="badge">\uD83E\uDD1D Pr\u00e9-venda</span>' : '') + '</div>'
+    + '<div class="hdr-sub">Relat\u00f3rio de Visita \u00b7 ' + dt
+    + (resp ? ' \u00b7 \uD83D\uDC64 ' + resp : '') + '</div>'
+    + '</div></div>'
+
+    + '<div class="sec">Identifica\u00e7\u00e3o</div><table>'
+    + row('Cliente', v.nome_cliente)
+    + row('Fazenda', v.nome_fazenda)
+    + row('Respons\u00e1vel', resp)
+    + row('Data da visita', dt)
+    + row('Clima', climatxt)
+    + '</table>'
+
+    + '<div class="sec">Combust\u00edvel e Tanques</div><table>'
+    + row('\u00daltima compra de combust\u00edvel', v.ultima_compra_combustivel)
+    + row('Tancagem (L)', v.tancagem_l)
+    + row('Conserva\u00e7\u00e3o dos tanques', v.conservacao_tanques)
+    + row('Manuten\u00e7\u00e3o necess\u00e1ria', yesno(v.manutencao_tanques))
+    + row('Principais maquin\u00e1rios', v.maquinarios)
+    + '</table>'
+
+    + '<div class="sec">Pecu\u00e1ria e Agricultura</div><table>'
+    + row('Tipo de cria\u00e7\u00e3o', Array.isArray(v.tipo_criacao) ? v.tipo_criacao.join(', ') : v.tipo_criacao)
+    + row('Quantidade de cabe\u00e7as', v.qtd_cabecas)
+    + row('Estado do curral', v.estado_curral)
+    + row('Agricultura (ha)', v.agricultura_ha)
+    + row('Tem piv\u00f4?', yesno(v.tem_pivo))
+    + row('Rac\u00e3o', v.racao)
+    + row('Faz ILP?', yesno(v.faz_ilp))
+    + row('Situa\u00e7\u00e3o pulverizadores', v.situacao_pulverizadores)
+    + row('Aguardando ambiental?', yesno(v.aguardando_ambiental))
+    + '</table>'
+
+    + '<div class="sec">Resumo e Pr\u00f3ximos Passos</div><table>'
+    + row('Resumo da visita', v.resumo)
+    + row('Pr\u00f3ximos passos', v.proximos_passos)
+    + '</table>'
+
+    + (v.fotos && v.fotos.length
+        ? '<div class="sec">Fotos (' + v.fotos.length + ')</div>'
+          + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'
+          + v.fotos.map(function(u){ return '<img class="foto" src="' + u + '">'; }).join('')
+          + '</div>'
+        : '')
+
+    + '<div class="footer">Din\u00e2mica TRR \u00b7 Distribuidora de Combust\u00edveis'
+    + ' \u00b7 Gerado em ' + new Date().toLocaleString('pt-BR') + '</div>'
+    + '<script>setTimeout(function(){window.print();},500);<\/script>'
+    + '</body></html>';
+
+  var w = window.open('', '_blank');
+  if (!w) { alert('Permita popups neste site para imprimir o relat\u00f3rio.'); return; }
+  w.document.write(body);
+  w.document.close();
+}
+
+
+
 /* ===== BIBLIOTECA DE FILTROS (Fase 1 / Epico 4) ===== */
 #filtros-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:400px;max-width:96vw;background:#fff;z-index:3200;box-shadow:-6px 0 28px rgba(0,0,0,.28);flex-direction:column;}
 #filtros-panel.open{display:flex;}
@@ -476,6 +530,9 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .vis-sec-hdr{font-size:12px;font-weight:900;color:#10243e;border-bottom:2px solid #eef1f4;padding-bottom:4px;margin:18px 0 10px;}
 .vis-card{background:var(--card);border-radius:10px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:9px;border-left:4px solid #1c7c54;}
 .vis-card.pv{border-left-color:#e0762c;}
+.vis-resp-bar{background:#f0f6ff;border-radius:7px;padding:8px 12px;font-size:13px;margin-bottom:10px;color:#10243e;border-left:3px solid #1d6ef5;}
+.vis-print-btn{background:#10243e;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.vis-print-btn:hover{background:#1a3a5c;}
 .vis-card-t{font-weight:800;font-size:13.5px;}
 .vis-card-s{font-size:11.5px;color:var(--muted);margin-top:2px;}
 .vis-fotos-prev{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
@@ -545,28 +602,6 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 @media (max-width:640px){
   #intel-panel{top:auto;left:0;right:0;bottom:0;width:100%;max-width:100%;height:86vh;border-radius:16px 16px 0 0;}
 }
-
-/* ── IA Analysis ───────────────────── */
-.adv-ia-section{margin-top:14px;padding:12px 14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;}
-.adv-ia-btn{width:100%;padding:13px 0;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:opacity .2s;}
-.adv-ia-btn:hover{opacity:.9;}
-.adv-ia-btn:disabled{background:#9ca3af;cursor:not-allowed;opacity:.7;}
-.adv-ia-result{margin-top:10px;}
-.adv-ia-loading{text-align:center;padding:20px 10px;color:#7c3aed;font-size:13px;line-height:1.7;}
-.adv-ia-card{background:#fff;border:1px solid #e8f0fe;border-radius:8px;padding:12px 14px;margin-top:8px;}
-.adv-ia-card-title{font-weight:700;font-size:11px;color:#10243e;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px;}
-.adv-ia-tag{display:inline-block;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:2px 8px;font-size:12px;margin:2px 2px 2px 0;}
-.adv-ia-prod{display:flex;flex-direction:column;padding:7px 0;border-bottom:1px solid #f3f4f6;}
-.adv-ia-prod:last-child{border-bottom:none;}
-.adv-ia-prod-name{font-weight:600;font-size:13px;color:#10243e;}
-.adv-ia-prod-why{font-size:12px;color:#6b7280;margin-top:2px;line-height:1.5;}
-.adv-prio-alta{color:#059669;font-size:10px;font-weight:700;background:#d1fae5;border-radius:3px;padding:1px 5px;margin-left:5px;}
-.adv-prio-media{color:#d97706;font-size:10px;font-weight:700;background:#fef3c7;border-radius:3px;padding:1px 5px;margin-left:5px;}
-.adv-prio-baixa{color:#6b7280;font-size:10px;font-weight:700;background:#f3f4f6;border-radius:3px;padding:1px 5px;margin-left:5px;}
-.adv-ia-script{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;line-height:1.7;color:#14532d;white-space:pre-wrap;margin-top:4px;word-break:break-word;}
-.adv-ia-copy{width:100%;margin-top:8px;padding:9px 0;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
-.adv-ia-copy:hover{background:#15803d;}
-.adv-ia-diesel{margin-top:8px;font-size:12px;color:#6b7280;padding:4px 0;}
 </style>
 </head>
 <body>
@@ -820,17 +855,6 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
     <div class="adv-map-wrap">
       <div id="adv-map"></div>
       <div class="adv-map-hint" id="adv-hint">Clique em um cliente para ver imoveis CAR no raio</div>
-      <div id="adv-nearby-panel" class="adv-nearby-panel" style="display:none">
-        <span>&#128205;</span>
-        <span id="adv-nearby-title">0 propriedades</span>
-        <div class="adv-nearby-km">
-          <span>Raio:</span>
-          <input type="number" id="adv-nearby-km" value="10" min="1" max="200" step="5"
-            onchange="advRefreshNearby()">
-          <span>km</span>
-        </div>
-        <button onclick="advCloseNearby()" title="Fechar">&#10005;</button>
-      </div>
     </div>
     <div class="adv-panel" id="adv-panel">
       <div class="adv-panel-hdr">
@@ -948,9 +972,10 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 </div><!-- /wrap -->
 
 <script>
-var _ADV_URL='https://keeqkmguljsddfmrqlld.supabase.co';
-var _ADV_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ';
-var SB=supabase.createClient(_ADV_URL,_ADV_KEY);
+var SB=supabase.createClient(
+  'https://keeqkmguljsddfmrqlld.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ'
+);
 
 /* ===== AUTH ===== */
 var SESSION=null;
@@ -1709,11 +1734,6 @@ function renderMapMarkers() {
     .bindPopup('<h4 class="lp-h">TRR Mozarlândia</h4><div class="lp-meta">GO-164, KM 166, Zona Urbana<br>Mozarlândia - GO · CEP 76700-000<br>Distribuidora de Combustíveis</div>', { maxWidth: 260 })
     .addTo(mapLayers);
 
-  L.marker([TRR2_LAT, TRR2_LON], { icon: trrIcon, zIndexOffset: 1000 })
-    .bindTooltip('<b>TRR São Miguel do Araguaia</b><br>Ponto de referência', { sticky: true })
-    .bindPopup('<h4 class="lp-h">TRR São Miguel do Araguaia</h4><div class="lp-meta">Av. José Pereira do Nascimento, 5224<br>Centro, São Miguel do Araguaia - GO<br>Distribuidora de Combustíveis</div>', { maxWidth: 260 })
-    .addTo(mapLayers);
-
   if (!geoData) return;
 
   if (mapView === 'mun') {
@@ -1845,11 +1865,8 @@ var advCliLayer    = null;
 var advRadiusLayer = null;
 var advCarLayer    = null;
 var advRouteLayer  = null;
-var advClickLayer  = null;
-var _advNearbyLat  = null, _advNearbyLon = null;
 var advRadius      = 10;
 var TRR_LAT = -14.74469, TRR_LON = -50.54306;
-var TRR2_LAT = -13.2742, TRR2_LON = -50.1631; // São Miguel do Araguaia
 var _advAreaFilter = '';
 // Municipios do Vale do Araguaia (editavel)
 var VALE_ARAGUAIA = ['MOZARLANDIA','ARUANA','BRITANIA','JUSSARA','MATRINCHA','ARAGUAPAZ',
@@ -1864,7 +1881,6 @@ function advToggleVale(btn){
   if (window._advNearby) advApplyFilters();
 }
 var TRR_LAT = -14.74469, TRR_LON = -50.54306;
-var TRR2_LAT = -13.2742, TRR2_LON = -50.1631; // São Miguel do Araguaia
 var prospData = null;
 var prospDrillData = null;
 var prospFilters = { q: '', uf: '', score: '', dist: '', semCli: false };
@@ -1963,8 +1979,7 @@ var TILE_DEFS = {
   mapa:     { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',      attr:'Esri Topo',     maxZoom:18 },
   satelite: { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',      attr:'Esri Imagery',  maxZoom:19 },
   hidrico:  { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', attr:'Esri Physical', maxZoom:18 },
-  vicinais: { url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'© OpenStreetMap', maxZoom:19, sub:'abc' },
-  earth:    { url:'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr:'Google', maxZoom:20, sub:'0123' }
+  vicinais: { url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'© OpenStreetMap', maxZoom:19, sub:'abc' }
 };
 
 var OVERLAY_DEFS = {
@@ -2004,7 +2019,7 @@ var LayerSwitcherControl = L.Control.extend({
 
     // Base tiles (selecao unica)
     var baseDiv = L.DomUtil.create('div', 'map-layer-ctrl', wrap);
-    var baseLabels = { mapa:'🗺 Mapa', satelite:'🛰 Satélite', hidrico:'🌊 Hírico', vicinais:'🛣 Vicinais', earth:'🌍 Google Earth' };
+    var baseLabels = { mapa:'🗺 Mapa', satelite:'🛰 Satélite', hidrico:'🌊 Hírico', vicinais:'🛣 Vicinais' };
     Object.keys(baseLabels).forEach(function(key) {
       var btn = L.DomUtil.create('button', 'map-layer-btn' + (key === 'mapa' ? ' active' : ''), baseDiv);
       btn.textContent = baseLabels[key];
@@ -2063,10 +2078,6 @@ async function initAdvMap() {
   L.marker([TRR_LAT, TRR_LON], {icon: trrDivIcon, zIndexOffset:1000})
     .bindTooltip('<b>TRR Mozarlândia</b><br>Base de operações', {sticky:true})
     .addTo(advMap);
-  L.marker([TRR2_LAT, TRR2_LON], {icon:trrDivIcon, zIndexOffset:1000})
-    .bindTooltip('<b>TRR São Miguel do Araguaia</b><br>Base de operações', {sticky:true})
-    .bindPopup('<h4 class="lp-h">TRR São Miguel do Araguaia</h4><div class="lp-meta">Av. José Pereira do Nascimento, 5224<br>Centro, São Miguel do Araguaia - GO<br>Distribuidora de Combustíveis</div>', {maxWidth:260})
-    .addTo(advMap);
   // Carregar geoData se ainda nao disponivel (independente da aba Mapa)
   if (!geoData) {
     var el = document.getElementById('adv-cli-count');
@@ -2080,8 +2091,6 @@ async function initAdvMap() {
     } catch(e) { console.warn('advMap geoData load error', e); }
   }
   renderAdvClientes();
-  advClickLayer = L.layerGroup().addTo(advMap);
-  advMap.on('click', function(e) { advShowNearby(e.latlng.lat, e.latlng.lng); });
 }
 
 function haversineKm(lat1, lon1, lat2, lon2) {
@@ -2225,15 +2234,9 @@ async function advDrawRoute(p) {
   if (!advRouteLayer) return;
   advRouteLayer.clearLayers();
   try {
-    // Usar o TRR mais próximo como origem da rota
-    var _d1 = haversineKm(TRR_LAT,  TRR_LON,  p.lat, p.lon);
-    var _d2 = haversineKm(TRR2_LAT, TRR2_LON, p.lat, p.lon);
-    var _oLat  = _d1 <= _d2 ? TRR_LAT  : TRR2_LAT;
-    var _oLon  = _d1 <= _d2 ? TRR_LON  : TRR2_LON;
-    var _oNome = _d1 <= _d2 ? 'Mozarlândia' : 'São Miguel';
     var url = 'https://router.project-osrm.org/route/v1/driving/'
-      + _oLon + ',' + _oLat + ';'
-      + p.lon + ',' + p.lat
+      + TRR_LON + ',' + TRR_LAT + ';'
+      + p.lon   + ',' + p.lat
       + '?overview=full&geometries=geojson';
     var resp = await fetch(url);
     var data = await resp.json();
@@ -2264,7 +2267,7 @@ async function advDrawRoute(p) {
     var badge = document.getElementById('adv-route-badge');
     if (badge) {
       badge.innerHTML =
-        '<span style="font-size:11px;color:#6b7785">&#x1F6E3; TRR ' + _oNome + ': </span>' +
+        '<span style="font-size:11px;color:#6b7785">&#x1F6E3; Rota: </span>' +
         '<b style="color:#e0762c">' + distKm + ' km</b>' +
         '<span style="font-size:11px;color:#6b7785"> &middot; </span>' +
         '<b style="color:#10243e">' + durStr + '</b>';
@@ -2403,274 +2406,6 @@ function advRenderResults(filtered, trrProps) {
 
 
 // ── Painel de Detalhes da Propriedade CAR ──
-// ── Análise de Satélite ──
-var FEATURE_PRODUCTS = {
-  pivos:        { icon:'💧', label:'Pivôs de Irrigação',   hint:'Círculos no campo — irrigação intensiva',
-    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S10 (bombeamento contínuo)'},
-         {p:2,par:'Dinâmica Agro',prod:'Lubrificantes para bombas'},
-         {p:3,par:'Shimizu Fertilizantes',prod:'Programa Gota Certa'},
-         {p:4,par:'Land Genética',prod:'Sementes milho híbrido'}]},
-  talhoes:      { icon:'🌾', label:'Talhões de Lavoura',   hint:'Retângulos de culturas diferentes',
-    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S500/S10 (frota agrícola)'},
-         {p:2,par:'Land Genética',prod:'Sementes milho — safrinha'},
-         {p:3,par:'Santo Isidoro',prod:'Sementes sorgo BRS 716'},
-         {p:4,par:'Shimizu Fertilizantes',prod:'Fertilizantes linha completa'},
-         {p:5,par:'DORF KETAL',prod:'MileX — aditivo que reduz consumo'}]},
-  currais:      { icon:'🐄', label:'Currais / Piquetes',   hint:'Cercados geométricos, presença de gado',
-    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S500/S10'},
-         {p:2,par:'Biofórmula',prod:'Suplementos Nutricionais Animais'},
-         {p:3,par:'Oxen Currais',prod:'Currais inteligentes e Ferragens'},
-         {p:4,par:'Pacheco Consultoria',prod:'Diagnóstico de rebanho'}]},
-  silos:        { icon:'🏗', label:'Silos / Armazéns',     hint:'Estruturas cilíndricas ou galpões',
-    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel (alta demanda safra)'},
-         {p:2,par:'Dinâmica Agro',prod:'Lubrificantes industriais'},
-         {p:3,par:'Banefort Group',prod:'Antecipação de Recebíveis'}]},
-  confinamentos:{ icon:'🐮', label:'Confinamentos',        hint:'Estrutura densa com cochos e sombrites',
-    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S500/S10 (volume alto)'},
-         {p:2,par:'Biofórmula',prod:'Suplementos Nutricionais'},
-         {p:3,par:'Grupo Organics',prod:'Esterco → Adubo (Serviço no Confinamento)'},
-         {p:4,par:'Pacheco Consultoria',prod:'Gestão e protocolo de rebanho'},
-         {p:5,par:'Banefort Group',prod:'Capital de giro / crédito rural'}]},
-  estradas:     { icon:'🛣', label:'Estradas Internas',   hint:'Rede viária dentro da propriedade',
-    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel (frota interna grande)'},
-         {p:2,par:'Dinâmica Agro',prod:'Lubrificantes e Arla32'}]},
-  sede:         { icon:'🏠', label:'Sede da Fazenda',     hint:'Construção principal e jardins',
-    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel + pacote de combustíveis'},
-         {p:2,par:'Dinâmica Agro',prod:'Pacote Tecnológico Completo'}]},
-  barragens:    { icon:'🌊', label:'Barragens / Lagos',   hint:'Lagos e acudes represados',
-    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel (bombeamento)'},
-         {p:2,par:'Shimizu Fertilizantes',prod:'Programa Gota Certa — irrigação'},
-         {p:3,par:'Biofórmula',prod:'Suplementos para gado bebedor'}]},
-  maquinas:     { icon:'🚜', label:'Máquinas em Campo',   hint:'Tratores/colheitadeiras visíveis',
-    rec:[{p:1,par:'Dinâmica TRR',prod:'Diesel S10 — demanda IMEDIATA'},
-         {p:2,par:'Dinâmica Agro',prod:'Lubrificantes e Arla32'},
-         {p:3,par:'DORF KETAL',prod:'MileX — reduz consumo em frota pesada'}]}
-};
-
-var _advSatMap = null;
-
-function advToggleSat() {
-  var body = document.getElementById('adv-sat-body');
-  var icon = document.getElementById('adv-sat-icon');
-  if (!body) return;
-  var opening = !body.classList.contains('open');
-  body.classList.toggle('open', opening);
-  if (icon) icon.textContent = opening ? '▲' : '▼';
-  if (opening) {
-    setTimeout(function() {
-      if (_advSatMap) _advSatMap.invalidateSize();
-    }, 50);
-  }
-}
-
-function advInitSatMap(lat, lon, nome, area) {
-  var container = document.getElementById('adv-sat-minimap');
-  if (!container) return;
-  if (_advSatMap) { _advSatMap.remove(); _advSatMap = null; }
-  var m = L.map('adv-sat-minimap', {
-    zoomControl:true, attributionControl:false,
-    scrollWheelZoom:false, dragging:true
-  });
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    {maxZoom:19}).addTo(m);
-  // Zoom baseado na área: pequena=15, média=14, grande=13
-  var zoom = area > 5000 ? 12 : area > 1000 ? 13 : area > 200 ? 14 : 15;
-  m.setView([lat, lon], zoom);
-  L.circleMarker([lat,lon],{radius:8,color:'#22c55e',fillColor:'#86efac',fillOpacity:.7,weight:2}).addTo(m);
-  _advSatMap = m;
-  // Links externos para fontes satélite
-  var llat = lat.toFixed(6), llon = lon.toFixed(6);
-  var nomeEnc = encodeURIComponent(nome || '');
-  document.getElementById('adv-sat-links').innerHTML =
-    '<a class="adv-sat-link" href="https://earth.google.com/web/search/' + llat + ',' + llon + '" target="_blank">🌍 Google Earth</a>' +
-    '<a class="adv-sat-link" href="https://www.bing.com/maps?cp=' + llat + '~' + llon + '&lvl=15&style=h" target="_blank">🗺 Bing Satélite</a>' +
-    '<a class="adv-sat-link" href="https://www.sentinel-hub.com/explore/eobrowser/?zoom=14&lat=' + llat + '&lng=' + llon + '" target="_blank">🛰 Sentinel-2</a>' +
-    '<a class="adv-sat-link" href="https://mapbiomas.org" target="_blank">🌿 MapBiomas</a>' +
-    '<a class="adv-sat-link" href="https://glovis.usgs.gov/" target="_blank">📡 Landsat/USGS</a>';
-}
-
-function advSatToggleFeat(btn, key) {
-  btn.classList.toggle('active');
-  advUpdateSatRecs();
-}
-
-function advUpdateSatRecs() {
-  var actives = [];
-  document.querySelectorAll('.adv-sat-feat-btn.active').forEach(function(b){
-    actives.push(b.getAttribute('data-feat'));
-  });
-  // Agregar produtos por parceiro
-  var map = {};
-  actives.forEach(function(feat){
-    var fp = FEATURE_PRODUCTS[feat];
-    if (!fp) return;
-    fp.rec.forEach(function(r){
-      if (!map[r.par]) map[r.par] = {par:r.par, prod:r.prod, prio:r.p};
-      else if (r.p < map[r.par].prio) { map[r.par].prod = r.prod; map[r.par].prio = r.p; }
-    });
-  });
-  var sorted = Object.values(map).sort(function(a,b){return a.prio-b.prio;});
-  var recEl = document.getElementById('adv-sat-recs');
-  if (!recEl) return;
-  if (!sorted.length) {
-    recEl.innerHTML = '<div class="adv-rec-empty">Marque as características visíveis no satélite para ver os produtos recomendados.</div>';
-  } else {
-    var html = '';
-    sorted.slice(0,6).forEach(function(r, i){
-      var cls = i===0?'':i===1?' prio-2':' prio-3';
-      html += '<div class="adv-rec-item"><div class="adv-rec-prio' + cls + '">' + (i+1) + '</div>'
-            + '<div class="adv-rec-info"><span class="adv-rec-parceiro">' + r.par + '</span>'
-            + '<span class="adv-rec-produto">' + r.prod + '</span></div></div>';
-    });
-    recEl.innerHTML = html;
-  }
-  // Gerar script WhatsApp
-  advGenSatScript(actives, sorted);
-}
-
-function advGenSatScript(features, recs) {
-  var scEl = document.getElementById('adv-script-txt');
-  if (!scEl) return;
-  var nome = document.getElementById('adv-det-title') ? document.getElementById('adv-det-title').textContent : 'sua fazenda';
-  if (!features.length) {
-    scEl.textContent = 'Marque as características da propriedade acima para gerar o script personalizado.';
-    return;
-  }
-  var labels = features.map(function(f){ return FEATURE_PRODUCTS[f] ? FEATURE_PRODUCTS[f].label : f; }).join(', ');
-  var top3 = recs.slice(0,3).map(function(r){ return r.prod + ' (' + r.par + ')'; });
-  var script = 'Ola! Meu nome e [SEU NOME], da Dinamica Agro.\n\n';
-  var hasConfinamento = features.indexOf('confinamentos') >= 0;
-  var hasPivo = features.indexOf('pivos') >= 0;
-  var hasTalhao = features.indexOf('talhoes') >= 0;
-  var hasCurral = features.indexOf('currais') >= 0 || hasConfinamento;
-  if (hasPivo || hasTalhao) {
-    script += 'Trabalho com fornecimento de diesel direto na fazenda pela Dinamica TRR - produto de base homologada em Senador Canedo (GO), com rastreamento e entrega pontual. Para uma operacao de lavoura como a sua, garantia de abastecimento e produtividade na hora certa.';
-  } else if (hasCurral) {
-    script += 'Trabalho com abastecimento de diesel pela Dinamica TRR, direto na sua fazenda. Mas alem do combustivel, temos solucoes completas para pecuaria: suplemento nutricional, consultoria tecnica e estrutura de curral.';
-  } else {
-    script += 'Trabalho com abastecimento de diesel e insumos agricolas para propriedades da regiao. Entregamos direto na fazenda com qualidade e pontualidade garantidas.';
-  }
-  script += '\n\nVi que a propriedade "' + nome + '" tem potencial para algumas solucoes que representamos:\n';
-  top3.forEach(function(t, i){ script += '\n' + (i+1) + '. ' + t; });
-  if (hasConfinamento) {
-    script += '\n\nDiferencial: Grupo Organics transforma esterco do confinamento em adubo organico certificado - zero desperdicio.';
-  }
-  script += '\n\nPosso enviar uma proposta sem compromisso?\n(62) 99808-2802 | Dinamica Agro';
-  scEl.textContent = script;
-}
-function advCopyScript() {
-  var el = document.getElementById('adv-script-txt');
-  if (!el) return;
-  navigator.clipboard.writeText(el.textContent).then(function(){
-    var btn = document.querySelector('.adv-script-copy');
-    if (btn) { btn.textContent = '✅ Copiado!'; setTimeout(function(){ btn.textContent = '📋 Copiar script para WhatsApp'; }, 2000); }
-  });
-}
-// ── fim Análise de Satélite ──
-
-function haversineKm(lat1, lon1, lat2, lon2) {
-  var R = 6371;
-  var dLat = (lat2-lat1) * Math.PI/180;
-  var dLon = (lon2-lon1) * Math.PI/180;
-  var a = Math.sin(dLat/2)*Math.sin(dLat/2)
-    + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)
-    * Math.sin(dLon/2)*Math.sin(dLon/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-async function advShowNearby(lat, lon) {
-  _advNearbyLat = lat; _advNearbyLon = lon;
-  if (!advClickLayer) advClickLayer = L.layerGroup().addTo(advMap);
-  advClickLayer.clearLayers();
-
-  var km = parseFloat(
-    document.getElementById('adv-nearby-km')
-    ? document.getElementById('adv-nearby-km').value : 10
-  ) || 10;
-
-  // Pin central + circulo de raio
-  L.circleMarker([lat, lon], {
-    radius:9, color:'#e0762c', fillColor:'#e0762c', fillOpacity:1, weight:2.5
-  }).addTo(advClickLayer).bindTooltip('&#128205; Ponto selecionado', {sticky:true});
-  L.circle([lat, lon], {
-    radius: km*1000, color:'#e0762c', weight:1.5, opacity:0.6,
-    fillColor:'#e0762c', fillOpacity:0.06, dashArray:'8 5'
-  }).addTo(advClickLayer);
-
-  // Badge loading
-  var panel = document.getElementById('adv-nearby-panel');
-  var title = document.getElementById('adv-nearby-title');
-  if (panel) { if(title) title.textContent = 'Buscando...'; panel.style.display = 'flex'; }
-
-  // Carregar CARs: reusar cache de municipios ja carregados,
-  // ou buscar sem filtro de municipio (cache key = __all__)
-  window._advCarCache = window._advCarCache || {};
-  var allCar = [];
-  var cacheKeys = Object.keys(window._advCarCache);
-  if (cacheKeys.length > 0) {
-    // Reusar tudo que ja foi carregado
-    cacheKeys.forEach(function(k) {
-      var arr = advCarProps(window._advCarCache[k]);
-      arr.forEach(function(c) {
-        if (!allCar.some(function(x){ return x.cod === c.cod; })) allCar.push(c);
-      });
-    });
-  } else {
-    // Nenhum cache ainda — buscar sem municipio (retorna todos do estado)
-    try {
-      var res = await SB.rpc('trr_car_geo', {p_uf: null, p_mun: null, p_status: null});
-      if (res.error) throw new Error(JSON.stringify(res.error));
-      window._advCarCache['__all__'] = res.data;
-      allCar = advCarProps(res.data);
-    } catch(e) {
-      if (panel && title) title.textContent = 'Erro ao carregar';
-      console.error('advShowNearby error:', e);
-      return;
-    }
-  }
-
-  // Filtrar pelo raio
-  var nearby = [];
-  allCar.forEach(function(c) {
-    if (!c.lat || !c.lon) return;
-    var d = haversineKm(lat, lon, c.lat, c.lon);
-    if (d <= km) nearby.push({ prop:c, dist:d });
-  });
-  nearby.sort(function(a,b){ return a.dist - b.dist; });
-
-  // Usar infraestrutura existente para plotar + abrir detalhes
-  var trrProps = (geoData && geoData.props) || [];
-  window._advTrrProps     = trrProps;
-  window._advFilteredItems = nearby;   // indices para advShowDetalhes
-
-  advRenderCarMarkers(nearby, trrProps); // plota em advCarLayer
-
-  // Atualizar badge
-  if (panel && title) {
-    title.textContent = nearby.length
-      + ' propriedade' + (nearby.length !== 1 ? 's' : '');
-  }
-
-  // Zoom para enquadrar o circulo
-  try {
-    advMap.fitBounds(
-      L.circle([lat,lon],{radius:km*1000}).getBounds(),
-      {padding:[30,30], maxZoom:13}
-    );
-  } catch(e){}
-}
-
-function advCloseNearby() {
-  var p = document.getElementById('adv-nearby-panel');
-  if (p) p.style.display = 'none';
-  if (advClickLayer) advClickLayer.clearLayers();
-  _advNearbyLat = null; _advNearbyLon = null;
-}
-
-function advRefreshNearby() {
-  if (_advNearbyLat !== null) advShowNearby(_advNearbyLat, _advNearbyLon);
-}
-
 function advShowDetalhes(idx) {
   var items = window._advFilteredItems || [];
   var trrProps = window._advTrrProps || [];
@@ -2731,8 +2466,8 @@ function advShowDetalhes(idx) {
   body += '<div class="adv-det-row"><div class="adv-det-lbl">Área</div>'
     + '<div class="adv-det-val">' + (c.area ? Number(c.area).toLocaleString('pt-BR',{maximumFractionDigits:1}) + ' ha' : '–') + '</div></div>';
 
-  body += '<div class="adv-det-row"><div class="adv-det-lbl">Distância das Unidades</div>'
-    + '<div class="adv-det-val">📍 Mozarlândia: ' + haversineKm(TRR_LAT, TRR_LON, c.lat, c.lon).toFixed(1) + ' km<br>📍 São Miguel: ' + haversineKm(TRR2_LAT, TRR2_LON, c.lat, c.lon).toFixed(1) + ' km</div></div>';
+  body += '<div class="adv-det-row"><div class="adv-det-lbl">Distância do TRR</div>'
+    + '<div class="adv-det-val">🛣 ' + item.dist.toFixed(1) + ' km</div></div>';
 
   body += '<div class="adv-det-row"><div class="adv-det-lbl">Coordenadas</div>'
     + '<div class="adv-det-val" style="font-size:12px;">' + (c.lat||'?') + ', ' + (c.lon||'?') + '</div></div>';
@@ -2765,7 +2500,6 @@ function advShowDetalhes(idx) {
 
   body += '</div>';
 
-
   // Exibir painel
   var panel = document.getElementById('adv-detail-panel');
   var titleEl = document.getElementById('adv-det-title');
@@ -2783,105 +2517,7 @@ function advShowDetalhes(idx) {
   panel.classList.add('open');
 }
 
-function advAnaliseIA(cod, lat, lon, area, municipio, tipo, nome, ctId) {
-  var container = document.getElementById(ctId || 'adv-ia-result');
-  if (!container) return;
-  var CKEY = 'ia_v1_' + cod;
-  try {
-    var cached = localStorage.getItem(CKEY);
-    if (cached) {
-      var obj = JSON.parse(cached);
-      if (obj.ts && (Date.now() - obj.ts) < 86400000) {
-        advRenderIAResult(container, obj.data, cod); return;
-      }
-    }
-  } catch(e) {}
-  container.innerHTML = '<div class="adv-ia-loading">Analisando imagem de satelite com IA...<br><small>Aguarde alguns segundos</small></div>';
-  var btn = container.previousElementSibling;
-  if (btn) { btn.disabled = true; btn.textContent = 'Analisando...'; }
-  fetch(_ADV_URL + '/functions/v1/analisar-propriedade', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': _ADV_KEY,
-      'Authorization': 'Bearer ' + _ADV_KEY
-    },
-    body: JSON.stringify({
-      lat: lat, lon: lon, area_ha: area,
-      municipio: municipio, tipo: tipo, cod: cod, nome: nome
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.error) throw new Error(data.error);
-    try { localStorage.setItem(CKEY, JSON.stringify({ ts: Date.now(), data: data })); } catch(e) {}
-    advRenderIAResult(container, data, cod);
-    if (btn) { btn.disabled = false; btn.textContent = '\u{1F916} Analise IA da Propriedade'; }
-  })
-  .catch(function(e) {
-    container.innerHTML = '<div style="color:#dc2626;padding:10px;font-size:13px;">Erro: ' + esc(e.message) + '</div>';
-    if (btn) { btn.disabled = false; btn.textContent = '\u{1F916} Tentar novamente'; }
-  });
-}
-
-function advRenderIAResult(container, data, cod) {
-  var h = '';
-  if (data.analise) {
-    h += '<div class="adv-ia-card">';
-    h += '<div class="adv-ia-card-title">Analise Geral</div>';
-    h += '<div style="font-size:13px;color:#374151;line-height:1.6;">' + esc(data.analise) + '</div>';
-    h += '</div>';
-  }
-  if (data.estruturas && data.estruturas.length) {
-    h += '<div class="adv-ia-card">';
-    h += '<div class="adv-ia-card-title">Estruturas Identificadas</div><div>';
-    data.estruturas.forEach(function(e) { h += '<span class="adv-ia-tag">' + esc(String(e)) + '</span>'; });
-    h += '</div>';
-    if (data.potencial_consumo && data.potencial_consumo.diesel_litros_mes) {
-      h += '<div class="adv-ia-diesel">Estimativa diesel: ~' + esc(String(data.potencial_consumo.diesel_litros_mes)) + ' L/mes</div>';
-    }
-    h += '</div>';
-  }
-  if (data.produtos_recomendados && data.produtos_recomendados.length) {
-    h += '<div class="adv-ia-card">';
-    h += '<div class="adv-ia-card-title">Produtos Recomendados</div>';
-    data.produtos_recomendados.forEach(function(p) {
-      var pc = p.prioridade === 'alta' ? 'adv-prio-alta' : (p.prioridade === 'media' ? 'adv-prio-media' : 'adv-prio-baixa');
-      h += '<div class="adv-ia-prod">';
-      h += '<div class="adv-ia-prod-name">' + esc(p.produto||'') + ' <span class="' + pc + '">' + esc(p.prioridade||'') + '</span></div>';
-      if (p.motivo) h += '<div class="adv-ia-prod-why">' + esc(p.motivo) + '</div>';
-      h += '</div>';
-    });
-    h += '</div>';
-  }
-  if (data.script_whatsapp) {
-    var safeId = 'ia_scr_' + (cod||'x').replace(/[^a-zA-Z0-9_]/g,'_');
-    h += '<div class="adv-ia-card">';
-    h += '<div class="adv-ia-card-title">Script WhatsApp Pronto</div>';
-    h += '<div class="adv-ia-script" id="' + safeId + '">' + esc(data.script_whatsapp) + '</div>';
-    h += '<button class="adv-ia-copy" onclick="advCopyIAScript(\'' + safeId + '\')">Copiar para WhatsApp</button>';
-    h += '</div>';
-  }
-  container.innerHTML = h;
-}
-
-function advCopyIAScript(safeId) {
-  var el = document.getElementById(safeId);
-  if (!el) return;
-  var btn = el.nextElementSibling;
-  var ok = function() { if(btn){btn.textContent='Copiado!'; setTimeout(function(){btn.textContent='Copiar para WhatsApp';},2000);} };
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(el.textContent||'').then(ok);
-  } else {
-    var r = document.createRange(); r.selectNodeContents(el);
-    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-    document.execCommand('copy'); s.removeAllRanges(); ok();
-  }
-}
-
-
 function advCloseDetalhes() {
-  if (_advSatMap) { _advSatMap.remove(); _advSatMap = null; }
   var panel      = document.getElementById('adv-detail-panel');
   var results    = document.getElementById('adv-results');
   var filterBar  = document.getElementById('adv-filter-bar');
@@ -3652,10 +3288,6 @@ function initCampoMap() {
     iconSize:[26,26], iconAnchor:[13,13], className:''
   });
   L.marker([TRR_LAT, TRR_LON], {icon:trrIcon, zIndexOffset:900}).bindTooltip('<b>TRR Mozarl\u00e2ndia</b>',{sticky:true}).addTo(campoMap);
-  L.marker([TRR2_LAT, TRR2_LON], {icon:trrIcon, zIndexOffset:900})
-    .bindTooltip('<b>TRR S\u00e3o Miguel do Araguaia</b>',{sticky:true})
-    .bindPopup('<h4 class="lp-h">TRR S\u00e3o Miguel do Araguaia</h4><div class="lp-meta">Av. Jos\u00e9 Pereira do Nascimento, 5224<br>Centro, S\u00e3o Miguel do Araguaia - GO<br>Distribuidora de Combust\u00edveis</div>', {maxWidth:260})
-    .addTo(campoMap);
   if (!geoData) {
     SB.rpc('trr_geo_all', {}).then(function(res){ if (!res.error) geoData = res.data; if (campoPos) campoRefresh(true); });
   }
@@ -3812,7 +3444,7 @@ function campoRenderList(clis, prospects) {
       '<div class="campo-card-nome">\uD83C\uDFAF '+esc(c.nom_imovel||c.cod_imovel||'\u2013')+'</div>' +
       '<div class="campo-card-sub">'+esc(c.municipio||'')+(c.area_ha?' \u00b7 '+Number(c.area_ha).toFixed(0)+' ha':'')+' \u00b7 CAR '+(statusLbl[c.status_car]||c.status_car||'')+'</div>' +
       '<div class="campo-card-foot"><span class="campo-card-dist">'+Number(c.dist_km).toFixed(1)+' km</span>'+
-      '<span style="display:flex;gap:6px"><button class="campo-nav-btn" style="background:#1c7c54" onclick="event.stopPropagation();openIntel('+c.id+')">🔎 Análise</button>'+(c.cod_imovel?'<a class="campo-nav-btn" style="background:#1a6e42;text-decoration:none" target="_blank" rel="noopener" href="https://www.registrorural.com.br/imoveis/car-'+c.cod_imovel+'/" onclick="event.stopPropagation()">🏡 Reg. Rural</a>':'')+navBtn(c.lat,c.lon)+'</span></div></div>';
+      '<span style="display:flex;gap:6px"><button class="campo-nav-btn" style="background:#1c7c54" onclick="event.stopPropagation();openIntel('+c.id+')">🔎 Análise</button>'+navBtn(c.lat,c.lon)+'</span></div></div>';
   });
   if (!html) html = '<div class="adv-empty" style="grid-column:1/-1"><div class="adv-empty-ico">\uD83C\uDF35</div><div class="adv-empty-txt">Nada num raio de '+campoRadius+' km. Aumente o raio ou continue dirigindo.</div></div>';
   el.innerHTML = html;
@@ -4152,18 +3784,6 @@ function renderIntel(d){
   }
 
   h += '<div style="font-size:10px;color:var(--muted);padding-bottom:10px">Estimativas geradas por cruzamento CAR \u00d7 IBGE (PPM/PAM 2024) \u00d7 base de clientes TRR. Confirmar na visita.</div>';
-  // Analise IA da Propriedade
-  var _iaCod = String(p.id || '').replace(/['"\\]/g, '');
-  var _iaNom = (p.nom_imovel && p.nom_imovel !== 'SEM_REGISTRO' ? p.nom_imovel : '').replace(/['"\\]/g, '');
-  var _iaMun = (p.municipio || '').replace(/['"\\]/g, '');
-  var _iaTip = (p.status || '').replace(/['"\\]/g, '');
-  h += '<div class="intel-sec adv-ia-section" style="margin-top:4px;padding:0 0 4px">';
-  h += '<button class="adv-ia-btn" onclick="advAnaliseIA(\'' + _iaCod + '\','
-    + (p.lat||0) + ',' + (p.lon||0) + ',' + (parseFloat(p.area_ha)||0) + ',\''
-    + _iaMun + '\',\'' + _iaTip + '\',\'' + _iaNom + '\',\'intel-ia-result\')">';
-  h += '\u{1F916} Análise IA da Propriedade</button>';
-  h += '<div id="intel-ia-result" class="adv-ia-result"></div>';
-  h += '</div>';
   document.getElementById('intel-body').innerHTML = h;
 }
 
@@ -4305,10 +3925,11 @@ function openVisita(ctx){
   window._visitaAtual = ctx;
   _visClima = null; _visFotos = [];
   document.getElementById('visita-panel').classList.add('open');
-  document.getElementById('visita-sub').textContent = (ctx.nome_fazenda||'Nova visita') + ' \u00b7 ' + new Date().toLocaleString('pt-BR');
+  document.getElementById('visita-sub').textContent = (ctx.nome_fazenda||'Nova visita') + ' \u00b7 ' + new Date().toLocaleString('pt-BR')+ (SESSION && (SESSION.nome||SESSION.email) ? ' \u00b7 \uD83D\uDC64 ' + (SESSION.nome||SESSION.email) : '');
   var b = document.getElementById('visita-body');
   b.innerHTML =
     '<div class="vis-clima" id="vis-clima">\u23F3 Buscando clima da posi\u00e7\u00e3o\u2026</div>'
+    + '<div class="vis-resp-bar">\uD83D\uDC64 Respons\u00e1vel: <b>' + esc(SESSION && (SESSION.nome||SESSION.email)||'Desconhecido') + '</b></div>'
     + '<div class="vis-sec-hdr">CLIENTE</div>'
     + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">Nome do cliente</label><input class="vis-in" id="v-cli" value="'+esc(ctx.nome_cliente||'')+'"></div>'
     + '<div class="vis-grp"><label class="vis-lbl">Nome da fazenda</label><input class="vis-in" id="v-faz" value="'+esc(ctx.nome_fazenda||'')+'"></div></div>'
@@ -4410,7 +4031,8 @@ async function salvarVisita(){
     var res = await SB.rpc('trr_visita_salvar', { p_token: SESSION.token, p: payload });
     if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
 
-    var h = '<div style="background:#d9f2e4;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:700;color:#1c7c54">\u2714 Visita salva com sucesso!</div>';
+    window._lastVisita = Object.assign({}, payload, { criado_por: SESSION&&(SESSION.nome||SESSION.email)||'', created_at: new Date().toISOString() });
+    var h = '<div style="background:#d9f2e4;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:700;color:#1c7c54">\u2714 Visita salva!<button class="vis-print-btn" style="float:right;margin-top:-2px" onclick="imprimirVisita(window._lastVisita)">\uD83D\uDDB6 Imprimir PDF</button></div>';
     // REL-05: gatilho de oferta por maquinario
     if (payload.maquinarios) {
       h += '<div style="background:#fff8f2;border:1px solid #fde8d2;border-radius:9px;padding:10px 13px;font-size:12.5px;margin-top:9px">\uD83D\uDCA1 <b>Gatilho de oferta:</b> maquin\u00e1rio anotado \u2014 oferecer <b>aditivos Milex</b> (Dorf Ketal) e <b>lubrificantes/ARLA</b> na sequ\u00eancia.</div>';
@@ -4451,8 +4073,9 @@ async function openVisitasList(){
     var vs = res.data || [];
     document.getElementById('vlist-sub').textContent = vs.length + ' visita(s)';
     if (!vs.length) { b.innerHTML = '<div class="intel-loading">Nenhuma visita registrada ainda.<br>Use \uD83D\uDCDD Registrar visita no painel de an\u00e1lise ou nos cards do Modo Campo.</div>'; return; }
+    window._vlistData = vs;
     var h = '';
-    vs.forEach(function(v){
+    vs.forEach(function(v, _vi){
       var dt = new Date(v.created_at).toLocaleString('pt-BR');
       h += '<div class="vis-card' + (v.pre_venda ? ' pv' : '') + '">'
         + '<div class="vis-card-t">' + (v.pre_venda ? '\uD83E\uDD1D ' : '') + esc(v.nome_fazenda || v.nome_cliente || 'Visita') + '</div>'
@@ -4460,6 +4083,7 @@ async function openVisitasList(){
         + (v.resumo ? '<div style="font-size:12.5px;margin-top:6px">' + esc(v.resumo) + '</div>' : '')
         + (v.proximos_passos ? '<div style="font-size:12px;margin-top:5px;color:#9a4c0e"><b>Pr\u00f3ximos passos:</b> ' + esc(v.proximos_passos) + '</div>' : '')
         + ((v.fotos && v.fotos.length) ? '<div class="vis-fotos-prev">' + v.fotos.map(function(u){ return '<a href="' + u + '" target="_blank"><img src="' + u + '"></a>'; }).join('') + '</div>' : '')
+        + '<div style="margin-top:8px"><button class="vis-print-btn" onclick="imprimirVisita(window._vlistData&&window._vlistData['+_vi+'])">\uD83D\uDDB6 Imprimir PDF</button></div>'
         + '</div>';
     });
     b.innerHTML = h;

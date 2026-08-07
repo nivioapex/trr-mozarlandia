@@ -101,6 +101,20 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .admin-submit:hover{background:#1a3a5c;}
 .admin-msg{grid-column:span 2;padding:10px 14px;border-radius:6px;font-size:13px;display:none;}
 .admin-msg.ok{background:#e2f3ea;color:#1c7c54;border:1px solid #b7dfca;}
+.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.log-tbl th{background:#f8f9fb;color:#10243e;font-weight:700;text-align:left;padding:7px 9px;border-bottom:2px solid #e0e5ed;white-space:nowrap;}
+.log-tbl td{padding:6px 9px;border-bottom:1px solid #f0f2f5;vertical-align:top;}
+.log-tbl tr:hover td{background:#f5f8ff;}
+.log-acao{display:inline-block;border-radius:4px;padding:2px 7px;font-size:10.5px;font-weight:700;white-space:nowrap;}
+.log-acao.login{background:#dbeafe;color:#1d4ed8;}
+.log-acao.visita_salva{background:#dcfce7;color:#166534;}
+.log-acao.usuario_criado{background:#fef9c3;color:#854d0e;}
+.log-acao.senha_alterada{background:#ffe4e6;color:#9f1239;}
+.log-acao.usuario_status{background:#f3e8ff;color:#6b21a8;}
+.log-acao.outro{background:#f1f5f9;color:#475569;}
+.log-filtros{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.log-filtros input,.log-filtros select{border:1.5px solid #dde2ea;border-radius:6px;padding:6px 10px;font-size:12.5px;}
+.log-filtros input{flex:1;min-width:160px;}
 .admin-msg.err{background:#fff5f5;color:#c53030;border:1px solid #fed7d7;}
 .user-tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .user-tbl th{text-align:left;padding:9px 10px;border-bottom:2px solid #dee2e6;color:#6b7785;font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
@@ -551,6 +565,21 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
         <h3>Usuários Cadastrados</h3>
         <div id="admin-users-wrap"><div class="spin">Carregando…</div></div>
       </div>
+      <div class="admin-sec">
+        <h3>📋 Logs de Acesso e Alterações</h3>
+        <div class="log-filtros">
+          <input type="text" id="log-busca" placeholder="🔍 Buscar por usuário…" oninput="filtrarLogs()">
+          <select id="log-acao-filtro" onchange="filtrarLogs()">
+            <option value="">Todas as ações</option>
+            <option value="login">Login</option>
+            <option value="visita_salva">Visita salva</option>
+            <option value="usuario_criado">Usuário criado</option>
+            <option value="senha_alterada">Senha alterada</option>
+            <option value="usuario_status">Status de usuário</option>
+          </select>
+        </div>
+        <div id="admin-logs-wrap"><div class="spin">Carregando…</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -911,7 +940,7 @@ async function doLogin(){
     if(res.error){errEl.textContent=res.error.message||'Erro de conexão.';errEl.style.display='block';return;}
     var d=res.data;
     if(d&&d.error){errEl.textContent=d.error;errEl.style.display='block';return;}
-    setToken(d.token);SESSION=d;showDashboard();
+    setToken(d.token);SESSION=d;showDashboard();SB.rpc('trr_log_inserir',{p_token:d.token,p_acao:'login',p_detalhes:{}}).catch(function(){});
   }catch(e){
     btn.disabled=false;btn.textContent='Entrar';
     errEl.textContent='Erro de conexão. Tente novamente.';errEl.style.display='block';
@@ -926,10 +955,75 @@ async function doLogout(){
   showLogin();
 }
 
+
+/* ===== AUDIT LOG ===== */
+var _logsData = [];
+async function loadLogs() {
+  var wrap = document.getElementById('admin-logs-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="spin">Carregando logs…</div>';
+  try {
+    var res = await SB.rpc('trr_audit_listar', { p_token: SESSION.token, p_limit: 400 });
+    if (res.error || !res.data) { wrap.innerHTML = '<div class="err-box">Erro ao carregar logs</div>'; return; }
+    _logsData = res.data;
+    filtrarLogs();
+  } catch(e) { wrap.innerHTML = '<div class="err-box">Erro de conexão</div>'; }
+}
+
+function filtrarLogs() {
+  var wrap = document.getElementById('admin-logs-wrap');
+  if (!wrap) return;
+  var busca = (document.getElementById('log-busca') || {}).value || '';
+  busca = busca.toLowerCase();
+  var acaoFiltro = (document.getElementById('log-acao-filtro') || {}).value || '';
+  var rows = _logsData.filter(function(l) {
+    if (acaoFiltro && l.acao !== acaoFiltro) return false;
+    if (busca) {
+      var hay = ((l.user_email || '') + ' ' + (l.user_nome || '')).toLowerCase();
+      if (!hay.includes(busca)) return false;
+    }
+    return true;
+  });
+  if (!rows.length) { wrap.innerHTML = '<div class="spin">Nenhum log encontrado</div>'; return; }
+
+  var ACOES = {
+    login: ['login', 'Login'],
+    visita_salva: ['visita_salva', 'Visita salva'],
+    usuario_criado: ['usuario_criado', 'Usuário criado'],
+    senha_alterada: ['senha_alterada', 'Senha alterada'],
+    usuario_status: ['usuario_status', 'Status de usuário']
+  };
+
+  var tbody = rows.map(function(l) {
+    var dt = new Date(l.created_at).toLocaleString('pt-BR');
+    var info = ACOES[l.acao] || ['outro', l.acao];
+    var badge = '<span class="log-acao ' + info[0] + '">' + info[1] + '</span>';
+    var det = '';
+    if (l.detalhes && Object.keys(l.detalhes).length) {
+      det = '<span style="color:#94a3b8;font-size:11px">' + JSON.stringify(l.detalhes).replace(/[{}\"]/g,'').substring(0,80) + '</span>';
+    }
+    return '<tr><td style="white-space:nowrap;color:#6b7785">' + dt + '</td>'
+      + '<td><b>' + esc(l.user_nome || '') + '</b><br><span style="color:#94a3b8;font-size:11px">' + esc(l.user_email || '') + '</span></td>'
+      + '<td>' + badge + '</td>'
+      + '<td>' + det + '</td></tr>';
+  }).join('');
+
+  wrap.innerHTML = '<table class="log-tbl"><thead><tr>'
+    + '<th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Detalhes</th>'
+    + '</tr></thead><tbody>' + tbody + '</tbody></table>'
+    + '<div style="font-size:11px;color:#aaa;margin-top:8px;text-align:right">' + rows.length + ' registro(s)</div>';
+}
+
+function _log(acao, detalhes) {
+  if (!SESSION || !SESSION.token) return;
+  SB.rpc('trr_log_inserir', { p_token: SESSION.token, p_acao: acao, p_detalhes: detalhes || {} }).catch(function(){});
+}
+
 /* ===== ADMIN ===== */
 async function openAdmin(){
   document.getElementById('admin-modal').classList.add('open');
   await loadUsers();
+  loadLogs();
 }
 function closeAdmin(){document.getElementById('admin-modal').classList.remove('open');}
 
@@ -973,7 +1067,7 @@ async function createUser(){
       msg.textContent=(res.data&&res.data.error)||res.error.message||'Erro.';
       msg.className='admin-msg err';msg.style.display='block';return;
     }
-    msg.textContent='✔ Usuário criado com sucesso!';msg.className='admin-msg ok';msg.style.display='block';
+    msg.textContent='✔ Usuário criado com sucesso!';msg.className='admin-msg ok';msg.style.display='block';_log('usuario_criado',{email:email,nome:nome,role:role});
     document.getElementById('nu-nome').value='';
     document.getElementById('nu-email').value='';
     document.getElementById('nu-pwd').value='';
@@ -989,7 +1083,7 @@ async function changePwd(uid, email){
   try {
     var res = await SB.rpc('dash_set_password', { p_token: SESSION.token, p_user_id: uid, p_new_pwd: pwd });
     if (res.error || (res.data && res.data.error)) { alert((res.data && res.data.error) || res.error.message || 'Erro.'); return; }
-    alert('\u2714 Senha alterada com sucesso!\nAs sess\u00f5es antigas desse usu\u00e1rio foram encerradas.');
+    alert('\u2714 Senha alterada com sucesso!\nAs sess\u00f5es antigas desse usu\u00e1rio foram encerradas.');_log('senha_alterada',{email:email});
   } catch(e) { alert('Erro de conex\u00e3o.'); }
 }
 
@@ -997,6 +1091,7 @@ async function toggleUser(uid){
   try{
     var res=await SB.rpc('dash_toggle_user',{p_token:SESSION.token,p_user_id:uid});
     if(res.error||(res.data&&res.data.error)){alert((res.data&&res.data.error)||res.error.message||'Erro.');return;}
+    _log('usuario_status',{user_id:uid});
     await loadUsers();
   }catch(e){alert('Erro de conexão.');}
 }
@@ -3922,6 +4017,7 @@ async function salvarVisita(){
     var res = await SB.rpc('trr_visita_salvar', { p_token: SESSION.token, p: payload });
     if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
 
+    _log('visita_salva',{fazenda:payload.nome_fazenda,cliente:payload.nome_cliente,pre_venda:payload.pre_venda});
     window._lastVisita = Object.assign({}, payload, { criado_por: SESSION&&(SESSION.nome||SESSION.email)||'', created_at: new Date().toISOString() });
     var h = '<div style="background:#d9f2e4;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:700;color:#1c7c54">\u2714 Visita salva!<button class="vis-print-btn" style="float:right;margin-top:-2px" onclick="imprimirVisita(window._lastVisita)">\uD83D\uDDB6 Imprimir PDF</button></div>';
     // REL-05: gatilho de oferta por maquinario

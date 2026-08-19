@@ -293,6 +293,40 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 @media(max-width:900px){.adv-layout{grid-template-columns:1fr;}}
 .adv-map-wrap{position:relative;}
 #adv-map{height:560px;border-radius:var(--r);box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.adv-nearby-panel{position:absolute;bottom:0;left:0;right:0;z-index:1500;background:#fff;border-top:2px solid #e0762c;border-radius:0 0 var(--r) var(--r);max-height:280px;display:flex;flex-direction:column;box-shadow:0 -4px 18px rgba(0,0,0,.15);}
+.adv-nearby-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #f0f2f5;font-weight:700;font-size:13px;color:#10243e;flex-shrink:0;}
+.adv-nearby-hdr button{margin-left:auto;background:none;border:none;font-size:18px;cursor:pointer;color:#6b7785;line-height:1;padding:0 2px;}
+.adv-nearby-hdr button:hover{color:#10243e;}
+.adv-nearby-radius{display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7785;}
+.adv-nearby-radius input{width:60px;}
+#adv-nearby-list{overflow-y:auto;flex:1;padding:6px 10px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;}
+.adv-nearby-item{background:#f8f9fb;border:1px solid #e8eaf0;border-radius:8px;padding:8px 10px;cursor:pointer;transition:background .15s;}
+.adv-nearby-item:hover{background:#eef1f8;border-color:#c5cae9;}
+.adv-nearby-item-name{font-size:12px;font-weight:700;color:#10243e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.adv-nearby-item-meta{font-size:11px;color:#6b7785;margin-top:2px;}
+.adv-nearby-item.cli{border-left:3px solid #10b981;}
+.adv-nearby-empty{padding:20px;text-align:center;color:#6b7785;font-size:13px;grid-column:1/-1;}
+/* -- IA Analysis -- */
+.adv-ia-section{margin-top:14px;padding:12px 14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;}
+.adv-ia-btn{width:100%;padding:13px 0;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:opacity .2s;}
+.adv-ia-btn:hover{opacity:.9;}
+.adv-ia-btn:disabled{background:#9ca3af;cursor:not-allowed;opacity:.7;}
+.adv-ia-result{margin-top:10px;}
+.adv-ia-loading{text-align:center;padding:20px 10px;color:#7c3aed;font-size:13px;line-height:1.7;}
+.adv-ia-card{background:#fff;border:1px solid #e8f0fe;border-radius:8px;padding:12px 14px;margin-top:8px;}
+.adv-ia-card-title{font-weight:700;font-size:11px;color:#10243e;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px;}
+.adv-ia-tag{display:inline-block;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:2px 8px;font-size:12px;margin:2px 2px 2px 0;}
+.adv-ia-prod{display:flex;flex-direction:column;padding:7px 0;border-bottom:1px solid #f3f4f6;}
+.adv-ia-prod:last-child{border-bottom:none;}
+.adv-ia-prod-name{font-weight:600;font-size:13px;color:#10243e;}
+.adv-ia-prod-why{font-size:12px;color:#6b7280;margin-top:2px;line-height:1.5;}
+.adv-prio-alta{color:#059669;font-size:10px;font-weight:700;background:#d1fae5;border-radius:3px;padding:1px 5px;margin-left:5px;}
+.adv-prio-media{color:#d97706;font-size:10px;font-weight:700;background:#fef3c7;border-radius:3px;padding:1px 5px;margin-left:5px;}
+.adv-prio-baixa{color:#6b7280;font-size:10px;font-weight:700;background:#f3f4f6;border-radius:3px;padding:1px 5px;margin-left:5px;}
+.adv-ia-script{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;line-height:1.7;color:#14532d;white-space:pre-wrap;margin-top:4px;word-break:break-word;}
+.adv-ia-copy{width:100%;margin-top:8px;padding:9px 0;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
+.adv-ia-copy:hover{background:#15803d;}
+.adv-ia-diesel{margin-top:8px;font-size:12px;color:#6b7280;padding:4px 0;}
 .adv-map-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:6px 16px;border-radius:16px;pointer-events:none;z-index:1000;white-space:nowrap;transition:opacity .4s;}
 .adv-map-hint.hidden{opacity:0;}
 .map-layer-ctrl{display:flex;gap:3px;background:rgba(255,255,255,.93);border-radius:8px;padding:4px 5px;box-shadow:0 1px 5px rgba(0,0,0,.25);}
@@ -775,6 +809,19 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
     <div class="adv-map-wrap">
       <div id="adv-map"></div>
       <div class="adv-map-hint" id="adv-hint">Clique em um cliente para ver imoveis CAR no raio</div>
+      <div id="adv-nearby-panel" class="adv-nearby-panel" style="display:none">
+        <div class="adv-nearby-hdr">
+          <span>&#128205; </span>
+          <span id="adv-nearby-title">Propriedades pr&#243;ximas</span>
+          <div class="adv-nearby-radius">
+            <label for="adv-nearby-km">Raio:</label>
+            <input type="number" id="adv-nearby-km" value="10" min="1" max="100" step="1" onchange="advRefreshNearby()" style="width:48px;padding:2px 4px;font-size:12px;border:1px solid #ddd;border-radius:4px;">
+            <span>km</span>
+          </div>
+          <button onclick="advCloseNearby()">&#10005;</button>
+        </div>
+        <div id="adv-nearby-list"></div>
+      </div>
     </div>
     <div class="adv-panel" id="adv-panel">
       <div class="adv-panel-hdr">
@@ -892,10 +939,9 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 </div><!-- /wrap -->
 
 <script>
-var SB=supabase.createClient(
-  'https://keeqkmguljsddfmrqlld.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ'
-);
+var _ADV_URL='https://keeqkmguljsddfmrqlld.supabase.co';
+var _ADV_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ';
+var SB=supabase.createClient(_ADV_URL,_ADV_KEY);
 
 /* ===== AUTH ===== */
 var SESSION=null;
@@ -1851,6 +1897,8 @@ var advCliLayer    = null;
 var advRadiusLayer = null;
 var advCarLayer    = null;
 var advRouteLayer  = null;
+var advClickLayer  = null;
+var _advNearbyLat  = null, _advNearbyLon = null;
 var advRadius      = 10;
 var TRR_LAT = -14.74469, TRR_LON = -50.54306;
 var _advAreaFilter = '';
@@ -2077,6 +2125,8 @@ async function initAdvMap() {
     } catch(e) { console.warn('advMap geoData load error', e); }
   }
   renderAdvClientes();
+  advClickLayer = L.layerGroup().addTo(advMap);
+  advMap.on('click', function(e){ advShowNearby(e.latlng.lat, e.latlng.lng); });
 }
 
 function haversineKm(lat1, lon1, lat2, lon2) {
@@ -2392,6 +2442,79 @@ function advRenderResults(filtered, trrProps) {
 
 
 // ── Painel de Detalhes da Propriedade CAR ──
+async function advShowNearby(lat, lon) {
+  _advNearbyLat = lat; _advNearbyLon = lon;
+  if (!advClickLayer) advClickLayer = L.layerGroup().addTo(advMap);
+  advClickLayer.clearLayers();
+  var km = parseFloat(
+    document.getElementById('adv-nearby-km')
+    ? document.getElementById('adv-nearby-km').value : 10
+  ) || 10;
+  L.circleMarker([lat, lon], {
+    radius:9, color:'#e0762c', fillColor:'#e0762c', fillOpacity:1, weight:2.5
+  }).addTo(advClickLayer).bindTooltip('&#128205; Ponto selecionado', {sticky:true});
+  L.circle([lat, lon], {
+    radius: km*1000, color:'#e0762c', weight:1.5, opacity:0.6,
+    fillColor:'#e0762c', fillOpacity:0.06, dashArray:'8 5'
+  }).addTo(advClickLayer);
+  var panel = document.getElementById('adv-nearby-panel');
+  var title = document.getElementById('adv-nearby-title');
+  if (panel) { if(title) title.textContent = 'Buscando...'; panel.style.display = 'flex'; }
+  window._advCarCache = window._advCarCache || {};
+  var allCar = [];
+  var cacheKeys = Object.keys(window._advCarCache);
+  if (cacheKeys.length > 0) {
+    cacheKeys.forEach(function(k) {
+      var arr = advCarProps(window._advCarCache[k]);
+      arr.forEach(function(c) {
+        if (!allCar.some(function(x){ return x.cod === c.cod; })) allCar.push(c);
+      });
+    });
+  } else {
+    try {
+      var res = await SB.rpc('trr_car_geo', {p_uf: null, p_mun: null, p_status: null});
+      if (res.error) throw new Error(JSON.stringify(res.error));
+      window._advCarCache['__all__'] = res.data;
+      allCar = advCarProps(res.data);
+    } catch(e) {
+      if (panel && title) title.textContent = 'Erro ao carregar';
+      console.error('advShowNearby error:', e);
+      return;
+    }
+  }
+  var nearby = [];
+  allCar.forEach(function(c) {
+    if (!c.lat || !c.lon) return;
+    var d = haversineKm(lat, lon, c.lat, c.lon);
+    if (d <= km) nearby.push({ prop:c, dist:d });
+  });
+  nearby.sort(function(a,b){ return a.dist - b.dist; });
+  var trrProps = (geoData && geoData.props) || [];
+  window._advTrrProps      = trrProps;
+  window._advFilteredItems = nearby;
+  advRenderCarMarkers(nearby, trrProps);
+  if (panel && title) {
+    title.textContent = nearby.length + ' propriedade' + (nearby.length !== 1 ? 's' : '') + ' em ' + km.toFixed(0) + ' km';
+  }
+  try {
+    advMap.fitBounds(
+      L.circle([lat,lon],{radius:km*1000}).getBounds(),
+      {padding:[30,30], maxZoom:13}
+    );
+  } catch(e){}
+}
+
+function advCloseNearby() {
+  var p = document.getElementById('adv-nearby-panel');
+  if (p) p.style.display = 'none';
+  if (advClickLayer) advClickLayer.clearLayers();
+  _advNearbyLat = null; _advNearbyLon = null;
+}
+
+function advRefreshNearby() {
+  if (_advNearbyLat !== null) advShowNearby(_advNearbyLat, _advNearbyLon);
+}
+
 function advShowDetalhes(idx) {
   var items = window._advFilteredItems || [];
   var trrProps = window._advTrrProps || [];
@@ -2501,6 +2624,102 @@ function advShowDetalhes(idx) {
   if (filterBar)  filterBar.style.display  = 'none';
   if (routeBadge) routeBadge.style.display = 'none';
   panel.classList.add('open');
+}
+
+function advAnaliseIA(cod, lat, lon, area, municipio, tipo, nome, ctId) {
+  var container = document.getElementById(ctId || 'adv-ia-result');
+  if (!container) return;
+  var CKEY = 'ia_v1_' + cod;
+  try {
+    var cached = localStorage.getItem(CKEY);
+    if (cached) {
+      var obj = JSON.parse(cached);
+      if (obj.ts && (Date.now() - obj.ts) < 86400000) {
+        advRenderIAResult(container, obj.data, cod); return;
+      }
+    }
+  } catch(e) {}
+  container.innerHTML = '<div class="adv-ia-loading">Analisando com IA...<br><small>Aguarde alguns segundos</small></div>';
+  var btn = container.previousElementSibling;
+  if (btn) { btn.disabled = true; btn.textContent = 'Analisando...'; }
+  fetch(_ADV_URL + '/functions/v1/analisar-propriedade', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': _ADV_KEY,
+      'Authorization': 'Bearer ' + _ADV_KEY
+    },
+    body: JSON.stringify({
+      lat: lat, lon: lon, area_ha: area,
+      municipio: municipio, tipo: tipo, cod: cod, nome: nome
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error);
+    try { localStorage.setItem(CKEY, JSON.stringify({ ts: Date.now(), data: data })); } catch(e) {}
+    advRenderIAResult(container, data, cod);
+    if (btn) { btn.disabled = false; btn.textContent = '🤖 Análise IA da Propriedade'; }
+  })
+  .catch(function(e) {
+    container.innerHTML = '<div style="color:#dc2626;padding:10px;font-size:13px;">Erro: ' + esc(e.message) + '</div>';
+    if (btn) { btn.disabled = false; btn.textContent = '🤖 Tentar novamente'; }
+  });
+}
+
+function advRenderIAResult(container, data, cod) {
+  var h = '';
+  if (data.analise) {
+    h += '<div class="adv-ia-card">';
+    h += '<div class="adv-ia-card-title">Análise Geral</div>';
+    h += '<div style="font-size:13px;color:#374151;line-height:1.6;">' + esc(data.analise) + '</div>';
+    h += '</div>';
+  }
+  if (data.estruturas && data.estruturas.length) {
+    h += '<div class="adv-ia-card">';
+    h += '<div class="adv-ia-card-title">Estruturas Identificadas</div><div>';
+    data.estruturas.forEach(function(e) { h += '<span class="adv-ia-tag">' + esc(String(e)) + '</span>'; });
+    h += '</div>';
+    if (data.potencial_consumo && data.potencial_consumo.diesel_litros_mes) {
+      h += '<div class="adv-ia-diesel">Estimativa diesel: ~' + esc(String(data.potencial_consumo.diesel_litros_mes)) + ' L/mês</div>';
+    }
+    h += '</div>';
+  }
+  if (data.produtos_recomendados && data.produtos_recomendados.length) {
+    h += '<div class="adv-ia-card">';
+    h += '<div class="adv-ia-card-title">Produtos Recomendados</div>';
+    data.produtos_recomendados.forEach(function(p) {
+      var pc = p.prioridade === 'alta' ? 'adv-prio-alta' : (p.prioridade === 'media' ? 'adv-prio-media' : 'adv-prio-baixa');
+      h += '<div class="adv-ia-prod">';
+      h += '<div class="adv-ia-prod-name">' + esc(p.produto||'') + ' <span class="' + pc + '">' + esc(p.prioridade||'') + '</span></div>';
+      if (p.motivo) h += '<div class="adv-ia-prod-why">' + esc(p.motivo) + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+  if (data.script_whatsapp) {
+    var safeId = 'ia_scr_' + (cod||'x').replace(/[^a-zA-Z0-9_]/g,'_');
+    h += '<div class="adv-ia-card">';
+    h += '<div class="adv-ia-card-title">Script WhatsApp Pronto</div>';
+    h += '<div class="adv-ia-script" id="' + safeId + '">' + esc(data.script_whatsapp) + '</div>';
+    h += '<button class="adv-ia-copy" onclick="advCopyIAScript(\'' + safeId + '\')">Copiar para WhatsApp</button>';
+    h += '</div>';
+  }
+  container.innerHTML = h;
+}
+
+function advCopyIAScript(safeId) {
+  var el = document.getElementById(safeId);
+  if (!el) return;
+  var btn = el.nextElementSibling;
+  var ok = function() { if(btn){btn.textContent='Copiado!'; setTimeout(function(){btn.textContent='Copiar para WhatsApp';},2000);} };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(el.textContent||'').then(ok);
+  } else {
+    var r = document.createRange(); r.selectNodeContents(el);
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    document.execCommand('copy'); s.removeAllRanges(); ok();
+  }
 }
 
 function advCloseDetalhes() {
@@ -3770,7 +3989,21 @@ function renderIntel(d){
   }
 
   h += '<div style="font-size:10px;color:var(--muted);padding-bottom:10px">Estimativas geradas por cruzamento CAR \u00d7 IBGE (PPM/PAM 2024) \u00d7 base de clientes TRR. Confirmar na visita.</div>';
+  h += '<div class="intel-sec adv-ia-section" style="margin-top:4px;padding:0 0 4px">';
+  h += '<button class="adv-ia-btn" id="intel-ia-btn">🤖 Análise IA da Propriedade</button>';
+  h += '<div id="intel-ia-result" class="adv-ia-result"></div>';
+  h += '</div>';
   document.getElementById('intel-body').innerHTML = h;
+  var _iBtn = document.getElementById('intel-ia-btn');
+  if (_iBtn) {
+    var _iCod = String(p.id||''), _iLat = p.lat||0, _iLon = p.lon||0,
+        _iArea = parseFloat(p.area_ha)||0, _iMun = p.municipio||'',
+        _iTip = p.status||'',
+        _iNom = (p.nom_imovel && p.nom_imovel !== 'SEM_REGISTRO' ? p.nom_imovel : '');
+    _iBtn.addEventListener('click', function(){
+      advAnaliseIA(_iCod, _iLat, _iLon, _iArea, _iMun, _iTip, _iNom, 'intel-ia-result');
+    });
+  }
 }
 
 function intelCopyMsg(btn){

@@ -2012,6 +2012,7 @@ function renderProspClientes(muns) {
 var TILE_DEFS = {
   mapa:     { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',      attr:'Esri Topo',     maxZoom:18 },
   satelite: { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',      attr:'Esri Imagery',  maxZoom:19 },
+  gearth:   { url:'https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', attr:'© Google', maxZoom:20, sub:['mt0','mt1','mt2','mt3'] },
   hidrico:  { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', attr:'Esri Physical', maxZoom:18 },
   vicinais: { url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'© OpenStreetMap', maxZoom:19, sub:'abc' }
 };
@@ -2053,7 +2054,7 @@ var LayerSwitcherControl = L.Control.extend({
 
     // Base tiles (selecao unica)
     var baseDiv = L.DomUtil.create('div', 'map-layer-ctrl', wrap);
-    var baseLabels = { mapa:'🗺 Mapa', satelite:'🛰 Satélite', hidrico:'🌊 Hírico', vicinais:'🛣 Vicinais' };
+    var baseLabels = { mapa:'🗺 Mapa', satelite:'🛰 Satélite', gearth:'🌎 Google Earth', hidrico:'🌊 Hídrico', vicinais:'🛣 Vicinais' };
     Object.keys(baseLabels).forEach(function(key) {
       var btn = L.DomUtil.create('button', 'map-layer-btn' + (key === 'mapa' ? ' active' : ''), baseDiv);
       btn.textContent = baseLabels[key];

@@ -1333,10 +1333,9 @@ function initLeafMap() {
     return;
   }
   leafMap = L.map('leaflet-map', { zoomControl: true }).setView([-14.2, -50.2], 7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 18
-  }).addTo(leafMap);
+  var leafTiles = makeTileLayers();
+  leafTiles.mapa.addTo(leafMap);
+  new LayerSwitcherControl(leafMap, leafTiles, makeOverlayLayers()).addTo(leafMap);
   mapLayers   = L.layerGroup().addTo(leafMap);
   carLayer    = L.layerGroup();    // shown only when toggled on
   carIndLayer = L.layerGroup();    // shown only when toggled on
@@ -1923,8 +1922,9 @@ var prospMunSel = null;
 function initProspMap() {
   if (prospMap) return;
   prospMap = L.map('prosp-map', {zoomControl:true, preferCanvas:true}).setView([-14.2,-50.2],7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {attribution:'© OpenStreetMap', maxZoom:16}).addTo(prospMap);
+  var prospTiles = makeTileLayers();
+  prospTiles.mapa.addTo(prospMap);
+  new LayerSwitcherControl(prospMap, prospTiles, makeOverlayLayers()).addTo(prospMap);
   prospLayer      = L.layerGroup().addTo(prospMap);
   prospDrillLayer = L.layerGroup().addTo(prospMap);
   prospCliLayer   = L.layerGroup().addTo(prospMap);

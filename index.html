@@ -472,6 +472,15 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 .vis-resp-bar{background:#f0f6ff;border-radius:7px;padding:8px 12px;font-size:13px;margin-bottom:10px;color:#10243e;border-left:3px solid #1d6ef5;}
 .vis-print-btn{background:#10243e;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;}
 .vis-print-btn:hover{background:#1a3a5c;}
+.vis-edit-btn{background:#1c7c54;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.vis-edit-btn:hover{background:#17693f;}
+.vis-del-btn{background:#c53030;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.vis-del-btn:hover{background:#a02020;}
+.vis-add-faz{background:none;border:1px dashed #ccc;border-radius:7px;padding:7px 12px;font-size:12.5px;cursor:pointer;color:var(--muted);width:100%;margin-top:6px;text-align:left;}
+.vis-add-faz:hover{border-color:#1c7c54;color:#1c7c54;}
+.vis-faz-row{display:flex;gap:6px;align-items:center;margin-top:6px;}
+.vis-faz-row input{flex:1;}
+.vis-faz-rm{background:none;border:none;color:#c53030;font-size:18px;cursor:pointer;padding:0 4px;line-height:1;}
 .vis-card-t{font-weight:800;font-size:13.5px;}
 .vis-card-s{font-size:11.5px;color:var(--muted);margin-top:2px;}
 .vis-fotos-prev{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
@@ -4153,6 +4162,8 @@ function openVisita(ctx){
     + '<div class="vis-sec-hdr">CLIENTE</div>'
     + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">Nome do cliente</label><input class="vis-in" id="v-cli" value="'+esc(ctx.nome_cliente||'')+'"></div>'
     + '<div class="vis-grp"><label class="vis-lbl">Nome da fazenda</label><input class="vis-in" id="v-faz" value="'+esc(ctx.nome_fazenda||'')+'"></div></div>'
+    + '<div id="v-fazendas-extra"></div>'
+    + '<button class="vis-add-faz" id="v-add-faz" onclick="visAddFazenda()">+ Adicionar outra fazenda do mesmo cliente</button>'
     + '<div class="vis-sec-hdr">COMBUST\u00cdVEL E TANQUES</div>'
     + '<div class="vis-row"><div class="vis-grp"><label class="vis-lbl">\u00daltima compra de combust\u00edvel</label><input class="vis-in" id="v-ult" placeholder="ex: h\u00e1 2 meses / posto X"></div>'
     + '<div class="vis-grp"><label class="vis-lbl">Tancagem da fazenda (L)</label><input class="vis-in" id="v-tanc" type="number" inputmode="numeric"></div></div>'
@@ -4231,9 +4242,14 @@ async function salvarVisita(){
     }
     var criacao = [];
     document.querySelectorAll('#v-cria .vis-chip.on').forEach(function(c){ criacao.push(c.getAttribute('data-v')); });
-    var payload = {
+    // Coletar todas as fazendas (primeira + extras)
+    var fazendas = [_v('v-faz')];
+    document.querySelectorAll('.v-faz-extra').forEach(function(inp){
+      var nm = inp.value.trim(); if (nm) fazendas.push(nm);
+    });
+    var payloadBase = {
       car_id: ctx.car_id || '', cliente_id: ctx.cliente_id || '',
-      nome_cliente: _v('v-cli'), nome_fazenda: _v('v-faz'),
+      nome_cliente: _v('v-cli'), nome_fazenda: fazendas[0],
       lat: ctx.lat != null ? String(ctx.lat) : (campoPos ? String(campoPos.lat) : ''),
       lon: ctx.lon != null ? String(ctx.lon) : (campoPos ? String(campoPos.lon) : ''),
       clima: _visClima,
@@ -4248,12 +4264,26 @@ async function salvarVisita(){
       resumo: _v('v-resumo'), proximos_passos: _v('v-prox'),
       pre_venda: document.getElementById('v-pv').checked
     };
-    var res = await SB.rpc('trr_visita_salvar', { p_token: SESSION.token, p: payload });
-    if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+    var payload = payloadBase;
+    var editId = ctx._editId || null;
+    if (editId) {
+      // Modo edi\u00E7\u00E3o: atualizar visita existente
+      var res = await SB.rpc('trr_visita_atualizar', { p_token: SESSION.token, p_id: editId, p: payloadBase });
+      if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+    } else {
+      // Modo novo: salvar uma visita por fazenda
+      for (var _fi = 0; _fi < fazendas.length; _fi++) {
+        var pFaz = Object.assign({}, payloadBase, { nome_fazenda: fazendas[_fi] });
+        var res = await SB.rpc('trr_visita_salvar', { p_token: SESSION.token, p: pFaz });
+        if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+        if (_fi === 0) payload = pFaz;
+      }
+    }
 
     _log('visita_salva',{fazenda:payload.nome_fazenda,cliente:payload.nome_cliente,pre_venda:payload.pre_venda});
     window._lastVisita = Object.assign({}, payload, { criado_por: SESSION&&(SESSION.nome||SESSION.email)||'', created_at: new Date().toISOString() });
-    var h = '<div style="background:#d9f2e4;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:700;color:#1c7c54">\u2714 Visita salva!<button class="vis-print-btn" style="float:right;margin-top:-2px" onclick="imprimirVisita(window._lastVisita)">\uD83D\uDDB6 Imprimir PDF</button></div>';
+    var salvas = editId ? 'Visita atualizada!' : (fazendas.length > 1 ? fazendas.length + ' visitas salvas!' : 'Visita salva!');
+    var h = '<div style="background:#d9f2e4;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:700;color:#1c7c54">\u2714 '+salvas+'<button class="vis-print-btn" style="float:right;margin-top:-2px" onclick="imprimirVisita(window._lastVisita)">\uD83D\uDDB6 Imprimir PDF</button></div>';
     // REL-05: gatilho de oferta por maquinario
     if (payload.maquinarios) {
       h += '<div style="background:#fff8f2;border:1px solid #fde8d2;border-radius:9px;padding:10px 13px;font-size:12.5px;margin-top:9px">\uD83D\uDCA1 <b>Gatilho de oferta:</b> maquin\u00e1rio anotado \u2014 oferecer <b>aditivos Milex</b> (Dorf Ketal) e <b>lubrificantes/ARLA</b> na sequ\u00eancia.</div>';
@@ -4304,7 +4334,11 @@ async function openVisitasList(){
         + (v.resumo ? '<div style="font-size:12.5px;margin-top:6px">' + esc(v.resumo) + '</div>' : '')
         + (v.proximos_passos ? '<div style="font-size:12px;margin-top:5px;color:#9a4c0e"><b>Pr\u00f3ximos passos:</b> ' + esc(v.proximos_passos) + '</div>' : '')
         + ((v.fotos && v.fotos.length) ? '<div class="vis-fotos-prev">' + v.fotos.map(function(u){ return '<a href="' + u + '" target="_blank"><img src="' + u + '"></a>'; }).join('') + '</div>' : '')
-        + '<div style="margin-top:8px"><button class="vis-print-btn" onclick="imprimirVisita(window._vlistData&&window._vlistData['+_vi+'])">\uD83D\uDDB6 Imprimir PDF</button></div>'
+        + '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'
+        + '<button class="vis-print-btn" onclick="imprimirVisita(window._vlistData&&window._vlistData['+_vi+'])">\uD83D\uDDB6 Imprimir PDF</button>'
+        + '<button class="vis-edit-btn" onclick="editarVisita('+_vi+')">\u270F\uFE0F Editar</button>'
+        + (SESSION.role==='admin' ? '<button class="vis-del-btn" onclick="excluirVisita('+_vi+')">\uD83D\uDDD1\uFE0F Excluir</button>' : '')
+        + '</div>'
         + '</div>';
     });
     b.innerHTML = h;
@@ -4313,6 +4347,76 @@ async function openVisitasList(){
   }
 }
 
+
+function visAddFazenda(){
+  var cont = document.getElementById('v-fazendas-extra');
+  if (!cont) return;
+  var idx = cont.children.length + 2;
+  var div = document.createElement('div');
+  div.className = 'vis-faz-row';
+  div.innerHTML = '<input class="vis-in v-faz-extra" placeholder="Fazenda ' + idx + '">'
+    + '<button class="vis-faz-rm" onclick="this.parentNode.remove()" title="Remover">×</button>';
+  cont.appendChild(div);
+}
+
+function editarVisita(vi){
+  var v = window._vlistData && window._vlistData[vi];
+  if (!v) return;
+  document.getElementById('vlist-panel').classList.remove('open');
+  var ctx = {
+    _editId: v.id,
+    car_id: v.car_id, cliente_id: v.cliente_id,
+    nome_cliente: v.nome_cliente, nome_fazenda: v.nome_fazenda,
+    lat: v.lat, lon: v.lon
+  };
+  openVisita(ctx);
+  setTimeout(function(){
+    document.getElementById('visita-sub').textContent = '✏️ Editando: ' + (v.nome_fazenda || v.nome_cliente || 'Visita');
+    document.getElementById('v-save').textContent = '✔ Salvar alterações';
+    var s = function(id, val){ var e = document.getElementById(id); if (e && val != null && val !== undefined) e.value = String(val); };
+    s('v-cli', v.nome_cliente); s('v-faz', v.nome_fazenda);
+    s('v-ult', v.ultima_compra_combustivel); s('v-tanc', v.tancagem_l);
+    s('v-cons', v.conservacao_tanques);
+    s('v-manu', v.manutencao_tanques == null ? '' : (v.manutencao_tanques ? 'true' : 'false'));
+    s('v-maq', v.maquinarios); s('v-cab', v.qtd_cabecas); s('v-curral', v.estado_curral);
+    s('v-trein', v.treinamento_manejo == null ? '' : (v.treinamento_manejo ? 'true' : 'false'));
+    s('v-tip', v.faz_tip == null ? '' : (v.faz_tip ? 'true' : 'false'));
+    s('v-racao', v.racao);
+    s('v-ilp', v.faz_ilp == null ? '' : (v.faz_ilp ? 'true' : 'false'));
+    s('v-agri', v.agricultura_ha);
+    s('v-pivo', v.tem_pivo == null ? '' : (v.tem_pivo ? 'true' : 'false'));
+    s('v-ener', v.energia);
+    s('v-amb', v.aguardando_ambiental == null ? '' : (v.aguardando_ambiental ? 'true' : 'false'));
+    s('v-pulv', v.situacao_pulverizadores);
+    s('v-resumo', v.resumo); s('v-prox', v.proximos_passos);
+    var pv = document.getElementById('v-pv'); if (pv) pv.checked = !!v.pre_venda;
+    if (v.tipo_criacao && v.tipo_criacao.length) {
+      document.querySelectorAll('#v-cria .vis-chip').forEach(function(c){
+        if (v.tipo_criacao.indexOf(c.getAttribute('data-v')) > -1) c.classList.add('on');
+      });
+    }
+    if (v.fotos && v.fotos.length) {
+      var pv2 = document.getElementById('v-fotos-prev');
+      if (pv2) pv2.innerHTML = v.fotos.map(function(u){ return '<a href="'+u+'" target="_blank"><img src="'+u+'"></a>'; }).join('');
+    }
+    var addBtn = document.getElementById('v-add-faz');
+    if (addBtn) addBtn.style.display = 'none';
+  }, 60);
+}
+
+async function excluirVisita(vi){
+  var v = window._vlistData && window._vlistData[vi];
+  if (!v) return;
+  if (!confirm('Excluir visita "' + (v.nome_fazenda || v.nome_cliente || 'Visita') + '"?\nEsta ação não pode ser desfeita.')) return;
+  try {
+    var res = await SB.rpc('trr_visita_excluir', { p_token: SESSION.token, p_id: v.id });
+    if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+    window._vlistData.splice(vi, 1);
+    openVisitasList();
+  } catch(e) {
+    alert('Erro ao excluir: ' + (e.message || String(e)));
+  }
+}
 
 function imprimirVisita(v) {
   if (!v) { alert('Dados da visita n\u00e3o dispon\u00edveis.'); return; }

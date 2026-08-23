@@ -4589,7 +4589,7 @@ function renderFicha(d){
   var usoTxt = Object.keys(usoLbl).filter(function(k){return uso[k];}).map(function(k){return usoLbl[k]+' '+uso[k]+' ha';}).join(' \u00b7 ');
   var h = ''
     + '<div class="vis-sec-hdr">IDENTIFICA\u00c7\u00c3O</div>'
-    + _fkv('N\u00ba do cliente', c.id_propriedade) + _fkv('Nome', c.cliente)
+    + _fkv('N\u00ba do cliente', c.id_cliente) + _fkv('Nome', c.cliente)
     + _fkv('CPF/CNPJ', c.cpf_cnpj) + _fkv('Inscri\u00e7\u00e3o estadual', c.inscricao_estadual)
     + _fkv('Inscri\u00e7\u00e3o INCRA', c.inscricao_incra)
     + _fkv('Telefone', c.telefone ? '<a href="https://wa.me/55'+String(c.telefone).replace(/\D/g,'')+'" target="_blank">'+esc(c.telefone)+'</a>' : null)

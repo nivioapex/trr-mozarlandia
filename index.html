@@ -1336,6 +1336,22 @@ var mapView = 'mun';   // 'mun' | 'prop'
 var geoData = null;
 var showCar = false;
 
+var TRR_LAT_IDX = -14.7392, TRR_LON_IDX = -50.5744; // Mozarlândia-GO
+
+function kmFromZoomIdx(zoom) {
+  if (zoom >= 12) return 30;
+  if (zoom >= 10) return 80;
+  if (zoom >= 8)  return 200;
+  return 400;
+}
+
+var _carIndReloadTimer = null;
+function scheduleCarIndReload() {
+  if (!showCarInd) return;
+  clearTimeout(_carIndReloadTimer);
+  _carIndReloadTimer = setTimeout(loadCarIndData, 700);
+}
+
 function initLeafMap() {
   if (leafMap) {
     setTimeout(function() { leafMap.invalidateSize(); }, 120);
@@ -1348,6 +1364,7 @@ function initLeafMap() {
   mapLayers   = L.layerGroup().addTo(leafMap);
   carLayer    = L.layerGroup();    // shown only when toggled on
   carIndLayer = L.layerGroup();    // shown only when toggled on
+  leafMap.on('moveend', scheduleCarIndReload);
   renderMapLegend();
 }
 
@@ -1595,8 +1612,14 @@ async function loadCarIndData() {
   if (!carIndLayer) return;
   var uf  = document.getElementById('mf-uf').value  || document.getElementById('f-uf').value  || null;
   var mun = document.getElementById('mf-mun').value || document.getElementById('f-mun').value || null;
+  var cLat = TRR_LAT_IDX, cLon = TRR_LON_IDX, cKm = 200;
+  if (leafMap) {
+    var c = leafMap.getCenter();
+    cLat = c.lat; cLon = c.lng;
+    cKm  = kmFromZoomIdx(leafMap.getZoom());
+  }
   try {
-    var res = await SB.rpc('trr_car_geo', { p_uf: uf, p_mun: mun, p_status: null });
+    var res = await SB.rpc('trr_car_geo', { p_uf: uf || null, p_mun: mun || null, p_status: null, p_lat: cLat, p_lon: cLon, p_km: cKm });
     if (res.error) { console.error('trr_car_geo error:', res.error); return; }
     carIndData = res.data;
     var notice = document.getElementById('car-ind-notice');

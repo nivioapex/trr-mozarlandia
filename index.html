@@ -2239,22 +2239,14 @@ async function advSelectClient(p) {
   var resultsEl = document.getElementById('adv-results');
   resultsEl.innerHTML = '<div class="adv-loading-bar"></div><div class="adv-empty" style="padding:28px"><div class="adv-empty-ico">&#x23F3;</div><div class="adv-empty-txt">Buscando im\u00f3veis CAR em '+km+' km...</div></div>';
 
-  window._advCarCache = window._advCarCache || {};
-  var cacheKey = p.mun || '__all__';
   var allCar = [];
-
-  if (window._advCarCache[cacheKey]) {
-    allCar = advCarProps(window._advCarCache[cacheKey]);
-  } else {
-    try {
-      var res = await SB.rpc('trr_car_geo', {p_uf:null, p_mun:p.mun||null, p_status:null});
-      if (res.error) throw new Error(JSON.stringify(res.error));
-      window._advCarCache[cacheKey] = res.data;
-      allCar = advCarProps(res.data);
-    } catch(e) {
-      resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">&#x274C;</div><div class="adv-empty-txt">Erro ao carregar CAR:<br>'+esc(e.message||String(e))+'</div></div>';
-      return;
-    }
+  try {
+    var res = await SB.rpc('trr_car_geo', {p_uf:null, p_mun:p.mun||null, p_status:null, p_lat:p.lat, p_lon:p.lon, p_km: Math.max((advRadius||km)*1.5, 50)});
+    if (res.error) throw new Error(JSON.stringify(res.error));
+    allCar = advCarProps(res.data);
+  } catch(e) {
+    resultsEl.innerHTML = '<div class="adv-empty"><div class="adv-empty-ico">&#x274C;</div><div class="adv-empty-txt">Erro ao carregar CAR:<br>'+esc(e.message||String(e))+'</div></div>';
+    return;
   }
 
   var nearby = [];
@@ -2493,27 +2485,15 @@ async function advShowNearby(lat, lon) {
   var panel = document.getElementById('adv-nearby-panel');
   var title = document.getElementById('adv-nearby-title');
   if (panel) { if(title) title.textContent = 'Buscando...'; panel.style.display = 'flex'; }
-  window._advCarCache = window._advCarCache || {};
   var allCar = [];
-  var cacheKeys = Object.keys(window._advCarCache);
-  if (cacheKeys.length > 0) {
-    cacheKeys.forEach(function(k) {
-      var arr = advCarProps(window._advCarCache[k]);
-      arr.forEach(function(c) {
-        if (!allCar.some(function(x){ return x.cod === c.cod; })) allCar.push(c);
-      });
-    });
-  } else {
-    try {
-      var res = await SB.rpc('trr_car_geo', {p_uf: null, p_mun: null, p_status: null});
-      if (res.error) throw new Error(JSON.stringify(res.error));
-      window._advCarCache['__all__'] = res.data;
-      allCar = advCarProps(res.data);
-    } catch(e) {
-      if (panel && title) title.textContent = 'Erro ao carregar';
-      console.error('advShowNearby error:', e);
-      return;
-    }
+  try {
+    var res = await SB.rpc('trr_car_geo', {p_uf: null, p_mun: null, p_status: null, p_lat: lat, p_lon: lon, p_km: Math.max(km * 1.5, 30)});
+    if (res.error) throw new Error(JSON.stringify(res.error));
+    allCar = advCarProps(res.data);
+  } catch(e) {
+    if (panel && title) title.textContent = 'Erro ao carregar';
+    console.error('advShowNearby error:', e);
+    return;
   }
   var nearby = [];
   allCar.forEach(function(c) {

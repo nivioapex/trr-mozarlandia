@@ -1622,12 +1622,13 @@ async function loadCarIndData() {
     var res = await SB.rpc('trr_car_geo', { p_uf: uf || null, p_mun: mun || null, p_status: null, p_lat: cLat, p_lon: cLon, p_km: cKm });
     if (res.error) { console.error('trr_car_geo error:', res.error); return; }
     carIndData = res.data;
+    // fast path retorna array direto; slow path retorna {total, props}
+    var props = Array.isArray(carIndData) ? carIndData
+              : (carIndData && Array.isArray(carIndData.props)) ? carIndData.props : [];
+    var total = props.length;
     var notice = document.getElementById('car-ind-notice');
     var badge  = document.getElementById('car-ind-badge');
-    var total  = (carIndData && carIndData.total) || 0;
-    var props  = (carIndData && carIndData.props) || [];
     if (total === 0) {
-      // Table is empty — show import instructions
       if (notice) notice.style.display = '';
       if (badge)  badge.textContent = '(sem dados)';
     } else {

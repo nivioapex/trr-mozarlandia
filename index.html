@@ -2350,10 +2350,19 @@ function renderAdvClientes() {
       var grpTag = grp.length > 1
         ? '<br><span style="color:#64748b;font-size:11px">'+grp.length+' clientes neste município</span>'
         : '';
+      var compraTag = p.ultima_compra
+        ? '<br><span style="color:#374151;font-size:11px">📅 Últ. compra: <b>'+esc(p.ultima_compra)+'</b></span>'
+        : '';
+      var vendasTag = p.vendas_2026
+        ? '<br><span style="color:#059669;font-size:11px">💰 2026: <b>R$'+Number(p.vendas_2026).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})+'</b></span>'
+        : (p.sem_compra_2026 ? '<br><span style="color:#d97706;font-size:11px">⚠ Sem compras em 2026</span>' : '');
+      var histTag = p.val_hist
+        ? '<br><span style="color:#6b7785;font-size:11px">📊 Méd hist.: R$'+Number(p.val_hist).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})+(p.qtd_hist_l ? ' · '+Number(p.qtd_hist_l).toLocaleString('pt-BR')+' L' : '')+'</span>'
+        : '';
       m.bindTooltip(
         emoji+' <b>'+esc(p.cli||'–')+'</b><br>'+esc(p.prop||'')+'<br>'+(p.mun||'')
         +(p.dist ? ' · '+Number(p.dist).toFixed(0)+' km' : '')
-        + inativoTag + grpTag,
+        + inativoTag + compraTag + vendasTag + histTag + grpTag,
         {sticky: true}
       );
       m.on('click', function(e){ L.DomEvent.stopPropagation(e); advSelectClient(p); });
@@ -2591,6 +2600,14 @@ function advRenderResults(filtered, trrProps) {
         + '👤 ' + (cliNome || propNome || 'Cliente TRR')
         + (cliNome && propNome ? ' &mdash; ' + propNome : '')
         + '</div>';
+      // Dados de compra
+      var pparts = [];
+      if (clientTp.ultima_compra) pparts.push('📅 ' + esc(clientTp.ultima_compra));
+      if (clientTp.vendas_2026)   pparts.push('2026: <b>R$'+Number(clientTp.vendas_2026).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})+'</b>');
+      if (clientTp.vendas_2025)   pparts.push('2025: R$'+Number(clientTp.vendas_2025).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}));
+      if (clientTp.val_hist && !clientTp.vendas_2026 && !clientTp.vendas_2025) pparts.push('Méd. hist.: R$'+Number(clientTp.val_hist).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}));
+      if (clientTp.sem_compra_2026 && !clientTp.vendas_2026) pparts.push('<span style="color:#d97706">⚠ Sem compras 2026</span>');
+      if (pparts.length) clientBlk += '<div class="adv-result-cli" style="font-size:11.5px;color:#374151;margin-top:2px">'+pparts.join(' · ')+'</div>';
     }
 
     h += '<div class="adv-result-item' + (isClient ? ' adv-result-item-cli' : '') + '" data-idx="'+filtered.indexOf(item)+'">'
@@ -4891,9 +4908,12 @@ function renderFicha(d){
     + _fkv('Tancagem', c.tancagem_l ? Number(c.tancagem_l).toLocaleString('pt-BR')+' L' : null)
     + _fkv('Uso do solo (14.x)', usoTxt || null)
     + '<div class="vis-sec-hdr">COMERCIAL</div>'
-    + _fkv('\u00daltima compra', '\uD83D\uDD52 aguardando dados de vendas (Fase 2)')
-    + _fkv('Recorr\u00eancia safra/entressafra', '\uD83D\uDD52 Fase 2')
-    + _fkv('Total vendido / Curva ABC', '\uD83D\uDD52 Fase 2')
+    + (c.ultima_compra   ? _fkv('\u00daltima compra', '\uD83D\uDCC5 ' + esc(c.ultima_compra)) : '')
+    + (c.vendas_2026     ? _fkv('Vendas 2026', 'R\u00A0$ ' + Number(c.vendas_2026).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})) : '')
+    + (c.vendas_2025     ? _fkv('Vendas 2025', 'R\u00A0$ ' + Number(c.vendas_2025).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})) : '')
+    + (c.val_hist        ? _fkv('M\u00E9dia hist\u00F3rica / litros', 'R\u00A0$ ' + Number(c.val_hist).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + (c.qtd_hist_l ? ' \u00B7 ' + Number(c.qtd_hist_l).toLocaleString('pt-BR') + '\u00A0L' : '')) : '')
+    + (c.sem_compra_2026 ? _fkv('Situa\u00E7\u00E3o 2026', '\u26A0\uFE0F Sem compras registradas em 2026') : '')
+    + (!c.ultima_compra && !c.val_hist ? _fkv('Dados comerciais', '\uD83D\uDD52 Aguardando importa\u00E7\u00E3o') : '')
     + '<div class="vis-sec-hdr">VISITAS ('+vs.length+')</div>';
   if (vs.length) vs.forEach(function(v){
     h += '<div class="vis-card'+(v.pre_venda?' pv':'')+'"><div class="vis-card-t">'+(v.pre_venda?'\uD83E\uDD1D ':'')+new Date(v.created_at).toLocaleDateString('pt-BR')+'</div>'

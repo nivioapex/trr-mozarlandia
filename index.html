@@ -2933,10 +2933,87 @@ function advShowResults(p, nearby, km, trrProps) {
       return Math.abs((tp.lat||0)-item.prop.lat)<0.0015 && Math.abs((tp.lon||0)-item.prop.lon)<0.0015;
     });
   }).length : 0;
-  if (panelHdr) panelHdr.innerHTML =
-    '<div class="adv-panel-hdr-title">📍 '+esc(p.cli||'–')+'</div>'
-    + '<div class="adv-panel-hdr-sub"><b>'+nearby.length+'</b> imóvel(eis) em '+km+' km'
-    + (totalCli ? ' · <b>'+totalCli+'</b> já cliente(s)' : '')+'</div>';
+  // Coletar TRR props que estão próximas de algum imóvel CAR em nearby (para a lista expansível)
+  var matchedTrrList = [];
+  if (trrProps && totalCli > 0) {
+    trrProps.forEach(function(tp) {
+      var hasNear = nearby.some(function(item) {
+        return Math.abs((tp.lat||0)-item.prop.lat)<0.0015 && Math.abs((tp.lon||0)-item.prop.lon)<0.0015;
+      });
+      if (hasNear) matchedTrrList.push(tp);
+    });
+    // Dedup por cli+prop
+    var _seen = {};
+    matchedTrrList = matchedTrrList.filter(function(x) {
+      var k = (x.cli||'')+'|'+(x.prop||'');
+      if (_seen[k]) return false;
+      _seen[k] = 1;
+      return true;
+    });
+  }
+
+  if (panelHdr) {
+    var cliToggleHtml = totalCli
+      ? ' · <button id="adv-cli-toggle" style="background:none;border:none;color:inherit;cursor:pointer;font-size:inherit;font-weight:700;padding:0;text-decoration:underline dotted;opacity:.9;">'+totalCli+' já cliente(s) <span id="adv-cli-arrow">▾</span></button>'
+      : '';
+    var hdrHtml = '<div class="adv-panel-hdr-title">📍 '+esc(p.cli||'–')+'</div>'
+      + '<div class="adv-panel-hdr-sub"><b>'+nearby.length+'</b> imóvel(eis) em '+km+' km'+cliToggleHtml+'</div>';
+
+    // Lista expansível de clientes
+    if (matchedTrrList.length) {
+      var listRows = matchedTrrList.map(function(tp) {
+        return '<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.12);font-size:11px;line-height:1.35;">'
+          + '<span style="font-weight:600;">🏠 '+esc(tp.prop||tp.cli||'–')+'</span>'
+          + (tp.cli ? '<br><span style="opacity:.72;font-size:10.5px;">👤 '+esc(tp.cli)+'</span>' : '')
+          + (tp.mun ? '<span style="opacity:.55;font-size:10.5px;"> · '+esc(tp.mun)+'</span>' : '')
+          + '</div>';
+      }).join('');
+      hdrHtml += '<div id="adv-cli-list" style="display:none;margin-top:6px;background:rgba(0,0,0,.25);border-radius:6px;padding:6px 8px;max-height:180px;overflow-y:auto;">'+listRows+'</div>';
+    }
+
+    // Alerta de inatividade
+    if (p.inativo_90d) {
+      var inativoLabel = p.curva_abc_inativo ? ' · Curva '+esc(p.curva_abc_inativo) : '';
+      hdrHtml += '<div style="margin-top:6px;background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.45);border-radius:6px;padding:4px 8px;font-size:11.5px;color:#fecaca;">⚠️ Inativo +90 dias'+inativoLabel+'</div>';
+    }
+
+    // Dados comerciais
+    var cpRows = [];
+    if (p.ultima_compra) cpRows.push('<span>📅 <b>'+esc(p.ultima_compra)+'</b></span>');
+    if (p.vendas_2026)   cpRows.push('<span>2026: <b>R$'+Number(p.vendas_2026).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})+'</b></span>');
+    else if (p.sem_compra_2026) cpRows.push('<span style="color:#fde68a">⚠ sem compras 2026</span>');
+    if (p.vendas_2025)   cpRows.push('<span>2025: R$'+Number(p.vendas_2025).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})+'</span>');
+    if (p.val_hist)      cpRows.push('<span>📊 R$'+Number(p.val_hist).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})+(p.qtd_hist_l?' · '+Number(p.qtd_hist_l).toLocaleString('pt-BR')+' L':'')+'</span>');
+    if (cpRows.length) {
+      hdrHtml += '<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;opacity:.9;">'+cpRows.join('')+'</div>';
+    }
+
+    // Contato: telefone + pessoa de contato
+    var ctParts = [];
+    if (p.telefone) {
+      var tel = String(p.telefone).replace(/\D/g,'');
+      ctParts.push('<a href="https://wa.me/55'+tel+'" target="_blank" rel="noopener" style="color:#86efac;text-decoration:none;font-weight:600;">📞 '+esc(p.telefone)+'</a>');
+    }
+    if (p.contato) ctParts.push('<span style="opacity:.85">👤 '+esc(p.contato)+'</span>');
+    if (ctParts.length) {
+      hdrHtml += '<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;">'+ctParts.join('')+'</div>';
+    }
+
+    panelHdr.innerHTML = hdrHtml;
+
+    // Bind expand/collapse dos clientes
+    var _cliToggle = document.getElementById('adv-cli-toggle');
+    var _cliList   = document.getElementById('adv-cli-list');
+    if (_cliToggle && _cliList) {
+      _cliToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var open = _cliList.style.display !== 'none';
+        _cliList.style.display = open ? 'none' : 'block';
+        var arrow = document.getElementById('adv-cli-arrow');
+        if (arrow) arrow.textContent = open ? '▾' : '▴';
+      });
+    }
+  }
 
   // Popula dropdown de cidades
   var munSel = document.getElementById('adv-filter-mun');

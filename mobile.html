@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#10243e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TRR Mobile · Mozarlândia</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --hdr:#10243e;--acc:#e0762c;--grn:#10b981;--red:#ef4444;--yel:#f59e0b;
+  --bg:#f4f5f7;--card:#fff;--txt:#10243e;--muted:#6b7785;
+  --r:14px;--gap:12px;--nav:64px;--top:56px;
+  font-size:15px;
+}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overscroll-behavior:none;}
+input,button,select{font-family:inherit;}
+
+/* ── LOGIN ── */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px;background:var(--hdr);}
+.login-logo{font-size:42px;margin-bottom:8px;}
+.login-title{color:#fff;font-size:20px;font-weight:800;margin:0 0 4px;letter-spacing:-.3px;}
+.login-sub{color:#8fa8c2;font-size:13px;margin:0 0 32px;}
+.login-card{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.25);}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+.login-field input{width:100%;padding:13px 14px;border:1.5px solid #dde2e8;border-radius:10px;font-size:15px;outline:none;transition:border .15s;}
+.login-field input:focus{border-color:var(--acc);}
+.login-btn{width:100%;padding:14px;background:var(--acc);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;transition:background .15s;}
+.login-btn:active{background:#c85f1a;}
+.login-err{color:var(--red);font-size:13px;margin-top:8px;text-align:center;min-height:18px;}
+
+/* ── SHELL ── */
+#app{display:none;flex-direction:column;height:100dvh;}
+.top-bar{position:fixed;top:0;left:0;right:0;height:var(--top);background:var(--hdr);color:#fff;display:flex;align-items:center;padding:0 16px env(safe-area-inset-top,0) 16px;gap:10px;z-index:200;padding-top:max(env(safe-area-inset-top),0px);}
+.top-bar-title{font-size:16px;font-weight:800;letter-spacing:-.2px;flex:1;}
+.top-bar-badge{font-size:11px;background:rgba(255,255,255,.15);padding:3px 8px;border-radius:20px;}
+.top-bar-user{font-size:12px;color:#8fa8c2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
+.top-bar-logout{background:none;border:none;color:#8fa8c2;font-size:20px;cursor:pointer;padding:0 4px;line-height:1;}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav);background:var(--card);display:flex;border-top:1px solid #e8eaf0;z-index:200;padding-bottom:env(safe-area-inset-bottom,0);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;color:var(--muted);font-size:11px;font-weight:600;padding:8px 4px;transition:color .15s;}
+.nav-btn .nav-ico{font-size:22px;line-height:1;}
+.nav-btn.active{color:var(--acc);}
+.nav-btn.active .nav-ico{transform:scale(1.12);}
+
+.tab-body{position:fixed;top:var(--top);bottom:var(--nav);left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:var(--gap);display:none;}
+.tab-body.active{display:block;}
+
+/* ── CARDS / COMUNS ── */
+.card{background:var(--card);border-radius:var(--r);box-shadow:0 1px 4px rgba(0,0,0,.07);overflow:hidden;margin-bottom:var(--gap);}
+.card-hdr{padding:12px 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid #f0f2f5;}
+.spin{display:inline-block;width:20px;height:20px;border:3px solid #e8eaf0;border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{padding:32px 16px;text-align:center;color:var(--muted);font-size:14px;}
+.empty-ico{font-size:32px;margin-bottom:8px;}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);}
+.kpi-card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center;}
+.kpi-val{font-size:28px;font-weight:900;color:var(--txt);line-height:1;}
+.kpi-lbl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.kpi-card.acc .kpi-val{color:var(--acc);}
+.kpi-card.grn .kpi-val{color:var(--grn);}
+.kpi-card.red .kpi-val{color:var(--red);}
+
+/* ── CLIENTE ITEM ── */
+.search-bar{display:flex;gap:8px;margin-bottom:var(--gap);}
+.search-bar input{flex:1;padding:12px 14px;border:1.5px solid #dde2e8;border-radius:12px;font-size:14px;outline:none;background:var(--card);}
+.search-bar input:focus{border-color:var(--acc);}
+.search-bar .btn-clr{padding:12px 14px;background:var(--card);border:1.5px solid #dde2e8;border-radius:12px;cursor:pointer;font-size:16px;color:var(--muted);}
+.cli-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f4f5f7;cursor:pointer;transition:background .12s;}
+.cli-item:last-child{border-bottom:none;}
+.cli-item:active{background:#f8f9fb;}
+.cli-avo{width:40px;height:40px;border-radius:50%;background:var(--acc);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cli-avo.ina{background:#dde2e8;color:var(--muted);}
+.cli-info{flex:1;min-width:0;}
+.cli-nome{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cli-meta{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cli-dist{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.cli-actions{display:none;padding:0 16px 14px 68px;gap:8px;}
+.cli-actions.open{display:flex;}
+.cli-action-btn{flex:1;padding:10px 6px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.cli-action-btn:active{opacity:.75;}
+.btn-tel{background:#e8f5e9;color:#1b5e20;}
+.btn-maps{background:#e3f2fd;color:#0d47a1;}
+.btn-wpp{background:#e8f5e9;color:#1b5e20;}
+.btn-more{background:#f3f0ff;color:#5b21b6;}
+.load-more{width:100%;padding:14px;background:transparent;border:1.5px solid #dde2e8;border-radius:12px;font-size:14px;font-weight:600;color:var(--acc);cursor:pointer;margin-top:8px;}
+.load-more:active{background:#f8f9fb;}
+
+/* ── DETAIL MODAL ── */
+#cli-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:flex-end;}
+#cli-modal.open{display:flex;}
+.cli-modal-sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-height:80dvh;overflow-y:auto;padding:0 0 env(safe-area-inset-bottom,16px);}
+.cli-modal-handle{width:40px;height:4px;background:#dde2e8;border-radius:2px;margin:12px auto 0;}
+.cli-modal-hdr{padding:12px 20px 16px;border-bottom:1px solid #f0f2f5;}
+.cli-modal-razao{font-size:17px;font-weight:800;color:var(--txt);}
+.cli-modal-sub{font-size:13px;color:var(--muted);margin-top:3px;}
+.cli-modal-field{padding:10px 20px;border-bottom:1px solid #f8f9fb;display:flex;gap:12px;align-items:center;}
+.cli-modal-field:last-child{border-bottom:none;}
+.cli-modal-ico{font-size:18px;width:28px;text-align:center;flex-shrink:0;}
+.cli-modal-txt{font-size:13.5px;color:var(--txt);}
+.cli-modal-lbl{font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:600;text-transform:uppercase;}
+.cli-modal-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted);z-index:10;}
+.badge-grn{display:inline-block;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.badge-red{display:inline-block;background:#fee2e2;color:#991b1b;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
+
+/* ── CAMPO / MAP ── */
+#campo-map{position:absolute;inset:0;}
+.campo-wrap{position:relative;height:100%;}
+
+/* ── GPS CONTROLS NO PROSPEC ── */
+.prospec-ico-btn{width:40px;height:40px;border:none;border-radius:50%;font-size:18px;cursor:pointer;background:rgba(255,255,255,.95);box-shadow:0 2px 10px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;}
+.prospec-ico-btn.gps-on{background:var(--grn);}
+.prospec-georef-ico{background:#1d6ef5;font-size:16px;}
+
+/* ── CNPJ ── */
+.cnpj-wrap{max-width:480px;margin:0 auto;}
+.cnpj-row{display:flex;gap:8px;margin-bottom:var(--gap);}
+.cnpj-input{flex:1;padding:13px 14px;border:1.5px solid #dde2e8;border-radius:12px;font-size:15px;font-family:monospace;letter-spacing:.4px;outline:none;background:var(--card);}
+.cnpj-input:focus{border-color:var(--acc);}
+.cnpj-go{padding:13px 18px;background:var(--acc);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
+.cnpj-loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:16px 0;}
+.cnpj-err{background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:14px 16px;color:var(--red);font-size:14px;}
+.cnpj-card{background:var(--card);border-radius:var(--r);box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden;}
+.cnpj-top{padding:16px;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid #f0f2f5;}
+.cnpj-razao{font-size:16px;font-weight:800;flex:1;line-height:1.3;}
+.cnpj-fantasia{font-size:12px;color:var(--muted);margin-top:2px;}
+.sit-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;}
+.cnpj-row-field{display:flex;gap:12px;align-items:flex-start;padding:11px 16px;border-bottom:1px solid #f8f9fb;}
+.cnpj-row-field:last-child{border-bottom:none;}
+.cnpj-row-ico{font-size:17px;width:24px;text-align:center;flex-shrink:0;margin-top:1px;}
+.cnpj-row-right{flex:1;min-width:0;}
+.cnpj-row-lbl{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+.cnpj-row-val{font-size:13.5px;color:var(--txt);word-break:break-word;}
+.cnpj-qsa-list{padding:0 16px 12px;}
+.cnpj-qsa-item{background:#f8f9fb;border-radius:8px;padding:8px 12px;margin-bottom:6px;}
+.cnpj-qsa-name{font-size:13px;font-weight:700;}
+.cnpj-qsa-role{font-size:11px;color:var(--muted);}
+.cnpj-source{padding:8px 16px;font-size:11px;color:var(--muted);border-top:1px solid #f0f2f5;background:#f8f9fb;}
+.cnpj-hist-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin:16px 0 8px;}
+.cnpj-hist-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border-radius:10px;margin-bottom:6px;cursor:pointer;border:1px solid #eee;}
+.cnpj-hist-item:active{background:#f4f5f7;}
+.cnpj-hist-cnpj{font-family:monospace;font-size:13px;font-weight:700;color:var(--acc);}
+.cnpj-hist-razao{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+
+/* ── PROSP AVANÇADA ── */
+#prospec-map{position:absolute;inset:0;}
+.prospec-wrap{position:relative;height:100%;}
+/* GPS overlay obrigatório */
+.gps-required-overlay{position:absolute;inset:0;z-index:600;background:rgba(15,23,42,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;gap:16px;}
+.gps-req-ico{font-size:64px;line-height:1;}
+.gps-req-title{color:#fff;font-size:20px;font-weight:800;}
+.gps-req-sub{color:#cbd5e1;font-size:14px;line-height:1.5;}
+.gps-req-btn{background:#3b82f6;color:#fff;border:none;border-radius:14px;padding:16px 32px;font-size:16px;font-weight:800;cursor:pointer;width:100%;max-width:280px;}
+.gps-req-btn:active{opacity:.85;}
+.prospec-search-bar{position:absolute;top:12px;left:12px;right:12px;z-index:400;display:flex;gap:6px;}
+.prospec-search-input{flex:1;padding:10px 14px;border:none;border-radius:24px;font-size:13.5px;outline:none;box-shadow:0 2px 10px rgba(0,0,0,.18);background:#fff;}
+.prospec-radius-row{position:absolute;top:60px;left:12px;z-index:400;display:flex;gap:4px;}
+.prospec-km-btn{padding:6px 11px;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.92);color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.12);}
+.prospec-km-btn.active{background:var(--acc);color:#fff;}
+.prospec-legend{position:absolute;top:70px;right:12px;z-index:400;background:rgba(255,255,255,.92);border-radius:10px;padding:6px 10px;font-size:11px;box-shadow:0 1px 4px rgba(0,0,0,.12);}
+.prospec-leg-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.prospec-nearby-sheet{position:absolute;bottom:0;left:0;right:0;z-index:500;background:var(--card);border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.18);max-height:45%;display:flex;flex-direction:column;}
+.prospec-sheet-hdr{padding:10px 16px 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0f2f5;flex-shrink:0;}
+.prospec-sheet-handle{width:36px;height:4px;background:#dde2e8;border-radius:2px;position:absolute;top:8px;left:50%;transform:translateX(-50%);}
+.prospec-sheet-title{font-size:13.5px;font-weight:800;flex:1;}
+.prospec-sheet-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;padding:0;}
+.prospec-sheet-list{overflow-y:auto;flex:1;}
+.prospec-item{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid #f4f5f7;}
+.prospec-item:last-child{border-bottom:none;}
+.prospec-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.prospec-info{flex:1;min-width:0;}
+.prospec-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prospec-meta{font-size:11.5px;color:var(--muted);}
+.prospec-dist{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.prospec-score{font-size:11px;font-weight:800;padding:2px 7px;border-radius:10px;white-space:nowrap;}
+.score-high{background:#fee2e2;color:#991b1b;}
+.score-med{background:#fef3c7;color:#92400e;}
+.score-low{background:#f0f9ff;color:#0369a1;}
+
+/* ── DETALHE PROSPECÇÃO ── */
+.prospec-detail-sheet{position:absolute;bottom:0;left:0;right:0;z-index:510;background:var(--card);border-radius:16px 16px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.2);max-height:68%;display:flex;flex-direction:column;}
+.pdl-body{overflow-y:auto;flex:1;padding-bottom:env(safe-area-inset-bottom,12px);}
+.pdl-row{display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid #f4f5f7;}
+.pdl-row:last-child{border-bottom:none;}
+.pdl-ico{font-size:17px;width:24px;text-align:center;flex-shrink:0;margin-top:1px;}
+.pdl-right{flex:1;min-width:0;}
+.pdl-lbl{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+.pdl-val{font-size:13.5px;color:var(--txt);}
+.pdl-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;}
+.pdl-actions{display:flex;gap:8px;padding:12px 16px;flex-shrink:0;border-top:1px solid #f0f2f5;}
+.pdl-action{flex:1;padding:11px 6px;border:none;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer;text-align:center;line-height:1.3;}
+.pdl-action:active{opacity:.8;}
+
+/* ── PAINEL IA ── */
+.pdl-ia-btn{width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:13px;font-weight:800;cursor:pointer;margin:0 16px 12px;width:calc(100% - 32px);display:flex;align-items:center;justify-content:center;gap:8px;}
+.pdl-ia-btn:active{opacity:.85;}
+.pdl-ia-panel{margin:0 12px 16px;background:#f8f7ff;border:1.5px solid #ede9fe;border-radius:14px;padding:14px 16px;display:none;}
+.pdl-ia-panel.open{display:block;}
+.pdl-ia-title{font-size:11px;font-weight:800;color:#5b21b6;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.pdl-ia-section{margin-bottom:10px;}
+.pdl-ia-lbl{font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.pdl-ia-val{font-size:13px;color:#1e1b4b;line-height:1.45;}
+.pdl-ia-chip{display:inline-block;background:#ede9fe;color:#4c1d95;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;margin:2px 3px 2px 0;}
+.pdl-ia-loading{display:flex;align-items:center;gap:8px;color:#7c3aed;font-size:13px;padding:6px 0;}
+.pdl-ia-dot{width:6px;height:6px;border-radius:50%;background:#7c3aed;animation:iabounce .8s ease-in-out infinite alternate;}
+.pdl-ia-dot:nth-child(2){animation-delay:.2s;}
+.pdl-ia-dot:nth-child(3){animation-delay:.4s;}
+@keyframes iabounce{to{opacity:.2;transform:translateY(-4px);}}
+
+/* ── STATUS BAR MAPA ── */
+.prospec-status{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:400;background:rgba(255,255,255,.92);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.14);white-space:nowrap;pointer-events:none;transition:opacity .3s;}
+
+/* ── VISITA MODAL ── */
+#visita-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:700;display:none;align-items:flex-end;}
+#visita-modal.open{display:flex;}
+.visita-sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;}
+.visita-hdr{padding:16px 20px 14px;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;gap:10px;flex-shrink:0;position:relative;}
+.visita-hdr-handle{width:36px;height:4px;background:#dde2e8;border-radius:2px;position:absolute;top:8px;left:50%;transform:translateX(-50%);}
+.visita-hdr-title{font-size:16px;font-weight:800;flex:1;}
+.visita-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;}
+.visita-body{overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);}
+.visita-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+.visita-field input{width:100%;padding:12px 14px;border:1.5px solid #dde2e8;border-radius:10px;font-size:14px;outline:none;}
+.visita-field input:focus{border-color:var(--acc);}
+.visita-gps{font-size:12px;color:var(--muted);background:#f4f5f7;border-radius:8px;padding:8px 12px;}
+.visita-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:-4px;}
+.visita-fotos-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;}
+.visita-add-foto{width:72px;height:72px;background:#f4f5f7;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:var(--muted);border:2px dashed #dde2e8;flex-shrink:0;}
+.visita-add-foto:active{background:#e8eaf0;}
+.visita-foto-wrap{position:relative;width:72px;height:72px;flex-shrink:0;}
+.visita-foto-thumb{width:72px;height:72px;border-radius:10px;object-fit:cover;display:block;}
+.visita-foto-del{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.visita-rec-btn{padding:11px 20px;border:none;border-radius:20px;background:#f0f2f5;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
+.visita-rec-btn.recording{background:#ef4444;color:#fff;}
+.visita-notas{width:100%;padding:12px 14px;border:1.5px solid #dde2e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none;resize:none;height:90px;}
+.visita-notas:focus{border-color:var(--acc);}
+.visita-save-btn{width:100%;padding:15px;background:var(--grn);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;}
+.visita-save-btn:active{opacity:.85;}
+
+/* ── LISTA DE VISITAS ── */
+.visita-item{padding:14px 16px;border-bottom:1px solid #f4f5f7;cursor:pointer;}
+.visita-item:active{background:#f8f9fb;}
+.visita-item-hdr{display:flex;align-items:center;gap:10px;}
+.visita-item-nome{font-weight:700;font-size:14px;flex:1;}
+.visita-item-dt{font-size:11px;color:var(--muted);white-space:nowrap;}
+.visita-item-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+.visita-item-fotos{display:flex;gap:4px;margin-top:8px;}
+.visita-item-foto{width:52px;height:52px;border-radius:7px;object-fit:cover;}
+.visita-item-notas{font-size:12.5px;color:var(--txt);margin-top:6px;line-height:1.45;}
+.visita-comp-wrap{margin-top:8px;border-top:1px solid #ede9fe;padding-top:8px;}
+.visita-comp-item{background:#f5f3ff;border-left:3px solid #7c3aed;border-radius:6px;padding:6px 9px;margin-bottom:5px;font-size:12px;}
+.visita-comp-hdr{font-size:10.5px;color:#6d28d9;font-weight:700;margin-bottom:2px;}
+.visita-comp-btn{margin-top:8px;width:100%;padding:10px;background:#7c3aed;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;}
+.visita-comp-form{margin-top:8px;display:none;}
+.visita-comp-form.open{display:block;}
+.visita-comp-ta{width:100%;padding:10px 12px;border:1.5px solid #c4b5fd;border-radius:10px;font-size:13px;font-family:inherit;resize:none;outline:none;height:70px;box-sizing:border-box;}
+.visita-comp-ta:focus{border-color:#7c3aed;}
+.visita-comp-save{margin-top:6px;width:100%;padding:12px;background:#6d28d9;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;}
+
+/* ── GEOREF ── */
+#georef-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:flex-end;}
+#georef-modal.open{display:flex;}
+.georef-sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;padding:0 0 env(safe-area-inset-bottom,16px);max-height:80dvh;overflow-y:auto;}
+.georef-hdr{padding:16px 20px;border-bottom:1px solid #f0f2f5;}
+.georef-coords{font-family:monospace;font-size:15px;font-weight:700;color:var(--acc);letter-spacing:.3px;margin-bottom:4px;}
+.georef-acc{font-size:12px;color:var(--muted);}
+.georef-actions{display:flex;flex-direction:column;gap:10px;padding:16px 20px;}
+.georef-action-btn{padding:14px;border:1.5px solid #dde2e8;border-radius:12px;background:#fff;font-size:14px;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;color:var(--txt);}
+.georef-action-btn:active{background:#f4f5f7;}
+.georef-action-btn.primary{background:var(--grn);color:#fff;border-color:var(--grn);}
+.georef-saved{background:#d1fae5;border-radius:10px;padding:12px 16px;font-size:13px;color:#065f46;font-weight:600;margin:0 20px 16px;}
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login-screen">
+  <div class="login-logo">⛽</div>
+  <div class="login-title">TRR Mozarlândia</div>
+  <div class="login-sub">Painel de Campo · Dinâmica Agro</div>
+  <div class="login-card">
+    <div class="login-field">
+      <label>E-mail</label>
+      <input id="l-email" type="email" autocomplete="email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')document.getElementById('l-pwd').focus()">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input id="l-pwd" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()" id="l-btn">Entrar</button>
+    <div class="login-err" id="l-err"></div>
+  </div>
+</div>
+
+<!-- ══════════ APP SHELL ══════════ -->
+<div id="app">
+  <!-- Top bar -->
+  <div class="top-bar">
+    <span class="top-bar-title">⛽ TRR Mobile</span>
+    <span class="top-bar-badge" id="tb-badge">●</span>
+    <span class="top-bar-user" id="tb-user"></span>
+    <button class="top-bar-logout" onclick="doLogout()" title="Sair">⏻</button>
+  </div>
+
+  <!-- ── TAB: RESUMO ── -->
+  <div class="tab-body active" id="tab-resumo">
+    <div class="kpi-grid" id="kpi-grid">
+      <div class="kpi-card"><div class="kpi-val" id="kv-prop">–</div><div class="kpi-lbl">Propriedades</div></div>
+      <div class="kpi-card acc"><div class="kpi-val" id="kv-cli">–</div><div class="kpi-lbl">Clientes</div></div>
+      <div class="kpi-card grn"><div class="kpi-val" id="kv-mun">–</div><div class="kpi-lbl">Municípios</div></div>
+      <div class="kpi-card"><div class="kpi-val" id="kv-dist">–</div><div class="kpi-lbl">Dist. Média TRR</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">🏆 Principais municípios</div>
+      <div id="res-muns"><div class="empty"><div class="spin"></div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">⚡ Atividade mais frequente</div>
+      <div style="padding:14px 16px;font-size:14px;color:var(--txt)" id="res-ativ">–</div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">📋 CAR por município (potencial)</div>
+      <div id="res-car"><div class="empty"><div class="spin"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ── TAB: CLIENTES ── -->
+  <div class="tab-body" id="tab-clientes">
+    <div class="search-bar">
+      <input id="cli-srch" type="search" placeholder="🔍 Fazenda, cidade, CNAE…" oninput="onCliSearch(this.value)">
+      <button class="btn-clr" onclick="clearSearch()">✕</button>
+    </div>
+    <div class="card" id="cli-list-card">
+      <div id="cli-list"><div class="empty"><div class="spin"></div></div></div>
+    </div>
+    <button class="load-more" id="load-more-btn" style="display:none" onclick="loadMoreClientes()">Carregar mais</button>
+  </div>
+
+  <!-- ── TAB: CNPJ ── -->
+  <div class="tab-body" id="tab-cnpj">
+    <div class="cnpj-wrap">
+      <div class="cnpj-row">
+        <input id="cnpj-inp" class="cnpj-input" type="tel" placeholder="00.000.000/0000-00" maxlength="18"
+               oninput="cnpjMask(this)" onkeydown="if(event.key==='Enter')lookupCnpj()">
+        <button class="cnpj-go" onclick="lookupCnpj()">🔍</button>
+      </div>
+      <div id="cnpj-result"></div>
+      <div id="cnpj-hist-wrap" style="display:none">
+        <div class="cnpj-hist-title">📂 Recentes</div>
+        <div id="cnpj-hist-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: PROSPECÇÃO AVANÇADA ── -->
+  <div class="tab-body" id="tab-prospec" style="padding:0;overflow:hidden;">
+    <div class="prospec-wrap">
+      <!-- Overlay GPS obrigatório -->
+      <div class="gps-required-overlay" id="gps-required-overlay" style="display:none">
+        <div class="gps-req-ico">📍</div>
+        <div class="gps-req-title">GPS é obrigatório</div>
+        <div class="gps-req-sub">Para usar o modo Campo, o GPS precisa estar ativo. Sua localização é usada para mostrar as propriedades próximas e registrar visitas com precisão.</div>
+        <button class="gps-req-btn" onclick="requestGpsAndProceed()">📡 Ativar GPS agora</button>
+      </div>
+      <div id="prospec-map"></div>
+      <!-- Barra de busca flutuante com GPS -->
+      <div class="prospec-search-bar">
+        <input id="prospec-srch" class="prospec-search-input" type="search" placeholder="🔍 Buscar fazenda…" oninput="prospecSearch(this.value)">
+        <button id="prospec-gps-btn" class="prospec-ico-btn" onclick="toggleProspecGps()" title="GPS">📍</button>
+        <button id="prospec-sat-btn" class="prospec-ico-btn" onclick="toggleSatLayer()" title="Satélite / Mapa">🌍</button>
+        <button id="prospec-georef-btn" class="prospec-ico-btn prospec-georef-ico" onclick="prospecGeoref()" title="Georreferenciar">📌</button>
+        <button class="prospec-ico-btn" onclick="openVisitaModal(null)" title="Registrar visita" style="background:#10b981;font-size:15px;">📸</button>
+      </div>
+      <!-- Status carregamento -->
+      <div class="prospec-status" id="prospec-status">⏳ Carregando…</div>
+      <!-- Botões de raio -->
+      <div class="prospec-radius-row">
+        <button class="prospec-km-btn" onclick="setProspecKm(5,this)">5km</button>
+        <button class="prospec-km-btn active" onclick="setProspecKm(10,this)">10km</button>
+        <button class="prospec-km-btn" onclick="setProspecKm(20,this)">20km</button>
+        <button class="prospec-km-btn" onclick="setProspecKm(50,this)">50km</button>
+      </div>
+      <!-- Legenda -->
+      <div class="prospec-legend">
+        <div><span class="prospec-leg-dot" style="background:#7c3aed"></span> Ativo</div>
+        <div><span class="prospec-leg-dot" style="background:#dc2626"></span> Inat.A</div>
+        <div><span class="prospec-leg-dot" style="background:#ea580c"></span> Inat.B</div>
+        <div><span class="prospec-leg-dot" style="background:#d97706"></span> Inat.C</div>
+        <div><span class="prospec-leg-dot" style="background:#16a34a"></span> CAR AT</div>
+        <div><span class="prospec-leg-dot" style="background:#a4243b"></span> CAR CA</div>
+      </div>
+      <!-- Painel de detalhe da propriedade -->
+      <div class="prospec-detail-sheet" id="prospec-detail-sheet" style="display:none">
+        <div class="prospec-sheet-handle"></div>
+        <div class="prospec-sheet-hdr">
+          <span class="prospec-sheet-title" id="pdl-title">Propriedade</span>
+          <button class="prospec-sheet-close" onclick="closeProspecDetail()">✕</button>
+        </div>
+        <div class="pdl-body" id="pdl-body"></div>
+        <button class="pdl-ia-btn" id="pdl-ia-btn" onclick="runPropertyAI()" style="display:none">🤖 Análise TRR — O que essa propriedade vai comprar?</button>
+        <div class="pdl-ia-panel" id="pdl-ia-panel"></div>
+      </div>
+
+      <!-- Painel de propriedades próximas (bottom sheet) -->
+      <div class="prospec-nearby-sheet" id="prospec-sheet" style="display:none">
+        <div class="prospec-sheet-handle"></div>
+        <div class="prospec-sheet-hdr">
+          <span class="prospec-sheet-title" id="prospec-sheet-title">Próximos CAR</span>
+          <button class="prospec-sheet-close" onclick="closeProspecSheet()">✕</button>
+        </div>
+        <div class="prospec-sheet-list" id="prospec-sheet-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: VISITAS ── -->
+  <div class="tab-body" id="tab-visitas">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap);">
+      <div style="font-size:13px;color:var(--muted);font-weight:600;" id="visitas-count">Nenhuma visita</div>
+      <button onclick="openVisitaModal(null)" style="padding:9px 16px;background:var(--grn);color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;">+ Nova</button>
+    </div>
+    <div class="card" id="visitas-list-card">
+      <div id="visitas-list"><div class="empty"><div class="empty-ico">📋</div>Nenhuma visita registrada ainda</div></div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav" style="font-size:10px;">
+    <button class="nav-btn active" id="nav-resumo" onclick="switchTab('resumo')">
+      <span class="nav-ico">📊</span><span>Resumo</span>
+    </button>
+    <button class="nav-btn" id="nav-clientes" onclick="switchTab('clientes')">
+      <span class="nav-ico">👥</span><span>Clientes</span>
+    </button>
+    <button class="nav-btn" id="nav-prospec" onclick="switchTab('prospec')">
+      <span class="nav-ico">🗺</span><span>Campo</span>
+    </button>
+    <button class="nav-btn" id="nav-cnpj" onclick="switchTab('cnpj')">
+      <span class="nav-ico">🔍</span><span>CNPJ</span>
+    </button>
+    <button class="nav-btn" id="nav-visitas" onclick="switchTab('visitas')">
+      <span class="nav-ico">📋</span><span>Visitas</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Modal Registrar Visita -->
+<div id="visita-modal" onclick="if(event.target===this)closeVisitaModal()">
+  <div class="visita-sheet">
+    <div class="visita-hdr">
+      <div class="visita-hdr-handle"></div>
+      <div class="visita-hdr-title">📸 Registrar Visita</div>
+      <button class="visita-close" onclick="closeVisitaModal()">✕</button>
+    </div>
+    <div class="visita-body">
+      <div class="visita-gps" id="visit-gps-info">📍 Localização não capturada</div>
+      <div class="visita-field">
+        <label>🏡 Fazenda / Propriedade</label>
+        <input id="visit-nome" type="text" placeholder="Nome da fazenda…" autocomplete="off">
+      </div>
+      <div class="visita-field">
+        <label>👤 Responsável / Contato</label>
+        <input id="visit-contato" type="text" placeholder="Nome do proprietário ou gerente…">
+      </div>
+      <div class="visita-section-title">📷 Fotos (máx. 3)</div>
+      <div class="visita-fotos-row" id="visit-fotos-row">
+        <label class="visita-add-foto" id="visit-add-foto-btn">
+          <input type="file" accept="image/*" capture="environment" id="visit-foto-input" onchange="visitaFotoChange(this)" style="display:none" multiple>
+          <span style="text-align:center">📷<br><small>Adicionar</small></span>
+        </label>
+      </div>
+      <div class="visita-section-title">🎙 Áudio</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button id="visit-rec-btn" class="visita-rec-btn" onclick="toggleAudioRec()">🎙 Gravar</button>
+        <span id="visit-rec-timer" style="font-size:12px;color:var(--muted);font-family:monospace;"></span>
+      </div>
+      <audio id="visit-audio-player" controls style="display:none;width:100%;border-radius:8px;"></audio>
+      <div class="visita-section-title">📝 Observações</div>
+      <textarea id="visit-notas" class="visita-notas" placeholder="Interesse, volumes consumidos, melhor época de contato, concorrência…"></textarea>
+      <button class="visita-save-btn" onclick="saveVisita()">💾 Salvar Visita</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Georeferenciamento -->
+<div id="georef-modal" onclick="if(event.target===this)closeGeoref()">
+  <div class="georef-sheet">
+    <div class="georef-hdr">
+      <div class="georef-coords" id="georef-coords">–</div>
+      <div class="georef-acc" id="georef-acc"></div>
+    </div>
+    <div class="georef-actions">
+      <button class="georef-action-btn" onclick="georefCopy()">📋 Copiar coordenadas</button>
+      <button class="georef-action-btn" onclick="georefWa()">📱 Enviar por WhatsApp</button>
+      <div style="margin-top:4px;">
+        <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:6px;font-weight:600;">Vincular a um imóvel (código CAR):</label>
+        <div style="display:flex;gap:8px;">
+          <input id="georef-car-inp" type="text" placeholder="Ex: GO-5213905-…" style="flex:1;padding:12px;border:1.5px solid #dde2e8;border-radius:10px;font-size:13px;outline:none;">
+          <button class="georef-action-btn primary" style="padding:12px 16px;flex-shrink:0;" onclick="georefSave()">💾 Salvar</button>
+        </div>
+      </div>
+      <div id="georef-saved-msg" style="display:none" class="georef-saved">✅ Localização salva com sucesso!</div>
+      <button class="georef-action-btn" style="margin-top:4px;justify-content:center;color:#dc2626;border-color:#fee2e2;" onclick="closeGeoref()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detalhe do cliente (bottom sheet) -->
+<div id="cli-modal" onclick="if(event.target===this)closeModal()">
+  <div class="cli-modal-sheet" id="cli-modal-inner">
+    <button class="cli-modal-close" onclick="closeModal()">×</button>
+    <div class="cli-modal-handle"></div>
+    <div class="cli-modal-hdr">
+      <div class="cli-modal-razao" id="cm-razao">–</div>
+      <div class="cli-modal-sub" id="cm-sub">–</div>
+    </div>
+    <div id="cm-fields"></div>
+  </div>
+</div>
+
+<script>
+/* ─── CONFIG ─── */
+var SB_URL = 'https://keeqkmguljsddfmrqlld.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ';
+var SB = supabase.createClient(SB_URL, SB_KEY);
+
+var SESSION = null, currentTab = 'resumo';
+var cliPage = 1, cliSearch = '', cliData = [], cliTotal = 0;
+var gpsActive = false, gpsWatcher = null, lastGpsPos = null;
+var prospecMeLayer = null;
+var cnpjHistory = [];
+
+/* ─── AUTH ─── */
+async function doLogin() {
+  var email = document.getElementById('l-email').value.trim();
+  var pwd   = document.getElementById('l-pwd').value;
+  var errEl = document.getElementById('l-err');
+  var btn   = document.getElementById('l-btn');
+  if (!email || !pwd) { errEl.textContent = 'Preencha e-mail e senha.'; return; }
+  errEl.textContent = ''; btn.textContent = '⏳ Entrando…'; btn.disabled = true;
+  try {
+    var res = await SB.rpc('dash_login', { p_email: email, p_pwd: pwd });
+    if (res.error || !res.data || res.data.error) {
+      errEl.textContent = (res.data && res.data.error) || (res.error && res.error.message) || 'Credenciais inválidas.';
+    } else {
+      SESSION = res.data;
+      localStorage.setItem('trr_mob_token', SESSION.token);
+      localStorage.setItem('trr_mob_email', email);
+      showApp();
+    }
+  } catch(e) { errEl.textContent = 'Erro de conexão.'; }
+  btn.textContent = 'Entrar'; btn.disabled = false;
+}
+
+async function restoreSession() {
+  var token = localStorage.getItem('trr_mob_token');
+  if (!token) return false;
+  try {
+    var res = await SB.rpc('dash_verify_session', { p_token: token });
+    if (res.error || !res.data || res.data.error) return false;
+    SESSION = res.data; SESSION.token = token;
+    return true;
+  } catch(e) { return false; }
+}
+
+async function doLogout() {
+  if (SESSION) try { await SB.rpc('dash_logout', { p_token: SESSION.token }); } catch(e) {}
+  localStorage.removeItem('trr_mob_token');
+  SESSION = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  var email = localStorage.getItem('trr_mob_email') || (SESSION && SESSION.email) || '';
+  document.getElementById('tb-user').textContent = email.split('@')[0];
+  loadResumo();
+  loadClientes();
+}
+
+/* ─── TABS ─── */
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-body').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+  if (tab === 'prospec') initProspecMap();
+  if (tab === 'visitas') renderVisitasList();
+}
+
+/* ─── RESUMO ─── */
+async function loadResumo() {
+  document.getElementById('tb-badge').textContent = '⏳';
+  try {
+    var r1 = await SB.rpc('trr_init');
+    var r2 = await SB.rpc('trr_data', { p_page: 1 });
+    if (r1.error || r2.error) throw new Error('Erro ao carregar dados');
+    var init = r1.data || {}, d = r2.data || {}, k = d.kpi || {};
+    set$('kv-prop', fmtN(k.prop));
+    set$('kv-cli',  fmtN(k.cli));
+    set$('kv-mun',  fmtN(k.mun));
+    set$('kv-dist', Number(k.avg_dist||0).toFixed(1).replace('.',',')+' km');
+    set$('res-ativ', shortA(d.top_ativ || '–'));
+    renderMuns(d.muns || []);
+    renderCar(init.car || []);
+    document.getElementById('tb-badge').textContent = '🟢';
+  } catch(e) {
+    document.getElementById('tb-badge').textContent = '🔴';
+  }
+}
+
+function renderMuns(muns) {
+  var top = muns.slice(0, 8);
+  if (!top.length) { document.getElementById('res-muns').innerHTML = '<div class="empty">Sem dados</div>'; return; }
+  var html = top.map(function(m) {
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid #f4f5f7">'
+      + '<span style="font-size:13px;font-weight:700;flex:1;color:var(--txt)">'+esc(m.municipio)+'</span>'
+      + '<span style="font-size:12px;color:var(--acc);font-weight:700">'+m.cnt+' prop.</span>'
+      + '<span style="font-size:11px;color:var(--muted);margin-left:6px">'+Number(m.avg_dist||0).toFixed(0)+' km</span>'
+      + '</div>';
+  }).join('');
+  document.getElementById('res-muns').innerHTML = html;
+}
+
+function renderCar(car) {
+  var top = car.slice(0, 6);
+  if (!top.length) { document.getElementById('res-car').innerHTML = '<div class="empty">Sem dados CAR</div>'; return; }
+  var html = top.map(function(c) {
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid #f4f5f7">'
+      + '<span style="font-size:13px;font-weight:700;flex:1">'+esc(c.municipio)+'</span>'
+      + '<span style="font-size:12px;color:#7c3aed;font-weight:700">'+fmtN(c.qtd)+' imóveis</span>'
+      + '</div>';
+  }).join('');
+  document.getElementById('res-car').innerHTML = html;
+}
+
+/* ─── CLIENTES ─── */
+var searchTimer = null;
+function onCliSearch(val) {
+  cliSearch = val;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(function(){ cliPage = 1; cliData = []; loadClientes(); }, 350);
+}
+
+function clearSearch() {
+  document.getElementById('cli-srch').value = '';
+  cliSearch = ''; cliPage = 1; cliData = [];
+  loadClientes();
+}
+
+async function loadClientes(append) {
+  if (!append) {
+    document.getElementById('cli-list').innerHTML = '<div class="empty"><div class="spin"></div></div>';
+    document.getElementById('load-more-btn').style.display = 'none';
+  }
+  try {
+    var res = await SB.rpc('trr_data', {
+      p_srch: cliSearch || null, p_page: cliPage,
+      p_uf: null, p_mun: null, p_ativ: null, p_faixa: null, p_ativa: null
+    });
+    if (res.error) throw res.error;
+    var d = res.data || {};
+    cliTotal = d.det_total || 0;
+    var rows = d.det || [];
+    if (append) cliData = cliData.concat(rows);
+    else cliData = rows;
+    renderClientes();
+    document.getElementById('load-more-btn').style.display = cliData.length < cliTotal ? '' : 'none';
+  } catch(e) {
+    document.getElementById('cli-list').innerHTML = '<div class="empty">Erro ao carregar</div>';
+  }
+}
+
+function loadMoreClientes() { cliPage++; loadClientes(true); }
+
+function renderClientes() {
+  if (!cliData.length) {
+    document.getElementById('cli-list').innerHTML = '<div class="empty"><div class="empty-ico">🔍</div>Nenhum resultado encontrado</div>';
+    return;
+  }
+  var html = cliData.map(function(r, i) {
+    var ini = ((r.cliente||r.propriedade||'?').charAt(0)).toUpperCase();
+    var ativo = r.ativa !== false;
+    var tel = extractTel(r);
+    return '<div class="cli-item" onclick="toggleCliActions(' + i + ')" id="cli-row-' + i + '">'
+      + '<div class="cli-avo' + (ativo ? '' : ' ina') + '">' + ini + '</div>'
+      + '<div class="cli-info">'
+      + '<div class="cli-nome">' + esc(r.cliente || r.propriedade || '–') + '</div>'
+      + '<div class="cli-meta">' + esc(r.municipio || '') + (r.uf ? '/' + r.uf : '') + (r.atividade_principal ? ' · ' + shortA(r.atividade_principal) : '') + '</div>'
+      + '</div>'
+      + '<div class="cli-dist">' + (r.dist ? Number(r.dist).toFixed(0) + ' km' : '') + '</div>'
+      + '</div>'
+      + '<div class="cli-actions" id="cli-act-' + i + '">'
+      + (tel ? '<button class="cli-action-btn btn-tel" onclick="callTel(\'' + tel + '\',event)">📞 Ligar</button>' : '')
+      + (tel ? '<button class="cli-action-btn btn-wpp" onclick="openWpp(\'' + tel + '\',event)">💬 WhatsApp</button>' : '')
+      + '<button class="cli-action-btn btn-maps" onclick="openMaps(\'' + esc(r.propriedade||r.municipio) + '\',event)">🗺 Maps</button>'
+      + '<button class="cli-action-btn btn-more" onclick="openDetailIdx(' + i + ',event)">ℹ️ Detalhes</button>'
+      + '</div>';
+  }).join('');
+  document.getElementById('cli-list').innerHTML = html;
+}
+
+function toggleCliActions(i) {
+  var el = document.getElementById('cli-act-' + i);
+  if (!el) return;
+  var open = el.classList.toggle('open');
+  if (open) {
+    document.querySelectorAll('.cli-actions.open').forEach(function(a){ if (a !== el) a.classList.remove('open'); });
+  }
+}
+
+function extractTel(r) {
+  return r.telefone || r.tel || r.celular || r.fone || null;
+}
+
+function callTel(tel, e) {
+  e.stopPropagation();
+  window.location.href = 'tel:' + tel.replace(/\D/g, '');
+}
+
+function openWpp(tel, e) {
+  e.stopPropagation();
+  window.open('https://wa.me/55' + tel.replace(/\D/g, ''), '_blank');
+}
+
+function openMaps(nome, e) {
+  e.stopPropagation();
+  window.open('https://maps.google.com/?q=' + encodeURIComponent(nome + ' Mozarlândia GO'), '_blank');
+}
+
+function openDetailIdx(i, e) {
+  e.stopPropagation();
+  var r = cliData[i];
+  if (!r) return;
+  openDetailObj(r);
+}
+
+function openDetail(jsonStr, e) {
+  e.stopPropagation();
+  var r = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+  openDetailObj(r);
+}
+
+function openDetailObj(r) {
+  document.getElementById('cm-razao').textContent = r.cliente || r.propriedade || '–';
+  var ativo = r.ativa !== false;
+  document.getElementById('cm-sub').innerHTML = (ativo
+    ? '<span class="badge-grn">Ativa</span>'
+    : '<span class="badge-red">Inativa</span>')
+    + (r.municipio ? ' · ' + r.municipio + (r.uf ? '/' + r.uf : '') : '');
+  var fields = [];
+  if (r.propriedade && r.propriedade !== r.cliente) fields.push(['🏡', 'Propriedade', r.propriedade]);
+  if (r.municipio) fields.push(['📍', 'Município', r.municipio + (r.uf ? '/' + r.uf : '')]);
+  if (r.atividade_principal) fields.push(['⚙️', 'Atividade', r.atividade_principal]);
+  if (r.dist) fields.push(['📏', 'Distância ao TRR', Number(r.dist).toFixed(1) + ' km']);
+  if (r.faixa_dist_trr) fields.push(['🎯', 'Faixa', r.faixa_dist_trr]);
+  if (r.id_propriedade) fields.push(['🔢', 'ID', r.id_propriedade]);
+  var tel = extractTel(r);
+  if (tel) fields.push(['📞', 'Telefone', '<a href="tel:' + tel.replace(/\D/g,'') + '" style="color:var(--acc)">' + tel + '</a>']);
+  document.getElementById('cm-fields').innerHTML = fields.map(function(f){
+    return '<div class="cli-modal-field"><span class="cli-modal-ico">'+f[0]+'</span>'
+      + '<div><div class="cli-modal-lbl">'+f[1]+'</div><div class="cli-modal-txt">'+f[2]+'</div></div></div>';
+  }).join('');
+  document.getElementById('cli-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('cli-modal').classList.remove('open'); }
+
+/* ─── GPS NO MAPA DE CAMPO (Prosp Avançada) ─── */
+function toggleProspecGps() {
+  if (gpsActive) stopProspecGps(); else startProspecGps();
+}
+
+function startProspecGps() {
+  if (!navigator.geolocation) { alert('GPS não disponível neste dispositivo.'); return; }
+  var btn = document.getElementById('prospec-gps-btn');
+  btn.textContent = '⏳'; btn.classList.add('gps-on');
+  gpsWatcher = navigator.geolocation.watchPosition(onProspecGpsPos, onProspecGpsErr, { enableHighAccuracy: true, maximumAge: 5000 });
+  gpsActive = true;
+}
+
+function stopProspecGps() {
+  if (gpsWatcher !== null) navigator.geolocation.clearWatch(gpsWatcher);
+  gpsActive = false; gpsWatcher = null;
+  var btn = document.getElementById('prospec-gps-btn');
+  if (btn) { btn.textContent = '📍'; btn.classList.remove('gps-on'); }
+  if (prospecMeLayer && prospecMap) { prospecMap.removeLayer(prospecMeLayer); prospecMeLayer = null; }
+}
+
+function onProspecGpsPos(pos) {
+  var lat = pos.coords.latitude, lon = pos.coords.longitude;
+  lastGpsPos = { lat: lat, lon: lon };
+  if (!prospecMap) return;
+  if (prospecMeLayer) prospecMap.removeLayer(prospecMeLayer);
+  prospecMeLayer = L.circleMarker([lat, lon], { radius: 10, color: '#1d6ef5', fillColor: '#1d6ef5', fillOpacity: 0.9, weight: 2 })
+    .addTo(prospecMap).bindPopup('📍 Você está aqui');
+  prospecMap.setView([lat, lon], Math.max(prospecMap.getZoom(), 13));
+  var btn = document.getElementById('prospec-gps-btn');
+  if (btn) { btn.textContent = '📍'; btn.classList.add('gps-on'); }
+}
+
+function onProspecGpsErr(e) {
+  var btn = document.getElementById('prospec-gps-btn');
+  if (btn) { btn.textContent = '📍'; btn.classList.remove('gps-on'); }
+  console.warn('GPS error', e);
+}
+
+/* ─── GEOREFERENCIAMENTO ─── */
+function prospecGeoref() {
+  if (lastGpsPos) {
+    openGeorefModal(lastGpsPos.lat, lastGpsPos.lon);
+  } else {
+    if (!navigator.geolocation) { alert('GPS não disponível.'); return; }
+    var btn = document.getElementById('prospec-georef-btn');
+    if (btn) btn.textContent = '⏳';
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      lastGpsPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      if (btn) btn.textContent = '📌';
+      openGeorefModal(lastGpsPos.lat, lastGpsPos.lon);
+    }, function() {
+      if (btn) btn.textContent = '📌';
+      alert('Não foi possível obter localização. Ative o GPS e tente novamente.');
+    }, { enableHighAccuracy: true, timeout: 12000 });
+  }
+}
+
+function openGeorefModal(lat, lon) {
+  document.getElementById('georef-coords').textContent = lat.toFixed(6) + ', ' + lon.toFixed(6);
+  document.getElementById('georef-acc').textContent = '📡 GPS · ' + new Date().toLocaleTimeString('pt-BR');
+  document.getElementById('georef-car-inp').value = '';
+  document.getElementById('georef-saved-msg').style.display = 'none';
+  document.getElementById('georef-modal').classList.add('open');
+}
+
+function closeGeoref() {
+  document.getElementById('georef-modal').classList.remove('open');
+}
+
+function georefCopy() {
+  if (!lastGpsPos) return;
+  var txt = lastGpsPos.lat.toFixed(6) + ', ' + lastGpsPos.lon.toFixed(6);
+  navigator.clipboard.writeText(txt).then(function(){ alert('Coordenadas copiadas!'); }).catch(function(){
+    var ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); alert('Coordenadas copiadas!');
+  });
+}
+
+function georefWa() {
+  if (!lastGpsPos) return;
+  var lat = lastGpsPos.lat.toFixed(6), lon = lastGpsPos.lon.toFixed(6);
+  var msg = encodeURIComponent('📍 Localização registrada em campo:\nLat: ' + lat + '\nLon: ' + lon + '\nhttps://maps.google.com/?q=' + lat + ',' + lon);
+  window.open('https://wa.me/?text=' + msg, '_blank');
+}
+
+async function georefSave() {
+  if (!lastGpsPos) return;
+  var cod = document.getElementById('georef-car-inp').value.trim();
+  var lat = lastGpsPos.lat, lon = lastGpsPos.lon;
+  var savedMsg = document.getElementById('georef-saved-msg');
+  // Salvar no localStorage como registro de campo
+  var registro = { ts: new Date().toISOString(), lat: lat, lon: lon, car: cod || null };
+  var lista = JSON.parse(localStorage.getItem('trr_georef_visitas') || '[]');
+  lista.unshift(registro);
+  localStorage.setItem('trr_georef_visitas', JSON.stringify(lista.slice(0, 200)));
+  // Tentar salvar no Supabase se tem código CAR
+  if (cod) {
+    try {
+      var res = await SB.from('rr_imoveis_cache').update({ lat: lat, lon: lon }).eq('car_codigo', cod);
+      if (!res.error) {
+        savedMsg.textContent = '✅ Localização salva no banco! Código: ' + cod;
+      } else {
+        savedMsg.textContent = '✅ Salvo localmente (banco exigiu autenticação). CAR: ' + cod;
+      }
+    } catch(e) {
+      savedMsg.textContent = '✅ Salvo localmente. CAR: ' + cod;
+    }
+  } else {
+    savedMsg.textContent = '✅ Ponto de visita salvo localmente (' + lat.toFixed(5) + ', ' + lon.toFixed(5) + ')';
+  }
+  savedMsg.style.display = 'block';
+}
+
+/* ─── PROSPECÇÃO AVANÇADA ─── */
+var prospecMap = null, prospecKm = 10, prospecCliLayer = null, prospecCarLayer = null;
+var prospecCliData = [], prospecCarData = [], prospecSelectedCli = null;
+var _nearbyCarStore = []; // store for nearby list click safety
+
+var prospecTileStreet = null, prospecTileSat = null, prospecSatActive = false;
+
+var TRR_LAT = -14.7392, TRR_LON = -50.5744; // Mozarlândia-GO
+
+function kmFromZoom(zoom) {
+  if (zoom >= 13) return 20;
+  if (zoom >= 11) return 50;
+  if (zoom >= 9)  return 150;
+  return 300;
+}
+
+var _prospecLoadTimer = null;
+function scheduleProspecLoad() {
+  clearTimeout(_prospecLoadTimer);
+  _prospecLoadTimer = setTimeout(loadProspecData, 600);
+}
+
+function initProspecMap() {
+  // Não exige GPS — carrega pelo centro do mapa por padrão
+  document.getElementById('gps-required-overlay').style.display = 'none';
+  if (prospecMap) { setTimeout(function(){ prospecMap.invalidateSize(); }, 100); return; }
+  var initLat = lastGpsPos ? lastGpsPos.lat : TRR_LAT;
+  var initLon = lastGpsPos ? lastGpsPos.lon : TRR_LON;
+  prospecMap = L.map('prospec-map', { zoomControl: false, attributionControl: false })
+    .setView([initLat, initLon], 10);
+  prospecTileStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
+  prospecTileSat    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '© Esri' });
+  prospecTileStreet.addTo(prospecMap);
+  L.control.zoom({ position: 'bottomright' }).addTo(prospecMap);
+  prospecCliLayer = L.layerGroup().addTo(prospecMap);
+  prospecCarLayer = L.layerGroup().addTo(prospecMap);
+  prospecMap.on('moveend', scheduleProspecLoad);
+  setTimeout(function(){ prospecMap.invalidateSize(); }, 150);
+  loadProspecData();
+}
+
+function toggleSatLayer() {
+  if (!prospecMap) return;
+  var btn = document.getElementById('prospec-sat-btn');
+  if (prospecSatActive) {
+    prospecMap.removeLayer(prospecTileSat);
+    prospecTileStreet.addTo(prospecMap);
+    prospecSatActive = false;
+    btn.textContent = '🌍';
+    btn.title = 'Modo Satélite';
+  } else {
+    prospecMap.removeLayer(prospecTileStreet);
+    prospecTileSat.addTo(prospecMap);
+    prospecSatActive = true;
+    btn.textContent = '🗺';
+    btn.title = 'Modo Mapa';
+  }
+}
+
+function requestGpsAndProceed() {
+  var overlay = document.getElementById('gps-required-overlay');
+  var btn = overlay.querySelector('.gps-req-btn');
+  btn.textContent = '⏳ Obtendo localização…';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      lastGpsPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      overlay.style.display = 'none';
+      if (prospecMap) prospecMap.setView([lastGpsPos.lat, lastGpsPos.lon], 12);
+      startProspecGps();
+      loadProspecData();
+    },
+    function(err) {
+      btn.textContent = '📡 Tentar novamente';
+      btn.disabled = false;
+      overlay.querySelector('.gps-req-sub').textContent = 'Permissão de GPS negada ou GPS desligado. Por favor, ative o GPS do celular e tente novamente.';
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
+}
+
+function setProspecStatus(msg) {
+  var el = document.getElementById('prospec-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? '' : 'none';
+}
+
+function parseGeoData(data) {
+  if (!data) return [];
+  var arr = Array.isArray(data) ? data : (data.props || data.rows || data.data || []);
+  return Array.isArray(arr) ? arr.filter(function(p){ return p.lat && p.lon; }) : [];
+}
+
+async function loadProspecData() {
+  setProspecStatus('⏳ Carregando propriedades…');
+  try {
+    // Clientes: carrega uma vez só
+    if (!prospecCliData.length) {
+      var rCli = await SB.rpc('trr_geo_all');
+      if (rCli.error) throw new Error('Clientes: ' + rCli.error.message);
+      prospecCliData = parseGeoData(rCli.data);
+    }
+
+    // CAR: usa centro do mapa + raio por zoom (fast path)
+    var cLat = TRR_LAT, cLon = TRR_LON, cKm = 150;
+    if (prospecMap) {
+      var c = prospecMap.getCenter();
+      cLat = c.lat; cLon = c.lng;
+      cKm  = kmFromZoom(prospecMap.getZoom());
+    }
+    var rCar = await SB.rpc('trr_car_geo', {
+      p_uf: null, p_mun: null, p_status: null,
+      p_lat: cLat, p_lon: cLon, p_km: cKm
+    });
+    if (rCar.error) throw new Error('CAR: ' + rCar.error.message);
+    prospecCarData = parseGeoData(rCar.data);
+
+    renderProspecMarkers();
+    var msg = '✅ ' + prospecCarData.length + ' imóveis CAR · ' + prospecCliData.length + ' clientes';
+    setProspecStatus(msg);
+    setTimeout(function(){ setProspecStatus(''); }, 5000);
+  } catch(e) {
+    setProspecStatus('⚠️ ' + e.message);
+    console.warn('Prospec data error', e);
+  }
+}
+
+function renderProspecMarkers(filterText) {
+  prospecCliLayer.clearLayers();
+  prospecCarLayer.clearLayers();
+  var carData = filterText ? prospecCarData.filter(function(p){
+    var s = (p.nom || p.cod || '').toLowerCase();
+    return s.indexOf(filterText.toLowerCase()) >= 0;
+  }) : prospecCarData;
+  var cliData2 = filterText ? prospecCliData.filter(function(p){
+    var s = (p.cli || p.razao || '').toLowerCase();
+    return s.indexOf(filterText.toLowerCase()) >= 0;
+  }) : prospecCliData;
+  // Renderizar CAR (pontos coloridos por status)
+  carData.forEach(function(p) {
+    var c = p.status === 'AT' ? '#16a34a' : p.status === 'PE' ? '#d97706' : '#dc2626';
+    var r = p.area > 500 ? 7 : p.area > 100 ? 6 : 5;
+    L.circleMarker([+p.lat, +p.lon], { radius: r, color: c, fillColor: c, fillOpacity: .65, weight: 1.5 })
+      .addTo(prospecCarLayer)
+      .on('click', function(e){ L.DomEvent.stopPropagation(e); showCarDetail(p); });
+  });
+  // Renderizar clientes (cor por status inativo)
+  cliData2.forEach(function(p) {
+    var inativo = p.inativo_90d === true || p.inativo_90d === 'true';
+    var curva = p.curva_abc_inativo || '';
+    var cor = '#7c3aed';
+    if (inativo) {
+      if (curva === 'A') cor = '#dc2626';
+      else if (curva === 'B') cor = '#ea580c';
+      else cor = '#d97706';
+    }
+    L.circleMarker([+p.lat, +p.lon], {
+      radius: inativo ? 11 : 10,
+      color: cor, fillColor: cor,
+      fillOpacity: .9, weight: 2
+    })
+      .addTo(prospecCliLayer)
+      .on('click', function(e){ L.DomEvent.stopPropagation(e); showCliDetail(p); });
+  });
+}
+
+function pdlRow(ico, lbl, val) {
+  return '<div class="pdl-row"><span class="pdl-ico">'+ico+'</span>'
+    +'<div class="pdl-right"><div class="pdl-lbl">'+lbl+'</div><div class="pdl-val">'+val+'</div></div></div>';
+}
+
+var _currentDetailProp = null, _currentDetailTipo = 'car';
+
+function closeProspecDetail() {
+  document.getElementById('prospec-detail-sheet').style.display = 'none';
+  document.getElementById('pdl-ia-panel').className = 'pdl-ia-panel';
+  document.getElementById('pdl-ia-btn').style.display = 'none';
+  _currentDetailProp = null;
+}
+
+function showCarDetail(p) {
+  closeProspecSheet();
+  var area = p.area ? Number(p.area) : 0;
+  var potLabel = area > 1000 ? 'Alto' : area > 200 ? 'Médio' : 'Baixo';
+  var potColor = area > 1000 ? '#991b1b' : area > 200 ? '#92400e' : '#0369a1';
+  var potBg    = area > 1000 ? '#fee2e2' : area > 200 ? '#fef3c7' : '#f0f9ff';
+  var stLabel  = p.status === 'AT' ? 'Ativo' : p.status === 'PE' ? 'Pendente' : p.status === 'CA' ? 'Cancelado' : (p.status || '–');
+  var stColor  = p.status === 'AT' ? '#065f46' : p.status === 'PE' ? '#92400e' : '#991b1b';
+  var stBg     = p.status === 'AT' ? '#d1fae5' : p.status === 'PE' ? '#fef3c7' : '#fee2e2';
+  var diesel   = area > 0 ? Math.round(area*3)+' – '+Math.round(area*5)+' L/mês (estimado)' : '–';
+
+  document.getElementById('pdl-title').textContent = p.nom || p.cod || 'Imóvel CAR';
+  document.getElementById('pdl-body').innerHTML =
+    pdlRow('📍','Município / UF', esc(p.mun || '–') + (p.uf ? ' / '+p.uf : '')) +
+    pdlRow('📐','Área', area ? area.toFixed(0)+' ha' : '–') +
+    pdlRow('📋','Status CAR', '<span class="pdl-badge" style="background:'+stBg+';color:'+stColor+'">'+stLabel+'</span>') +
+    pdlRow('🎯','Potencial de Compra', '<span class="pdl-badge" style="background:'+potBg+';color:'+potColor+'">'+potLabel+'</span>') +
+    pdlRow('⛽','Consumo Diesel Est.', diesel) +
+    (p.cod ? pdlRow('🗂','Código CAR', '<span style="font-family:monospace;font-size:12px">'+esc(p.cod)+'</span>') : '') +
+    '<div class="pdl-actions">' +
+      '<button class="pdl-action" style="background:#e3f2fd;color:#0d47a1" onclick="if(_currentDetailProp){prospecFlyTo(_currentDetailProp.lat,_currentDetailProp.lon);closeProspecDetail();}">🗺<br>Centralizar</button>' +
+      '<button class="pdl-action" style="background:#f3f0ff;color:#5b21b6" onclick="if(_currentDetailProp){showProspecNearbyCar(_currentDetailProp);}">🔭<br>CAR próx.</button>' +
+      '<button class="pdl-action" style="background:var(--grn);color:#fff" onclick="if(_currentDetailProp){openVisitaFromCar(_currentDetailProp);}">📸<br>Visita</button>' +
+    '</div>';
+
+  _currentDetailProp = p; _currentDetailTipo = 'car';
+  document.getElementById('pdl-ia-btn').style.display = 'flex';
+  document.getElementById('pdl-ia-panel').className = 'pdl-ia-panel';
+  document.getElementById('prospec-detail-sheet').style.display = 'flex';
+  prospecMap.setView([+p.lat, +p.lon], 14);
+}
+
+function showCliDetail(p) {
+  closeProspecSheet();
+  _currentDetailProp = p; _currentDetailTipo = 'cli';
+
+  document.getElementById('pdl-title').textContent = p.cli || p.razao || p.nome || 'Cliente TRR';
+  document.getElementById('pdl-body').innerHTML =
+    '<div style="padding:16px;text-align:center;color:#7c3aed;font-size:13px">' +
+    '<div class="pdl-ia-loading" style="justify-content:center"><div class="pdl-ia-dot"></div><div class="pdl-ia-dot"></div><div class="pdl-ia-dot"></div></div>' +
+    'Carregando dados do cliente…</div>' +
+    pdlActionsCliHtml();
+
+  document.getElementById('pdl-ia-btn').style.display = 'flex';
+  document.getElementById('pdl-ia-panel').className = 'pdl-ia-panel';
+  document.getElementById('prospec-detail-sheet').style.display = 'flex';
+  prospecMap.setView([+p.lat, +p.lon], 14);
+
+  // Busca dados completos do cliente no Supabase
+  loadCliDetailData(p);
+}
+
+function pdlActionsCliHtml() {
+  return '<div class="pdl-actions">' +
+    '<button class="pdl-action" style="background:#e3f2fd;color:#0d47a1" onclick="if(_currentDetailProp){prospecFlyTo(_currentDetailProp.lat,_currentDetailProp.lon);closeProspecDetail();}">🗺<br>Centralizar</button>' +
+    '<button class="pdl-action" style="background:#f3f0ff;color:#5b21b6" onclick="if(_currentDetailProp){closeProspecDetail();showProspecNearby(_currentDetailProp);}">🔭<br>CAR próx.</button>' +
+    '<button class="pdl-action" style="background:var(--grn);color:#fff" onclick="if(_currentDetailProp){openVisitaFromCar(_currentDetailProp);}">📸<br>Visita</button>' +
+  '</div>';
+}
+
+async function loadCliDetailData(p) {
+  try {
+    // Tenta buscar dados completos do cliente pelo ID ou CNPJ
+    var rows = null;
+    var idField = p.id || p.cli_id || p.cliente_id;
+
+    if (idField && SESSION && SESSION.token) {
+      var r = await SB.rpc('trr_cliente_ficha', { p_token: SESSION.token, p_id: Number(idField) });
+      if (!r.error && r.data) rows = r.data;
+    }
+    if (!rows && p.cnpj && SESSION && SESSION.token) {
+      // Busca por CNPJ via trr_data (busca geral)
+      var r2 = await SB.rpc('trr_data', { p_srch: p.cnpj, p_page: 1, p_uf: null, p_mun: null, p_ativ: null, p_faixa: null, p_ativa: null });
+      if (!r2.error && r2.data && r2.data.det && r2.data.det.length > 0) rows = r2.data.det[0];
+    }
+
+    // Mescla os dados do mapa com o que vier do banco
+    var c = Object.assign({}, p, rows || {});
+    renderCliDetailBody(c);
+  } catch(e) {
+    // Se falhar, renderiza apenas com dados do mapa
+    renderCliDetailBody(p);
+  }
+}
+
+function renderCliDetailBody(c) {
+  // Atualiza título com nome completo se disponível
+  var nome = c.razao_social || c.razao || c.nome_fantasia || c.cli || c.nome || 'Cliente TRR';
+  document.getElementById('pdl-title').textContent = nome;
+
+  var html = '';
+  html += pdlRow('✅','Status', '<span class="pdl-badge" style="background:#d1fae5;color:#065f46">Cliente TRR</span>');
+  if (c.cnpj) html += pdlRow('🪪','CNPJ', '<span style="font-family:monospace">'+esc(c.cnpj)+'</span>');
+  if (c.nome_fantasia && c.razao_social) html += pdlRow('🏷','Nome Fantasia', esc(c.nome_fantasia));
+  html += pdlRow('📍','Município', esc(c.mun || c.municipio || c.cidade || '–') + (c.uf ? ' / '+c.uf : ''));
+  if (c.atividade_principal || c.atividade) html += pdlRow('⚙️','Atividade', esc(c.atividade_principal || c.atividade));
+  if (c.telefone || c.fone || c.celular) html += pdlRow('📞','Telefone', esc(c.telefone || c.fone || c.celular));
+  if (c.email) html += pdlRow('📧','E-mail', esc(c.email));
+  if (c.responsavel || c.contato || c.proprietario) html += pdlRow('👤','Contato', esc(c.responsavel || c.contato || c.proprietario));
+  if (c.area || c.area_ha) {
+    var ha = Number(c.area || c.area_ha);
+    html += pdlRow('📐','Área', ha.toFixed(0)+' ha');
+    var dMin = Math.round(ha*3), dMax = Math.round(ha*5);
+    html += pdlRow('⛽','Diesel Est.', dMin.toLocaleString('pt-BR')+' – '+dMax.toLocaleString('pt-BR')+' L/mês');
+  }
+  if (c.ultima_compra || c.dt_ultima_compra) html += pdlRow('🛒','Última Compra', esc(c.ultima_compra || c.dt_ultima_compra));
+  if (c.volume_medio || c.vol_medio) html += pdlRow('📊','Volume Médio', esc(String(c.volume_medio || c.vol_medio)));
+  if (c.dist) html += pdlRow('📏','Dist. ao TRR', Number(c.dist).toFixed(1)+' km');
+  if (c.observacao || c.obs) html += pdlRow('📝','Observação', esc(c.observacao || c.obs));
+
+  html += pdlActionsCliHtml();
+  document.getElementById('pdl-body').innerHTML = html;
+}
+
+/* ── ANÁLISE IA DE PROPRIEDADE ── */
+function runPropertyAI() {
+  var p = _currentDetailProp;
+  if (!p) return;
+  var panel = document.getElementById('pdl-ia-panel');
+  var btn   = document.getElementById('pdl-ia-btn');
+  // Se já está aberto, fecha
+  if (panel.classList.contains('open')) {
+    panel.className = 'pdl-ia-panel';
+    btn.textContent = '🤖 Análise TRR — O que essa propriedade vai comprar?';
+    return;
+  }
+  panel.className = 'pdl-ia-panel open';
+  panel.innerHTML = '<div class="pdl-ia-loading"><div class="pdl-ia-dot"></div><div class="pdl-ia-dot"></div><div class="pdl-ia-dot"></div><span>Analisando propriedade…</span></div>';
+  btn.textContent = '✕ Fechar análise';
+  // Pequeno delay para dar sensação de processamento
+  setTimeout(function(){
+    panel.innerHTML = generatePropertyAnalysis(p, _currentDetailTipo);
+  }, 900);
+}
+
+function generatePropertyAnalysis(p, tipo) {
+  var area   = p.area ? Number(p.area) : 0;
+  var mun    = p.mun  || '';
+  var uf     = p.uf   || 'GO';
+  var now    = new Date();
+  var mes    = now.getMonth(); // 0=jan … 11=dez
+  var nome   = p.nom || p.cli || p.razao || p.cod || 'Imóvel';
+
+  /* ── Cultura estimada (região de Mozarlândia / NO de Goiás) ── */
+  var culturas = [];
+  var regiaoSoja = /mozarl|rubial|aruan|trombas|formoso|uruaçu|porang/i.test(mun);
+  var regiaoPec  = /crixas|são miguel|nova iguaçu|amaralina|santa terezinha/i.test(mun);
+  if (regiaoPec) {
+    culturas = ['Pecuária bovina (corte)', 'Pastagem Brachiaria/Mombaça'];
+  } else if (area > 500) {
+    culturas = ['Soja (verão)', 'Milho 2ª safra', 'Pousio/pastagem'];
+  } else if (area > 100) {
+    culturas = ['Soja (verão)', 'Milho 2ª safra'];
+  } else {
+    culturas = ['Pastagem', 'Lavoura mista pequena escala'];
+  }
+
+  /* ── Frota estimada ── */
+  var frotaTratores = area > 1000 ? '4–6 tratores' : area > 400 ? '2–3 tratores' : area > 100 ? '1–2 tratores' : '1 trator pequeno';
+  var colheitadeira = area > 300 && !regiaoPec ? '1–2 colheitadeiras' : '–';
+  var pulverizador  = area > 200 && !regiaoPec ? '1 pulverizador (tratorizado ou SP)' : '–';
+
+  /* ── Momento da safra ── */
+  var momentoSafra, recomTiming;
+  if (mes >= 7 && mes <= 9) { // ago–out = pré-plantio
+    momentoSafra  = '🌱 Pré-plantio (ago–out)';
+    recomTiming   = 'AGORA é o momento ideal: máquinas em preparo de solo, plantadeiras revisadas e consumo de diesel elevado. Visitar antes da janela fechar.';
+  } else if (mes >= 10 || mes <= 1) { // nov–jan = plantio/crescimento
+    momentoSafra  = '🌿 Plantio / crescimento (nov–jan)';
+    recomTiming   = 'Máquinas rodando forte. Foco em lubrificantes, graxas e reposição de diesel. Boa janela para proposta de abastecimento direto.';
+  } else if (mes >= 2 && mes <= 4) { // fev–abr = colheita
+    momentoSafra  = '🚜 Colheita (fev–abr)';
+    recomTiming   = 'Pico de consumo de diesel e lubrificantes. Abordagem direta: "Não pode ter máquina parada por falta de combustível."';
+  } else { // mai–jul = entressafra
+    momentoSafra  = '💤 Entressafra (mai–jul)';
+    recomTiming   = 'Momento de manutenção. Empurre graxas, óleos de câmbio e filtros. Fechar contrato de abastecimento para a próxima safra.';
+  }
+
+  /* ── Diesel estimado ── */
+  var dieselMin = area > 0 ? Math.round(area * 3) : 0;
+  var dieselMax = area > 0 ? Math.round(area * 5) : 0;
+  var dieselStr = area > 0 ? dieselMin.toLocaleString('pt-BR') + ' – ' + dieselMax.toLocaleString('pt-BR') + ' L/mês' : 'Não estimado (sem área)';
+
+  /* ── Produtos TRR recomendados ── */
+  var produtos = ['⛽ Óleo diesel a granel (entrega na fazenda)'];
+  if (area > 100 && !regiaoPec) {
+    produtos.push('🛢 Óleo de motor (15W40 agrícola)');
+    produtos.push('⚙️ Óleo de transmissão / hidráulico');
+    produtos.push('🟡 Graxa para rolamentos e articulações');
+  }
+  if (regiaoPec || area <= 100) {
+    produtos.push('🛢 Lubrificante motor trator pequeno');
+    produtos.push('🟡 Graxa para ordenha / currais');
+  }
+  if (area > 300 && !regiaoPec) {
+    produtos.push('🌾 Herbicidas / inseticidas (contato com distribuidores parceiros)');
+  }
+
+  /* ── CAR status extra hint ── */
+  var carHint = '';
+  if (tipo === 'car') {
+    if (p.status === 'PE') carHint = '<div class="pdl-ia-section"><div class="pdl-ia-lbl">⚠️ Alerta CAR</div><div class="pdl-ia-val" style="color:#92400e">CAR pendente — proprietário pode estar com dificuldades para financiamento. Abordagem de custo-benefício com pagamento à vista pode funcionar melhor.</div></div>';
+    else if (p.status === 'CA') carHint = '<div class="pdl-ia-section"><div class="pdl-ia-lbl">⚠️ Alerta CAR</div><div class="pdl-ia-val" style="color:#991b1b">CAR cancelado — verificar se área ainda está operando. Confirmar situação antes de avançar.</div></div>';
+  }
+
+  /* ── Sugestão de abordagem ── */
+  var potLabel = area > 1000 ? 'ALTO' : area > 200 ? 'MÉDIO' : 'BAIXO';
+  var abordagem;
+  if (area > 500) {
+    abordagem = '"Bom dia! Vi que o senhor tem uma propriedade de porte em '+esc(mun)+'. Trabalhamos com entrega de diesel direto na fazenda, sem burocracia. Posso fazer uma proposta de abastecimento semanal para fechar o custo da safra?"';
+  } else if (area > 100) {
+    abordagem = '"Boa tarde! Sou da TRR de Mozarlândia. O senhor já tem um parceiro para entregar diesel na porta da fazenda? Temos condições especiais para propriedades como a sua em '+esc(mun)+'."';
+  } else {
+    abordagem = '"Oi, bom dia! Trabalho com entrega de diesel e lubrificantes direto na fazenda. Para a propriedade de vocês, consigo já deixar o preço do litro mais competitivo do que buscar no posto. Posso dar uma passada?"';
+  }
+
+  /* ── Montar HTML ── */
+  return '<div class="pdl-ia-title">🤖 Análise TRR · '+esc(mun||uf)+'</div>' +
+
+    '<div class="pdl-ia-section"><div class="pdl-ia-lbl">🌿 Culturas estimadas</div>' +
+    '<div class="pdl-ia-val">'+culturas.map(function(c){ return '<span class="pdl-ia-chip">'+c+'</span>'; }).join('')+'</div></div>' +
+
+    '<div class="pdl-ia-section"><div class="pdl-ia-lbl">🚜 Frota estimada</div>' +
+    '<div class="pdl-ia-val">'+frotaTratores+(colheitadeira!=='–'?' · '+colheitadeira:'')+(pulverizador!=='–'?' · '+pulverizador:'')+'</div></div>' +
+
+    '<div class="pdl-ia-section"><div class="pdl-ia-lbl">📅 Safra atual</div>' +
+    '<div class="pdl-ia-val"><strong>'+momentoSafra+'</strong><br><span style="color:#374151;font-size:12px">'+recomTiming+'</span></div></div>' +
+
+    '<div class="pdl-ia-section"><div class="pdl-ia-lbl">⛽ Potencial diesel</div>' +
+    '<div class="pdl-ia-val"><strong>'+dieselStr+'</strong> &nbsp;<span class="pdl-ia-chip" style="background:'+(area>1000?'#fee2e2':area>200?'#fef3c7':'#f0f9ff')+';color:'+(area>1000?'#991b1b':area>200?'#92400e':'#0369a1')+'">Potencial '+potLabel+'</span></div></div>' +
+
+    '<div class="pdl-ia-section"><div class="pdl-ia-lbl">🛢 Produtos recomendados</div>' +
+    '<div class="pdl-ia-val">'+produtos.map(function(pr){ return '<div style="padding:2px 0;font-size:12px">'+pr+'</div>'; }).join('')+'</div></div>' +
+
+    carHint +
+
+    '<div class="pdl-ia-section"><div class="pdl-ia-lbl">💬 Sugestão de abordagem</div>' +
+    '<div class="pdl-ia-val" style="background:#f0fdf4;border-left:3px solid #16a34a;padding:10px 12px;border-radius:8px;font-style:italic;font-size:12px;line-height:1.5;color:#14532d">'+abordagem+'</div></div>';
+}
+
+async function showProspecNearbyCar(p) {
+  closeProspecDetail();
+  var sheet = document.getElementById('prospec-sheet');
+  var listEl = document.getElementById('prospec-sheet-list');
+  var titleEl = document.getElementById('prospec-sheet-title');
+  var cLat = +p.lat, cLon = +p.lon;
+  var excludeCod = p.cod;
+  titleEl.textContent = '🔭 Buscando CAR em ' + prospecKm + 'km…';
+  listEl.innerHTML = '<div class="empty"><div class="spin"></div></div>';
+  sheet.style.display = 'flex';
+  try {
+    var res = await SB.rpc('trr_car_geo', { p_uf: null, p_mun: null, p_status: null, p_lat: cLat, p_lon: cLon, p_km: prospecKm });
+    if (res.error) throw res.error;
+    var props = parseGeoData(res.data);
+    var nearby = props
+      .filter(function(q){ return q.cod !== excludeCod; })
+      .map(function(q){ return Object.assign({}, q, { _dist: haversineKm(cLat, cLon, +q.lat, +q.lon) }); })
+      .sort(function(a,b){ return a._dist - b._dist; })
+      .slice(0, 50);
+    titleEl.textContent = '🔭 ' + nearby.length + ' imóveis CAR em ' + prospecKm + 'km';
+    if (!nearby.length) {
+      listEl.innerHTML = '<div class="empty" style="padding:20px">Sem imóveis CAR nesse raio.</div>';
+      return;
+    }
+    _nearbyCarStore = nearby;
+    listEl.innerHTML = nearby.map(function(q, idx) {
+      var c = q.status === 'AT' ? '#16a34a' : q.status === 'PE' ? '#d97706' : '#dc2626';
+      var ha = q.area ? Number(q.area).toFixed(0)+' ha' : '–';
+      var pot = q.area > 500 ? 'score-high' : q.area > 100 ? 'score-med' : 'score-low';
+      var potL = q.area > 500 ? 'Alto' : q.area > 100 ? 'Médio' : 'Baixo';
+      return '<div class="prospec-item" onclick="showCarDetail(_nearbyCarStore['+idx+'])">'+
+        '<div class="prospec-dot" style="background:'+c+'"></div>'+
+        '<div class="prospec-info"><div class="prospec-name">'+esc(q.nom||q.cod||'Imóvel')+'</div>'+
+        '<div class="prospec-meta">'+esc(q.mun||'')+' · '+ha+'</div></div>'+
+        '<div class="prospec-dist">'+q._dist.toFixed(1)+'km</div>'+
+        '<div class="prospec-score '+pot+'">'+potL+'</div></div>';
+    }).join('');
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty">Erro: ' + esc(e.message||'falha') + '</div>';
+  }
+}
+
+function openVisitaFromCar(p) {
+  closeProspecDetail();
+  openVisitaModal({ cli: p.nom || p.cod || p.cli || '', razao: p.nom || '' });
+}
+
+function prospecSearch(val) {
+  if (!prospecMap) return;
+  renderProspecMarkers(val.trim() || null);
+}
+
+function setProspecKm(km, btn) {
+  prospecKm = km;
+  document.querySelectorAll('.prospec-km-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  if (prospecSelectedCli) showProspecNearby(prospecSelectedCli);
+}
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  var R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function showProspecNearby(cli) {
+  prospecSelectedCli = cli;
+  var sheet = document.getElementById('prospec-sheet');
+  var listEl = document.getElementById('prospec-sheet-list');
+  var titleEl = document.getElementById('prospec-sheet-title');
+  var cLat = +cli.lat, cLon = +cli.lon;
+  titleEl.textContent = '🎯 Buscando CAR em ' + prospecKm + 'km…';
+  listEl.innerHTML = '<div class="empty"><div class="spin"></div></div>';
+  sheet.style.display = 'flex';
+  try {
+    var res = await SB.rpc('trr_car_geo', { p_uf: null, p_mun: null, p_status: null, p_lat: cLat, p_lon: cLon, p_km: prospecKm });
+    if (res.error) throw res.error;
+    var props = parseGeoData(res.data);
+    var nearby = props
+      .map(function(p){ return Object.assign({}, p, { _dist: haversineKm(cLat, cLon, +p.lat, +p.lon) }); })
+      .sort(function(a, b){ return a._dist - b._dist; })
+      .slice(0, 50);
+    titleEl.textContent = '🎯 ' + nearby.length + ' CAR em ' + prospecKm + 'km — ' + (cli.cli || cli.razao || 'Cliente').slice(0, 25);
+    if (!nearby.length) {
+      listEl.innerHTML = '<div class="empty" style="padding:20px">Sem imóveis CAR nesse raio.</div>';
+      return;
+    }
+    _nearbyCarStore = nearby;
+    listEl.innerHTML = nearby.map(function(p, idx) {
+      var c = p.status === 'AT' ? '#16a34a' : p.status === 'PE' ? '#d97706' : '#dc2626';
+      var ha = p.area ? Number(p.area).toFixed(0) + ' ha' : '–';
+      var score = p.area > 500 ? 'score-high' : p.area > 100 ? 'score-med' : 'score-low';
+      var scoreLabel = p.area > 500 ? 'Alto' : p.area > 100 ? 'Médio' : 'Baixo';
+      return '<div class="prospec-item" onclick="closeProspecSheet();showCarDetail(_nearbyCarStore['+idx+'])">'
+        + '<div class="prospec-dot" style="background:' + c + '"></div>'
+        + '<div class="prospec-info"><div class="prospec-name">' + esc(p.nom || p.cod || 'Imóvel') + '</div>'
+        + '<div class="prospec-meta">' + esc(p.mun || '') + ' · ' + ha + '</div></div>'
+        + '<div class="prospec-dist">' + p._dist.toFixed(1) + ' km</div>'
+        + '<div class="prospec-score ' + score + '">' + scoreLabel + '</div>'
+        + '</div>';
+    }).join('');
+    if (prospecMap) prospecMap.setView([cLat, cLon], 12);
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty">Erro: ' + esc(e.message||'falha') + '</div>';
+  }
+}
+
+function closeProspecSheet() {
+  document.getElementById('prospec-sheet').style.display = 'none';
+  prospecSelectedCli = null;
+}
+
+function prospecFlyTo(lat, lon) {
+  if (prospecMap) { prospecMap.setView([+lat, +lon], 15); closeProspecSheet(); }
+}
+
+/* ─── VISITAS ─── */
+var visitPhotos = [], audioBlob = null, mediaRecorder = null, audioChunks = [], recInterval = null, recSeconds = 0;
+
+function openVisitaModal(cli) {
+  visitPhotos = []; audioBlob = null; mediaRecorder = null; audioChunks = [];
+  document.getElementById('visit-nome').value = cli ? (cli.cli || cli.razao || '') : '';
+  document.getElementById('visit-contato').value = '';
+  document.getElementById('visit-notas').value = '';
+  document.getElementById('visit-audio-player').style.display = 'none';
+  document.getElementById('visit-audio-player').src = '';
+  document.getElementById('visit-rec-btn').textContent = '🎙 Gravar';
+  document.getElementById('visit-rec-btn').classList.remove('recording');
+  document.getElementById('visit-rec-timer').textContent = '';
+  renderVisitaFotos();
+  // GPS info
+  if (lastGpsPos) {
+    document.getElementById('visit-gps-info').textContent = '📍 ' + lastGpsPos.lat.toFixed(5) + ', ' + lastGpsPos.lon.toFixed(5);
+  } else {
+    document.getElementById('visit-gps-info').textContent = '📍 Localização não capturada';
+    // Try to get position
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        lastGpsPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        document.getElementById('visit-gps-info').textContent = '📍 ' + lastGpsPos.lat.toFixed(5) + ', ' + lastGpsPos.lon.toFixed(5);
+      }, function(){}, { enableHighAccuracy: true, timeout: 8000 });
+    }
+  }
+  document.getElementById('visita-modal').classList.add('open');
+}
+
+function closeVisitaModal() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); clearInterval(recInterval); }
+  document.getElementById('visita-modal').classList.remove('open');
+}
+
+function visitaFotoChange(input) {
+  Array.from(input.files).forEach(function(file) {
+    if (visitPhotos.length >= 3) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      // Compactar: criar canvas e redimensionar
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var maxDim = 800;
+        var w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        visitPhotos.push(canvas.toDataURL('image/jpeg', 0.7));
+        renderVisitaFotos();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderVisitaFotos() {
+  var row = document.getElementById('visit-fotos-row');
+  var html = '';
+  visitPhotos.forEach(function(b64, i) {
+    html += '<div class="visita-foto-wrap"><img class="visita-foto-thumb" src="' + b64 + '">'
+      + '<button class="visita-foto-del" onclick="visitaFotoDel(' + i + ')">×</button></div>';
+  });
+  if (visitPhotos.length < 3) {
+    html += '<label class="visita-add-foto"><input type="file" accept="image/*" capture="environment" onchange="visitaFotoChange(this)" style="display:none" multiple>'
+      + '<span style="text-align:center">📷<br><small>Adicionar</small></span></label>';
+  }
+  row.innerHTML = html;
+}
+
+function visitaFotoDel(i) {
+  visitPhotos.splice(i, 1);
+  renderVisitaFotos();
+}
+
+function toggleAudioRec() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    stopAudioRec();
+  } else {
+    startAudioRec();
+  }
+}
+
+function startAudioRec() {
+  if (!navigator.mediaDevices) { alert('Gravação de áudio não suportada neste dispositivo.'); return; }
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = function() {
+      audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      var url = URL.createObjectURL(audioBlob);
+      var player = document.getElementById('visit-audio-player');
+      player.src = url; player.style.display = 'block';
+      stream.getTracks().forEach(function(t){ t.stop(); });
+    };
+    mediaRecorder.start();
+    recSeconds = 0;
+    document.getElementById('visit-rec-btn').textContent = '⏹ Parar';
+    document.getElementById('visit-rec-btn').classList.add('recording');
+    recInterval = setInterval(function() {
+      recSeconds++;
+      var m = Math.floor(recSeconds/60), s = recSeconds%60;
+      document.getElementById('visit-rec-timer').textContent = m + ':' + (s<10?'0':'')+s;
+      if (recSeconds >= 180) stopAudioRec(); // max 3 min
+    }, 1000);
+  }).catch(function(e) { alert('Não foi possível acessar o microfone: ' + e.message); });
+}
+
+function stopAudioRec() {
+  clearInterval(recInterval);
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  document.getElementById('visit-rec-btn').textContent = '🎙 Re-gravar';
+  document.getElementById('visit-rec-btn').classList.remove('recording');
+}
+
+async function saveVisita() {
+  var nome = document.getElementById('visit-nome').value.trim() || 'Sem nome';
+  var contato = document.getElementById('visit-contato').value.trim();
+  var notas = document.getElementById('visit-notas').value.trim();
+  var ts = new Date().toISOString();
+  var lat = lastGpsPos ? lastGpsPos.lat : null;
+  var lon = lastGpsPos ? lastGpsPos.lon : null;
+
+  var audioB64 = null;
+  if (audioBlob) {
+    audioB64 = await new Promise(function(res) {
+      var r = new FileReader(); r.onload = function(e){ res(e.target.result); }; r.readAsDataURL(audioBlob);
+    });
+  }
+
+  var visita = { id: Date.now(), ts: ts, nome: nome, contato: contato, notas: notas, lat: lat, lon: lon, fotos: visitPhotos, audio: audioB64 };
+  var lista = JSON.parse(localStorage.getItem('trr_visitas') || '[]');
+  lista.unshift(visita);
+  // Limitar tamanho: remover audios antigos se > 30 visitas
+  if (lista.length > 30) lista = lista.slice(0, 30);
+  try { localStorage.setItem('trr_visitas', JSON.stringify(lista)); } catch(e) {
+    // localStorage cheio: salvar sem fotos/audio
+    lista[0].fotos = []; lista[0].audio = null;
+    try { localStorage.setItem('trr_visitas', JSON.stringify(lista)); } catch(e2) {}
+  }
+
+  // Visita salva no localStorage acima (sincronização com servidor via bot/backoffice)
+
+  closeVisitaModal();
+  // Mostrar marcador no mapa
+  if (lat && lon && prospecMap) {
+    L.circleMarker([lat, lon], { radius: 10, color: '#10b981', fillColor: '#10b981', fillOpacity: .9, weight: 2 })
+      .addTo(prospecMap).bindPopup('📸 Visita: ' + esc(nome)).openPopup();
+  }
+  alert('✅ Visita salva!\n' + nome + (contato ? '\n' + contato : ''));
+}
+
+window._mobVisitas = [];
+
+function mobRenderComplementos(v, vi) {
+  var comps = v.complementos || [];
+  var html = '';
+  if (comps.length) {
+    html += '<div class="visita-comp-wrap">'
+      + '<div style="font-size:10.5px;font-weight:900;color:#6d28d9;margin-bottom:5px">📝 Complementos (' + comps.length + ')</div>'
+      + comps.map(function(c) {
+          var dt = c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '';
+          return '<div class="visita-comp-item">'
+            + '<div class="visita-comp-hdr">' + esc(c.criado_por || c.email || '') + (dt ? ' · ' + dt : '') + '</div>'
+            + esc(c.texto || '') + '</div>';
+        }).join('')
+      + '</div>';
+  }
+  html += '<button class="visita-comp-btn" onclick="mobToggleCompForm(' + vi + ')">➕ Complementar</button>'
+    + '<div class="visita-comp-form" id="mob-comp-' + vi + '">'
+    + '<textarea class="visita-comp-ta" id="mob-comp-ta-' + vi + '" placeholder="Escreva o complemento…"></textarea>'
+    + '<button class="visita-comp-save" onclick="mobEnviarComp(' + vi + ')">Salvar complemento</button>'
+    + '</div>';
+  return html;
+}
+
+function mobToggleCompForm(vi) {
+  var f = document.getElementById('mob-comp-' + vi);
+  if (!f) return;
+  f.classList.toggle('open');
+  if (f.classList.contains('open')) {
+    var ta = document.getElementById('mob-comp-ta-' + vi);
+    if (ta) ta.focus();
+  }
+}
+
+async function mobEnviarComp(vi) {
+  var v = window._mobVisitas[vi];
+  if (!v || !v.id) { alert('Visita sem ID — não é possível complementar.'); return; }
+  var ta = document.getElementById('mob-comp-ta-' + vi);
+  var texto = ta ? ta.value.trim() : '';
+  if (!texto) { alert('Escreva o complemento antes de salvar.'); return; }
+  var btn = document.querySelector('#mob-comp-' + vi + ' .visita-comp-save');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    var res = await SB.rpc('trr_visita_complementar', { p_token: SESSION.token, p_id: v.id, p_texto: texto });
+    if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+    if (!v.complementos) v.complementos = [];
+    v.complementos.push(res.data.complemento);
+    ta.value = '';
+    renderVisitasList();
+  } catch(e) {
+    alert('Erro: ' + (e.message || String(e)));
+    if (btn) { btn.disabled = false; btn.textContent = 'Salvar complemento'; }
+  }
+}
+
+async function renderVisitasList() {
+  var countEl = document.getElementById('visitas-count');
+  var listEl = document.getElementById('visitas-list');
+  if (!SESSION) return;
+
+  // ─── ADMIN: carrega do Supabase com complementos ────────────────────────────
+  if (SESSION.role === 'admin') {
+    listEl.innerHTML = '<div class="empty"><div class="empty-ico">⏳</div>Carregando visitas…</div>';
+    try {
+      var res = await SB.rpc('trr_visitas_listar', { p_token: SESSION.token, p_lim: 200 });
+      var lista = (res.data && !res.data.error) ? res.data : [];
+      window._mobVisitas = lista;
+      if (countEl) countEl.textContent = lista.length + (lista.length === 1 ? ' visita registrada' : ' visitas registradas');
+      if (!lista.length) {
+        listEl.innerHTML = '<div class="empty"><div class="empty-ico">📋</div>Nenhuma visita registrada ainda</div>';
+        return;
+      }
+      listEl.innerHTML = lista.map(function(v, vi) {
+        var dt = v.created_at ? new Date(v.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+        var fotos = (v.fotos || []).slice(0,3).map(function(f){ return '<img class="visita-item-foto" src="' + (f.url||f) + '">'; }).join('');
+        return '<div class="visita-item">'
+          + '<div class="visita-item-hdr"><div class="visita-item-nome">🏡 ' + esc(v.nome_fazenda || v.nome_cliente || '—') + '</div>'
+          + '<div class="visita-item-dt">' + dt + '</div></div>'
+          + (v.criado_por ? '<div class="visita-item-meta">👤 ' + esc(v.criado_por) + '</div>' : '')
+          + (v.nome_cliente ? '<div class="visita-item-meta">🤝 ' + esc(v.nome_cliente) + '</div>' : '')
+          + (v.lat ? '<div class="visita-item-meta">📍 ' + Number(v.lat).toFixed(4) + ', ' + Number(v.lon).toFixed(4) + '</div>' : '')
+          + (v.resumo ? '<div class="visita-item-notas">' + esc(v.resumo) + '</div>' : '')
+          + (fotos ? '<div class="visita-item-fotos">' + fotos + '</div>' : '')
+          + mobRenderComplementos(v, vi)
+          + '</div>';
+      }).join('');
+    } catch(e) {
+      listEl.innerHTML = '<div class="empty"><div class="empty-ico">❌</div>Erro ao carregar visitas.</div>';
+    }
+    return;
+  }
+
+  // ─── VENDEDOR: Supabase (visitas salvas no sistema) + localStorage (campo) ──
+  listEl.innerHTML = '<div class="empty"><div class="empty-ico">⏳</div>Carregando visitas…</div>';
+  var sbLista = [];
+  try {
+    var res = await SB.rpc('trr_visitas_listar', { p_token: SESSION.token, p_lim: 200 });
+    sbLista = (res.data && !res.data.error) ? res.data : [];
+  } catch(e) {}
+  window._mobVisitas = sbLista;
+
+  var localLista = JSON.parse(localStorage.getItem('trr_visitas') || '[]');
+  var total = sbLista.length + localLista.length;
+
+  if (countEl) countEl.textContent = total + (total === 1 ? ' visita registrada' : ' visitas registradas');
+  if (!total) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-ico">📋</div>Nenhuma visita registrada ainda</div>';
+    return;
+  }
+
+  var html = '';
+
+  // Supabase: com complemento
+  if (sbLista.length) {
+    html += '<div style="font-size:11px;font-weight:900;color:#10243e;padding:4px 0 8px;text-transform:uppercase;letter-spacing:.5px">Visitas no sistema</div>';
+    html += sbLista.map(function(v, vi) {
+      var dt = v.created_at ? new Date(v.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+      var fotos = (v.fotos || []).slice(0,3).map(function(f){ return '<img class="visita-item-foto" src="' + (f.url||f) + '">'; }).join('');
+      return '<div class="visita-item">'
+        + '<div class="visita-item-hdr"><div class="visita-item-nome">🏡 ' + esc(v.nome_fazenda || v.nome_cliente || '—') + '</div>'
+        + '<div class="visita-item-dt">' + dt + '</div></div>'
+        + (v.nome_cliente ? '<div class="visita-item-meta">🤝 ' + esc(v.nome_cliente) + '</div>' : '')
+        + (v.lat ? '<div class="visita-item-meta">📍 ' + Number(v.lat).toFixed(4) + ', ' + Number(v.lon).toFixed(4) + '</div>' : '')
+        + (v.resumo ? '<div class="visita-item-notas">' + esc(v.resumo) + '</div>' : '')
+        + (fotos ? '<div class="visita-item-fotos">' + fotos + '</div>' : '')
+        + mobRenderComplementos(v, vi)
+        + '</div>';
+    }).join('');
+  }
+
+  // localStorage: sem complemento (apenas captura de campo)
+  if (localLista.length) {
+    if (sbLista.length) html += '<div style="font-size:11px;font-weight:900;color:#10243e;padding:12px 0 8px;text-transform:uppercase;letter-spacing:.5px">Capturadas no campo (local)</div>';
+    html += localLista.map(function(v) {
+      var dt = new Date(v.ts).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+      var fotos = (v.fotos || []).slice(0,3).map(function(b){ return '<img class="visita-item-foto" src="' + b + '">'; }).join('');
+      var temAudio = v.audio ? '🎙 ' : '';
+      return '<div class="visita-item">'
+        + '<div class="visita-item-hdr"><div class="visita-item-nome">🏡 ' + esc(v.nome) + '</div>'
+        + '<div class="visita-item-dt">' + dt + '</div></div>'
+        + (v.contato ? '<div class="visita-item-meta">👤 ' + esc(v.contato) + '</div>' : '')
+        + (v.lat ? '<div class="visita-item-meta">📍 ' + Number(v.lat).toFixed(4) + ', ' + Number(v.lon).toFixed(4) + '</div>' : '')
+        + (temAudio ? '<div class="visita-item-meta">' + temAudio + 'Áudio gravado</div>' : '')
+        + (fotos ? '<div class="visita-item-fotos">' + fotos + '</div>' : '')
+        + (v.notas ? '<div class="visita-item-notas">' + esc(v.notas) + '</div>' : '')
+        + '</div>';
+    }).join('');
+  }
+
+  listEl.innerHTML = html;
+}
+
+/* ─── CNPJ ─── */
+function cnpjMask(el) {
+  var v = el.value.replace(/\D/g, '').slice(0, 14);
+  if (v.length > 12) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  else if (v.length > 8) v = v.replace(/^(\d{2})(\d{3})(\d{3})(\d+)$/, '$1.$2.$3/$4');
+  else if (v.length > 5) v = v.replace(/^(\d{2})(\d{3})(\d+)$/, '$1.$2.$3');
+  else if (v.length > 2) v = v.replace(/^(\d{2})(\d+)$/, '$1.$2');
+  el.value = v;
+}
+
+async function lookupCnpj() {
+  var raw = (document.getElementById('cnpj-inp').value || '').replace(/\D/g, '');
+  if (raw.length !== 14) { alert('CNPJ deve ter 14 dígitos.'); return; }
+  document.getElementById('cnpj-result').innerHTML = '<div class="cnpj-loading"><div class="spin"></div>Consultando Receita Federal…</div>';
+  try {
+    var r = await fetch('https://minhareceita.org/' + raw);
+    if (!r.ok) {
+      var err = {}; try { err = await r.json(); } catch(e2) {}
+      document.getElementById('cnpj-result').innerHTML = '<div class="cnpj-err">❌ ' + (err.message || 'CNPJ não encontrado.') + '</div>';
+      return;
+    }
+    var d = await r.json();
+    renderCnpjMob(d);
+    cnpjHistory.unshift({ cnpj: raw, razao: d.razao_social });
+    if (cnpjHistory.length > 8) cnpjHistory.pop();
+    renderCnpjHist();
+  } catch(e) {
+    document.getElementById('cnpj-result').innerHTML = '<div class="cnpj-err">❌ Erro de conexão.</div>';
+  }
+}
+
+function cnpjFmt(n) { return n ? String(n).replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : ''; }
+
+function renderCnpjMob(d) {
+  var sitColors = { ATIVA: '#10b981', BAIXADA: '#ef4444', SUSPENSA: '#f59e0b', INAPTA: '#ef4444' };
+  var sit = d.descricao_situacao_cadastral || '';
+  var sitC = sitColors[sit] || '#6b7785';
+  var tel = (d.ddd_telefone_1 || '').replace(/^(\d{2})(\d+)$/, '($1) $2');
+  var addr = [d.descricao_tipo_de_logradouro, d.logradouro, d.numero].filter(Boolean).join(' ')
+    + (d.bairro ? ', '+d.bairro : '') + (d.municipio ? ', '+d.municipio : '') + (d.uf ? '/'+d.uf : '')
+    + (d.cep ? ' · CEP '+String(d.cep).replace(/(\d{5})(\d{3})/, '$1-$2') : '');
+  var capital = d.capital_social ? 'R$ '+Number(d.capital_social).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
+  var iniAtiv = d.data_inicio_atividade ? new Date(d.data_inicio_atividade+'T12:00:00').toLocaleDateString('pt-BR') : '';
+
+  function rf(ico, lbl, val) {
+    if (!val) return '';
+    return '<div class="cnpj-row-field"><span class="cnpj-row-ico">'+ico+'</span>'
+      +'<div class="cnpj-row-right"><div class="cnpj-row-lbl">'+lbl+'</div><div class="cnpj-row-val">'+val+'</div></div></div>';
+  }
+
+  var qsaHtml = '';
+  if (d.qsa && d.qsa.length) {
+    qsaHtml = '<div class="cnpj-row-field" style="background:#f8f9fb;align-items:center">'
+      +'<span class="cnpj-row-ico">👥</span>'
+      +'<div class="cnpj-row-right"><div class="cnpj-row-lbl">Quadro Societário</div></div></div>'
+      +'<div class="cnpj-qsa-list">'
+      + d.qsa.map(function(s){
+          return '<div class="cnpj-qsa-item"><div class="cnpj-qsa-name">'+esc(s.nome_socio)+'</div>'
+               +'<div class="cnpj-qsa-role">'+esc(s.qualificacao_socio)+'</div></div>';
+        }).join('') + '</div>';
+  }
+
+  var html = '<div class="cnpj-card">'
+    +'<div class="cnpj-top">'
+    +'<div style="flex:1"><div class="cnpj-razao">'+esc(d.razao_social||'–')+'</div>'
+    +(d.nome_fantasia ? '<div class="cnpj-fantasia">'+esc(d.nome_fantasia)+'</div>' : '')+'</div>'
+    +'<span class="sit-badge" style="background:'+sitC+'">'+sit+'</span>'
+    +'</div>'
+    + rf('🔢','CNPJ', cnpjFmt(d.cnpj))
+    + rf('⚙️','CNAE Principal', (d.cnae_fiscal ? d.cnae_fiscal+' — ' : '') + (d.cnae_fiscal_descricao||''))
+    + rf('🏛','Natureza Jurídica', d.natureza_juridica)
+    + rf('📦','Porte', d.porte)
+    + rf('💰','Capital Social', capital)
+    + rf('📅','Início de Atividade', iniAtiv)
+    + rf('📍','Endereço', addr)
+    + (tel ? '<div class="cnpj-row-field"><span class="cnpj-row-ico">📞</span>'
+      +'<div class="cnpj-row-right"><div class="cnpj-row-lbl">Telefone</div>'
+      +'<div class="cnpj-row-val"><a href="tel:'+d.ddd_telefone_1.replace(/\D/g,'')+'" style="color:var(--acc)">'+tel+'</a></div></div></div>' : '')
+    + (d.email ? '<div class="cnpj-row-field"><span class="cnpj-row-ico">✉️</span>'
+      +'<div class="cnpj-row-right"><div class="cnpj-row-lbl">E-mail</div>'
+      +'<div class="cnpj-row-val"><a href="mailto:'+d.email+'" style="color:var(--acc)">'+d.email+'</a></div></div></div>' : '')
+    + qsaHtml
+    +'<div class="cnpj-source">Fonte: minhareceita.org · Receita Federal · '+new Date().toLocaleDateString('pt-BR')+'</div>'
+    +'</div>';
+
+  document.getElementById('cnpj-result').innerHTML = html;
+}
+
+function renderCnpjHist() {
+  if (!cnpjHistory.length) return;
+  document.getElementById('cnpj-hist-wrap').style.display = '';
+  document.getElementById('cnpj-hist-list').innerHTML = cnpjHistory.map(function(h){
+    return '<div class="cnpj-hist-item" onclick="cnpjFromHist(\''+h.cnpj+'\')">'
+      +'<span class="cnpj-hist-cnpj">'+cnpjFmt(h.cnpj)+'</span>'
+      +'<span class="cnpj-hist-razao">'+(h.razao||'')+'</span></div>';
+  }).join('');
+}
+
+function cnpjFromHist(cnpj) {
+  document.getElementById('cnpj-inp').value = cnpjFmt(cnpj);
+  lookupCnpj();
+}
+
+/* ─── UTILS ─── */
+function set$(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtN(n) { return Number(n||0).toLocaleString('pt-BR'); }
+function shortA(s) {
+  if (!s) return '–';
+  return s.replace('Comércio varejista','Com. varejista').replace('Comércio atacadista','Com. atacadista')
+          .replace('Atividades de apoio','Apoio').replace('Fabricação de','Fab.');
+}
+
+/* ─── BOOT ─── */
+(async function() {
+  if (await restoreSession()) {
+    showApp();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+})();
+</script>
+</body>
+</html>

@@ -807,7 +807,10 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
       <button class="flt-btn" id="flt-btn-adv" onclick="openFiltros()">⚙️ Filtros<span class="flt-count"></span></button>
     </div>
     <div class="adv-legend">
-      <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#7c3aed;border:2px solid #fff;box-shadow:0 0 0 1.5px #7c3aed"></div>Cliente TRR</div>
+      <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#7c3aed;border:2px solid #fff;box-shadow:0 0 0 1.5px #7c3aed"></div>Cliente Ativo</div>
+      <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#dc2626;border:2px solid #fff;box-shadow:0 0 0 1.5px #dc2626"></div>Inativo Curva A</div>
+      <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#ea580c;border:2px solid #fff;box-shadow:0 0 0 1.5px #ea580c"></div>Inativo Curva B</div>
+      <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#d97706;border:2px solid #fff;box-shadow:0 0 0 1.5px #d97706"></div>Inativo Curva C</div>
       <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#e0762c"></div>CAR Ativo</div>
       <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#c9980a"></div>CAR Pendente</div>
       <div class="adv-leg-item"><div class="adv-leg-dot" style="background:#a4243b"></div>CAR Cancelado</div>
@@ -1875,24 +1878,48 @@ function renderMunMarkers() {
 function renderPropMarkers() {
   var props = geoData.props || [];
 
+  // Agrupar por coordenada para jitter
+  var propGroups = {};
   props.forEach(function(p) {
     if (!p.lat || !p.lon) return;
-    var color = '#7c3aed';
-    var av = p.ativa === true || p.ativa === 'true';
+    var key = p.lat + '|' + p.lon;
+    if (!propGroups[key]) propGroups[key] = [];
+    propGroups[key].push(p);
+  });
+  // Ordenar: ativos primeiro, inativos acima
+  var sortedProps = props.slice().sort(function(a,b){ return _inatPriority(a) - _inatPriority(b); });
 
-    var circle = L.circleMarker([p.lat, p.lon], {
-      radius: 7,
+  sortedProps.forEach(function(p) {
+    if (!p.lat || !p.lon) return;
+    var key = p.lat + '|' + p.lon;
+    var grp = propGroups[key] || [p];
+    var idx = grp.indexOf(p);
+    var coords = advJitterCoords(Number(p.lat), Number(p.lon), idx, grp.length);
+
+    var av = p.ativa === true || p.ativa === 'true';
+    var inativo = p.inativo_90d === true || p.inativo_90d === 'true';
+    var curva = p.curva_abc_inativo || '';
+    var color = '#7c3aed';
+    if (inativo) {
+      if (curva === 'A') color = '#dc2626';
+      else if (curva === 'B') color = '#ea580c';
+      else color = '#d97706';
+    }
+
+    var circle = L.circleMarker(coords, {
+      radius: inativo ? 8 : 7,
       fillColor: color,
       color: '#fff',
-      weight: 1,
+      weight: inativo ? 2 : 1,
       opacity: 1,
-      fillOpacity: av ? 0.8 : 0.3
+      fillOpacity: inativo ? 0.9 : (av ? 0.8 : 0.3)
     }).addTo(mapLayers);
 
     circle.bindTooltip(
       '<b>' + esc(p.prop || '–') + '</b><br>' +
       esc(p.cli || '–') + '<br>' +
-      p.mun + ' · ' + Number(p.dist).toFixed(0) + ' km',
+      p.mun + ' · ' + Number(p.dist).toFixed(0) + ' km' +
+      (inativo ? '<br><span style="color:'+color+';font-weight:700">⚠ Inativo +90d · Curva '+curva+'</span>' : ''),
       { sticky: true }
     );
 
@@ -1905,6 +1932,7 @@ function renderPropMarkers() {
         'Dist. ao TRR: <b>' + Number(p.dist).toFixed(0) + ' km</b> · ' + (p.faixa || '–') + '<br>' +
         'Produtor rural: ' + (p.prod ? 'Sim' : 'Não') + '<br>' +
         'Status: <span class="lp-bd ' + (av ? 'g' : 'n') + '" style="float:none;display:inline-block">' + (av ? 'Ativa' : 'Inativa') + '</span>' +
+        (inativo ? '<br><span style="color:'+color+';font-weight:700;font-size:12px">⚠ Sem compra há +90 dias · Curva '+curva+'</span>' : '') +
       '</div>',
       { maxWidth: 300 }
     );
@@ -2161,6 +2189,8 @@ async function initAdvMap() {
   renderAdvClientes();
   advClickLayer = L.layerGroup().addTo(advMap);
   advMap.on('click', function(e){ advShowNearby(e.latlng.lat, e.latlng.lng); });
+  // Re-renderiza clientes ao mudar zoom (jitter adaptativo)
+  advMap.on('zoomend', function(){ renderAdvClientes(); });
 }
 
 function haversineKm(lat1, lon1, lat2, lon2) {
@@ -2181,30 +2211,157 @@ function setAdvRadius(km) {
   if (window._advCurrentClient) advSelectClient(window._advCurrentClient);
 }
 
+// Jitter: espalha clientes sobrepostos em aneis (apenas zoom alto > ADV_CLUSTER_ZOOM)
+var ADV_CLUSTER_ZOOM = 9; // abaixo deste zoom, usa clusters com contagem
+
+function advJitterCoords(lat, lon, idx, total, zoom) {
+  if (total <= 1) return [lat, lon];
+  var z = zoom || (advMap ? advMap.getZoom() : 10);
+  // 12px de separação visual, mínimo 300m e máximo 3km por anel
+  var degPerPx = 360 / (256 * Math.pow(2, z));
+  var spreadDeg = Math.max(0.003, Math.min(degPerPx * 12, 0.027));
+  var ringCap = 8;
+  var ring = Math.floor(idx / ringCap) + 1;
+  var pos  = idx % ringCap;
+  var angle = (2 * Math.PI * pos / Math.min(ringCap, total)) + (ring * 0.7);
+  var cosLat = Math.cos(lat * Math.PI / 180) || 1;
+  return [lat + spreadDeg * ring * Math.cos(angle), lon + spreadDeg * ring * Math.sin(angle) / cosLat];
+}
+
+// Cor de prioridade do cluster (pior inativo do grupo vence)
+function advGroupColor(group) {
+  var hasA = group.some(function(p){ return p._curva === 'A' && p._inativo; });
+  var hasB = group.some(function(p){ return p._curva === 'B' && p._inativo; });
+  var hasC = group.some(function(p){ return p._inativo; });
+  if (hasA) return { fill: '#dc2626', text: '#fff', border: '#991b1b' };
+  if (hasB) return { fill: '#ea580c', text: '#fff', border: '#9a3412' };
+  if (hasC) return { fill: '#d97706', text: '#fff', border: '#92400e' };
+  return { fill: '#7c3aed', text: '#fff', border: '#5b21b6' };
+}
+
+function _inatPriority(p) {
+  // ativos renderizam primeiro (abaixo), inativos por último (acima)
+  var inativo = p._inativo !== undefined ? p._inativo : (p.inativo_90d === true || p.inativo_90d === 'true');
+  var curva   = p._curva   !== undefined ? p._curva   : (p.curva_abc_inativo || '');
+  if (!inativo) return 0;
+  if (curva === 'C') return 1;
+  if (curva === 'B') return 2;
+  return 3; // Curva A fica no topo
+}
+
 function renderAdvClientes() {
   if (!advCliLayer || !geoData) return;
   advCliLayer.clearLayers();
   var props = geoData.props || [];
-  var count = 0;
-  props.forEach(function(p) {
-    if (!p.lat || !p.lon) return;
-    if (_advValeFilter && !advIsVale(p.mun)) return;
-    if (!fMatchCli(p)) return;
-    count++;
-    var av = p.ativa === true || p.ativa === 'true';
-    var m = L.circleMarker([p.lat, p.lon], {
-      radius: 9, fillColor: '#7c3aed', color: '#fff',
-      weight: 2, opacity: 1, fillOpacity: av ? 0.95 : 0.45
-    }).addTo(advCliLayer);
-    m.bindTooltip(
-      '🟣 <b>'+esc(p.cli||'–')+'</b><br>'+esc(p.prop||'')+'<br>'+(p.mun||'')
-      +(p.dist ? ' · '+Number(p.dist).toFixed(0)+' km' : ''),
-      {sticky:true}
-    );
-    m.on('click', function(e){ L.DomEvent.stopPropagation(e); advSelectClient(p); });
+  var zoom = advMap ? advMap.getZoom() : 8;
+
+  // 1. Filtrar
+  var filtered = props.filter(function(p) {
+    if (!p.lat || !p.lon) return false;
+    if (_advValeFilter && !advIsVale(p.mun)) return false;
+    if (!fMatchCli(p)) return false;
+    return true;
   });
+
+  // 2. Enriquecer com flags
+  filtered.forEach(function(p) {
+    p._inativo = (p.inativo_90d === true || p.inativo_90d === 'true');
+    p._curva   = p.curva_abc_inativo || '';
+  });
+
+  // 3. Ordenar: ativos primeiro, Curva A inativos por último (rendem por cima)
+  filtered.sort(function(a, b) { return _inatPriority(a) - _inatPriority(b); });
+
+  // 4. Agrupar por coordenada
+  var groups = {};
+  filtered.forEach(function(p) {
+    var key = p.lat + '|' + p.lon;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(p);
+  });
+
+  if (zoom <= ADV_CLUSTER_ZOOM) {
+    // === MODO CLUSTER (zoom ≤ 9): um marcador com contagem por ponto único ===
+    Object.keys(groups).forEach(function(key) {
+      var grp = groups[key];
+      // Ordenado já — pega o primeiro para lat/lon
+      var rep = grp[0];
+      var lat = Number(rep.lat), lon = Number(rep.lon);
+      var cnt = grp.length;
+      var col = advGroupColor(grp);
+      // Conta inativos
+      var nInat = grp.filter(function(p){ return p._inativo; }).length;
+      var labelInat = nInat > 0 ? ' / ⚠'+nInat+' inativ.' : '';
+      // Tamanho proporcional ao log do total, mínimo 12px
+      var r = Math.max(12, Math.min(26, 10 + Math.ceil(Math.log2(cnt + 1) * 3)));
+      var icon = L.divIcon({
+        className: '',
+        iconSize: [r*2, r*2],
+        iconAnchor: [r, r],
+        html: '<div style="width:'+r*2+'px;height:'+r*2+'px;border-radius:50%;'
+            + 'background:'+col.fill+';border:2px solid '+col.border+';'
+            + 'display:flex;align-items:center;justify-content:center;'
+            + 'color:'+col.text+';font-size:'+(r > 16 ? 13 : 11)+'px;font-weight:700;'
+            + 'box-shadow:0 2px 4px rgba(0,0,0,0.35)">'+cnt+'</div>'
+      });
+      var m = L.marker([lat, lon], {icon: icon}).addTo(advCliLayer);
+      m.bindTooltip(
+        '<b>'+cnt+' clientes</b> · '+(rep.mun||'')
+        + (nInat > 0 ? '<br><span style="color:'+col.fill+';font-weight:700">⚠ '+nInat+' inativos +90d</span>' : '')
+        + '<br><span style="color:#64748b;font-size:11px">Zoom + para ver individualmente</span>',
+        {sticky: true}
+      );
+      // Clique no cluster: zoom in para ver os individuais
+      m.on('click', function(e) {
+        L.DomEvent.stopPropagation(e);
+        if (advMap) advMap.setView([lat, lon], ADV_CLUSTER_ZOOM + 1);
+      });
+    });
+  } else {
+    // === MODO INDIVIDUAL (zoom > 9): marcadores com jitter por anel ===
+    filtered.forEach(function(p) {
+      var key = p.lat + '|' + p.lon;
+      var grp = groups[key];
+      var idx = grp.indexOf(p);
+      var coords = advJitterCoords(Number(p.lat), Number(p.lon), idx, grp.length, zoom);
+
+      var inativo   = p._inativo;
+      var curva     = p._curva;
+      var fillColor = '#7c3aed';
+      var emoji     = '🟣';
+      if (inativo) {
+        if (curva === 'A') { fillColor = '#dc2626'; emoji = '🔴'; }
+        else if (curva === 'B') { fillColor = '#ea580c'; emoji = '🟠'; }
+        else { fillColor = '#d97706'; emoji = '🟡'; }
+      }
+
+      var m = L.circleMarker(coords, {
+        radius:      inativo ? 10 : 8,
+        fillColor:   fillColor,
+        color:       inativo ? '#fff' : 'rgba(255,255,255,0.7)',
+        weight:      inativo ? 2.5 : 1.5,
+        opacity:     1,
+        fillOpacity: inativo ? 0.95 : 0.82
+      }).addTo(advCliLayer);
+
+      var inativoTag = inativo
+        ? '<br><span style="color:'+fillColor+';font-weight:700">⚠ Inativo +90d · Curva '+curva+'</span>'
+        : '';
+      var grpTag = grp.length > 1
+        ? '<br><span style="color:#64748b;font-size:11px">'+grp.length+' clientes neste município</span>'
+        : '';
+      m.bindTooltip(
+        emoji+' <b>'+esc(p.cli||'–')+'</b><br>'+esc(p.prop||'')+'<br>'+(p.mun||'')
+        +(p.dist ? ' · '+Number(p.dist).toFixed(0)+' km' : '')
+        + inativoTag + grpTag,
+        {sticky: true}
+      );
+      m.on('click', function(e){ L.DomEvent.stopPropagation(e); advSelectClient(p); });
+    });
+  }
+
   var el = document.getElementById('adv-cli-count');
-  if (el) el.textContent = count+' clientes';
+  if (el) el.textContent = filtered.length+' clientes';
 }
 
 // Normaliza resposta do trr_car_geo — aceita {props:[]} OU array direto
@@ -3595,10 +3752,23 @@ async function campoRefresh(force) {
     };
 
     campoCliLayer.clearLayers();
+    // Ordenar inativos Curva A no topo
+    clis.sort(function(a,b){ return _inatPriority(a.p) - _inatPriority(b.p); });
     clis.forEach(function(x){
-      L.circleMarker([x.p.lat, x.p.lon], { radius:8, fillColor:'#7c3aed', color:'#fff', weight:2, fillOpacity:0.95 })
+      var p = x.p;
+      var inativo = p.inativo_90d === true || p.inativo_90d === 'true';
+      var curva   = p.curva_abc_inativo || '';
+      var cor = '#7c3aed';
+      var emoji = '\uD83D\uDFE3';
+      if (inativo) {
+        if (curva === 'A') { cor = '#dc2626'; emoji = '\uD83D\uDD34'; }
+        else if (curva === 'B') { cor = '#ea580c'; emoji = '\uD83D\uDFE0'; }
+        else { cor = '#d97706'; emoji = '\uD83D\uDFE1'; }
+      }
+      var inativoTag = inativo ? '<br><span style="color:'+cor+';font-weight:700">\u26A0 Inativo +90d \u00B7 Curva '+curva+'</span>' : '';
+      L.circleMarker([p.lat, p.lon], { radius: inativo ? 10 : 8, fillColor:cor, color:'#fff', weight:2, fillOpacity:0.95 })
         .addTo(campoCliLayer)
-        .bindTooltip('\uD83D\uDFE3 <b>'+esc(x.p.cli||'\u2013')+'</b><br>'+esc(x.p.prop||'')+'<br>'+x.dist.toFixed(1)+' km de voc\u00ea', {sticky:true});
+        .bindTooltip(emoji+' <b>'+esc(p.cli||'\u2013')+'</b><br>'+esc(p.prop||'')+'<br>'+x.dist.toFixed(1)+' km de voc\u00ea' + inativoTag, {sticky:true});
     });
 
     var statusColor = {'AT':'#e0762c','PE':'#c9980a','CA':'#a4243b'};

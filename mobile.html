@@ -903,6 +903,7 @@ var _nearbyCarStore = []; // store for nearby list click safety
 var prospecTileStreet = null, prospecTileSat = null, prospecSatActive = false;
 
 var TRR_LAT = -14.7392, TRR_LON = -50.5744; // Mozarlândia-GO
+var TRR2_LAT = -13.2715, TRR2_LON = -50.1631; // São Miguel do Araguaia-GO
 
 function kmFromZoom(zoom) {
   if (zoom >= 13) return 20;
@@ -931,6 +932,15 @@ function initProspecMap() {
   L.control.zoom({ position: 'bottomright' }).addTo(prospecMap);
   prospecCliLayer = L.layerGroup().addTo(prospecMap);
   prospecCarLayer = L.layerGroup().addTo(prospecMap);
+  // Marcadores TRR
+  var _trrIcon = L.divIcon({
+    html: '<div style="background:#10243e;color:#f5a623;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;border:2px solid #f5a623;box-shadow:0 2px 6px rgba(0,0,0,.5)">TRR</div>',
+    iconSize:[26,26], iconAnchor:[13,13], className:''
+  });
+  L.marker([TRR_LAT, TRR_LON], {icon:_trrIcon, zIndexOffset:1000})
+    .bindTooltip('<b>TRR Mozarlândia</b>', {sticky:true}).addTo(prospecMap);
+  L.marker([TRR2_LAT, TRR2_LON], {icon:_trrIcon, zIndexOffset:1000})
+    .bindTooltip('<b>TRR São Miguel do Araguaia</b>', {sticky:true}).addTo(prospecMap);
   prospecMap.on('moveend', scheduleProspecLoad);
   setTimeout(function(){ prospecMap.invalidateSize(); }, 150);
   loadProspecData();

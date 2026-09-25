@@ -1340,6 +1340,7 @@ var geoData = null;
 var showCar = false;
 
 var TRR_LAT_IDX = -14.7392, TRR_LON_IDX = -50.5744; // Mozarlândia-GO
+var TRR2_LAT_IDX = -13.2715, TRR2_LON_IDX = -50.1631; // São Miguel do Araguaia-GO
 
 function kmFromZoomIdx(zoom) {
   if (zoom >= 12) return 30;
@@ -1800,6 +1801,10 @@ function renderMapMarkers() {
     .bindTooltip('<b>TRR Mozarlândia</b><br>Ponto de referência', { sticky: true })
     .bindPopup('<h4 class="lp-h">TRR Mozarlândia</h4><div class="lp-meta">GO-164, KM 166, Zona Urbana<br>Mozarlândia - GO · CEP 76700-000<br>Distribuidora de Combustíveis</div>', { maxWidth: 260 })
     .addTo(mapLayers);
+  L.marker([TRR2_LAT_IDX, TRR2_LON_IDX], { icon: trrIcon, zIndexOffset: 1000 })
+    .bindTooltip('<b>TRR São Miguel do Araguaia</b><br>Ponto de referência', { sticky: true })
+    .bindPopup('<h4 class="lp-h">TRR São Miguel do Araguaia</h4><div class="lp-meta">São Miguel do Araguaia - GO<br>Distribuidora de Combustíveis</div>', { maxWidth: 260 })
+    .addTo(mapLayers);
 
   if (!geoData) return;
 
@@ -1961,6 +1966,7 @@ var advClickLayer  = null;
 var _advNearbyLat  = null, _advNearbyLon = null;
 var advRadius      = 10;
 var TRR_LAT = -14.74469, TRR_LON = -50.54306;
+var TRR2_LAT = -13.2715, TRR2_LON = -50.1631; // São Miguel do Araguaia-GO
 var _advAreaFilter = '';
 // Municipios do Vale do Araguaia (editavel)
 var VALE_ARAGUAIA = ['MOZARLANDIA','ARUANA','BRITANIA','JUSSARA','MATRINCHA','ARAGUAPAZ',
@@ -1974,7 +1980,7 @@ function advToggleVale(btn){
   renderAdvClientes();
   if (window._advNearby) advApplyFilters();
 }
-var TRR_LAT = -14.74469, TRR_LON = -50.54306;
+// TRR_LAT/TRR_LON already declared above (Mozarlândia), TRR2_LAT/TRR2_LON also declared
 var prospData = null;
 var prospDrillData = null;
 var prospFilters = { q: '', uf: '', score: '', dist: '', semCli: false };
@@ -2173,6 +2179,9 @@ async function initAdvMap() {
   });
   L.marker([TRR_LAT, TRR_LON], {icon: trrDivIcon, zIndexOffset:1000})
     .bindTooltip('<b>TRR Mozarlândia</b><br>Base de operações', {sticky:true})
+    .addTo(advMap);
+  L.marker([TRR2_LAT, TRR2_LON], {icon: trrDivIcon, zIndexOffset:1000})
+    .bindTooltip('<b>TRR São Miguel do Araguaia</b><br>Base de operações', {sticky:true})
     .addTo(advMap);
   // Carregar geoData se ainda nao disponivel (independente da aba Mapa)
   if (!geoData) {
@@ -2549,7 +2558,7 @@ function advQuickScore(c, trrProps){
   if (dMin <= 10) s += 20; else if (dMin <= 25) s += 10;     // prova social
   var area = parseFloat(c.area)||0;
   if (area >= 200) s += 15; else if (area >= 50) s += 8;     // porte
-  var dTrr = haversineKm(TRR_LAT, TRR_LON, c.lat, c.lon);
+  var dTrr = Math.min(haversineKm(TRR_LAT, TRR_LON, c.lat, c.lon), haversineKm(TRR2_LAT, TRR2_LON, c.lat, c.lon));
   if (dTrr <= 60) s += 15; else if (dTrr <= 120) s += 8;     // logistica
   window._advMunCli = window._advMunCli || {};
   if (window._advMunCli[c.mun] === undefined && geoData && geoData.props) {
@@ -3758,6 +3767,7 @@ function initCampoMap() {
     iconSize:[26,26], iconAnchor:[13,13], className:''
   });
   L.marker([TRR_LAT, TRR_LON], {icon:trrIcon, zIndexOffset:900}).bindTooltip('<b>TRR Mozarl\u00e2ndia</b>',{sticky:true}).addTo(campoMap);
+  L.marker([TRR2_LAT, TRR2_LON], {icon:trrIcon, zIndexOffset:900}).bindTooltip('<b>TRR S\u00e3o Miguel do Araguaia</b>',{sticky:true}).addTo(campoMap);
   if (!geoData) {
     SB.rpc('trr_geo_all', {}).then(function(res){ if (!res.error) geoData = res.data; if (campoPos) campoRefresh(true); });
   }

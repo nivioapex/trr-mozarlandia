@@ -927,8 +927,9 @@ function initProspecMap() {
   prospecMap = L.map('prospec-map', { zoomControl: false, attributionControl: false })
     .setView([initLat, initLon], 10);
   prospecTileStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
-  prospecTileSat    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '© Esri' });
-  prospecTileStreet.addTo(prospecMap);
+  prospecTileSat    = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, attribution: '© Google', subdomains: ['mt0','mt1','mt2','mt3'] });
+  prospecTileSat.addTo(prospecMap);
+  prospecSatActive  = true;
   L.control.zoom({ position: 'bottomright' }).addTo(prospecMap);
   prospecCliLayer = L.layerGroup().addTo(prospecMap);
   prospecCarLayer = L.layerGroup().addTo(prospecMap);

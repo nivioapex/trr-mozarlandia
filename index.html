@@ -1363,7 +1363,7 @@ function initLeafMap() {
   }
   leafMap = L.map('leaflet-map', { zoomControl: true }).setView([-14.2, -50.2], 7);
   var leafTiles = makeTileLayers();
-  leafTiles.mapa.addTo(leafMap);
+  leafTiles.gearth.addTo(leafMap);
   new LayerSwitcherControl(leafMap, leafTiles, makeOverlayLayers()).addTo(leafMap);
   mapLayers   = L.layerGroup().addTo(leafMap);
   carLayer    = L.layerGroup();    // shown only when toggled on
@@ -1990,7 +1990,7 @@ function initProspMap() {
   if (prospMap) return;
   prospMap = L.map('prosp-map', {zoomControl:true, preferCanvas:true}).setView([-14.2,-50.2],7);
   var prospTiles = makeTileLayers();
-  prospTiles.mapa.addTo(prospMap);
+  prospTiles.gearth.addTo(prospMap);
   new LayerSwitcherControl(prospMap, prospTiles, makeOverlayLayers()).addTo(prospMap);
   prospLayer      = L.layerGroup().addTo(prospMap);
   prospDrillLayer = L.layerGroup().addTo(prospMap);
@@ -2164,7 +2164,7 @@ async function initAdvMap() {
   advMap = L.map('adv-map', {zoomControl:true, preferCanvas:true}).setView([-14.2,-50.2],7);
   var advTiles = makeTileLayers();
   window._advTiles = advTiles;
-  advTiles.mapa.addTo(advMap);
+  advTiles.gearth.addTo(advMap);
   var advOverlays = makeOverlayLayers();
   window._advOverlays = advOverlays;
   new LayerSwitcherControl(advMap, advTiles, advOverlays).addTo(advMap);
@@ -3754,7 +3754,7 @@ function initCampoMap() {
   campoMap = L.map('campo-map', { zoomControl:true, preferCanvas:true }).setView([TRR_LAT, TRR_LON], 11);
   var campoTiles = makeTileLayers();
   window._campoTiles = campoTiles;
-  campoTiles.mapa.addTo(campoMap);
+  campoTiles.gearth.addTo(campoMap);
   var campoOverlays = makeOverlayLayers();
   window._campoOverlays = campoOverlays;
   new LayerSwitcherControl(campoMap, campoTiles, campoOverlays).addTo(campoMap);

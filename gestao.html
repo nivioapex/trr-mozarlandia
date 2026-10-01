@@ -235,6 +235,7 @@ async function carregarPainel(){
     ['Taxa de conversão',k.taxa_conversao==null?'–':String(k.taxa_conversao).replace('.',',')+'%','g',''],
     ['Litros fechados (est.)',n0(k.litros_fechados),'',''],
     ['Tempo de resposta (mediana)',k.tempo_resposta_min==null?'–':(k.tempo_resposta_min<60?String(k.tempo_resposta_min).replace('.',',')+' min':(k.tempo_resposta_min/60).toFixed(1).replace('.',',')+' h'),'',''],
+    ['Confirmadas no EMSys',n0(k.confirmadas_erp)+(k.litros_erp?' · '+n0(k.litros_erp)+' L':''),'g',''],
     ['Aguardando análise da IA',n0(k.aguardando_analise),'',''],
     ['Não comercial',n0(o.nao_comercial),'','nao_comercial']
   ];
@@ -290,7 +291,7 @@ async function carregarConversas(){
     var res=(c.resumo||'').split('\n'); var alerta=res.filter(function(l){return l.indexOf('⚠')===0;}).join(' ');
     var resumo=res.filter(function(l){return l.indexOf('⚠')!==0;}).join(' ');
     return '<tr class="click" data-id="'+c.id+'"><td><b>'+esc(c.contato_nome||'–')+'</b>'+(c.cliente_base?'<div class="mut">'+esc(c.cliente_base)+'</div>':(c.fone?'<div class="mut">'+esc(c.fone)+'</div>':''))+'</td>'+
-      '<td>'+esc(c.vendedor_nome||'–')+'</td><td>'+badge(c.status)+(c.status_origem&&c.status_origem!=='ia'?'<div class="mut">por '+esc(c.status_origem)+'</div>':'')+'</td>'+
+      '<td>'+esc(c.vendedor_nome||'–')+'</td><td>'+badge(c.status)+(c.status_origem==='erp'?'<div class="mut" style="color:var(--green)">✔ confirmada no EMSys</div>':(c.status_origem&&c.status_origem!=='ia'?'<div class="mut">por '+esc(c.status_origem)+'</div>':''))+'</td>'+
       '<td>'+(c.objecoes||[]).map(function(o){return '<span class="chip">'+esc(objNome(o))+'</span>';}).join('')+'</td>'+
       '<td style="max-width:420px">'+(pess?'<span class="mut">Conteúdo não gravado (marcada como pessoal pelo vendedor)</span>':esc(resumo||(c.pendente_analise?'Aguardando análise…':'–')))+
         (alerta?'<div class="alert">'+esc(alerta)+'</div>':'')+(c.litros_estimados?'<div class="mut">'+n0(c.litros_estimados)+' L'+(c.valor_estimado?' · '+brl(c.valor_estimado):'')+'</div>':'')+'</td>'+
@@ -320,6 +321,14 @@ async function abrir(id){
   var h='<div class="info"><b>Resumo da IA</b>'+(c.status_motivo?' · <span class="mut">'+esc(c.status_motivo)+'</span>':'')+'\n'+esc(c.resumo||'Ainda não analisada.')+
     ((c.objecoes||[]).length?'\nObjeções: '+c.objecoes.map(function(o){return objNome(o);}).map(esc).join(', '):'')+
     (cli?'\n\nCliente na base: '+esc(cli.cliente)+' · última compra '+esc(cli.ultima_compra||'–')+' · histórico '+brl(cli.val_hist)+(cli.inativo_90d?' · inativo +90 dias':''):'')+'</div>';
+  if(d.venda_erp){ var ve=d.venda_erp;
+    h+='<div class="info" style="border-left:4px solid var(--green)"><b>✅ Compra confirmada no EMSys</b>\n'+new Date(ve.data).toLocaleDateString('pt-BR')+(ve.documento?' · doc. '+esc(ve.documento):'')+(ve.litros?' · '+n0(ve.litros)+' L':'')+(ve.valor?' · '+brl(ve.valor):'')+'</div>'; }
+  var mm=d.memoria;
+  if(mm){
+    var sec=function(t,a){return (a&&a.length)?'<div style="margin-top:6px"><b>'+t+'</b><ul style="margin:2px 0 0 18px;padding:0">'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>':'';};
+    var corpo=sec('⏰ Pendências',mm.pendencias)+sec('🤝 Relacionamento',mm.relacionamento)+sec('🚜 Operação',mm.operacao)+sec('💬 Comercial',mm.comercial);
+    if(corpo) h+='<div class="info" style="white-space:normal"><b>🧠 Memória do cliente</b> <span class="mut">· atualizada em '+new Date(mm.atualizado_at).toLocaleDateString('pt-BR')+'</span>'+corpo+'</div>';
+  }
   if(c.status==='pessoal'){ body.innerHTML=h+'<div class="empty">O vendedor marcou esta conversa como pessoal. O conteúdo foi apagado e não é gravado.</div>'; return; }
 
   var msgs=d.mensagens||[];

@@ -236,7 +236,7 @@ async function carregarPainel(){
     ['Litros fechados (est.)',n0(k.litros_fechados),'',''],
     ['Tempo de resposta (mediana)',k.tempo_resposta_min==null?'–':(k.tempo_resposta_min<60?String(k.tempo_resposta_min).replace('.',',')+' min':(k.tempo_resposta_min/60).toFixed(1).replace('.',',')+' h'),'',''],
     ['Aguardando análise da IA',n0(k.aguardando_analise),'',''],
-    ['Não comercial / pessoal',n0(o.nao_comercial)+' / '+n0(o.pessoal),'','']
+    ['Não comercial',n0(o.nao_comercial),'','nao_comercial']
   ];
   document.getElementById('kpis').innerHTML=kp.map(function(x){
     return '<div class="kpi'+(x[3]?' click':'')+'" data-st="'+x[3]+'"><div class="l">'+x[0]+'</div><div class="v '+x[2]+'">'+x[1]+'</div></div>';
@@ -272,7 +272,7 @@ async function carregarPainel(){
 }
 
 function renderTabs(){
-  var tabs=[['','Todas'],['venda_fechada','Fechadas'],['perdida','Perdidas'],['em_negociacao','Negociando'],['sem_resposta','Sem resposta'],['nao_comercial','Não comercial'],['pessoal','Pessoal']];
+  var tabs=[['','Todas'],['venda_fechada','Fechadas'],['perdida','Perdidas'],['em_negociacao','Negociando'],['sem_resposta','Sem resposta'],['nao_comercial','Não comercial']];
   document.getElementById('st-tabs').innerHTML=tabs.map(function(t){return '<button data-s="'+t[0]+'" class="'+(F.status===t[0]?'on':'')+'">'+t[1]+'</button>';}).join('');
   document.querySelectorAll('#st-tabs button').forEach(function(b){ b.onclick=function(){ F.status=b.getAttribute('data-s'); renderTabs(); carregarConversas(); }; });
 }

@@ -64,6 +64,10 @@
   .msg.cliente{background:#fff;margin-right:auto}
   .msg.vendedor{background:#d9fdd3;margin-left:auto}
   .msg .h{font-size:10.5px;color:var(--mut);text-align:right;margin-top:2px}
+  .msg{position:relative}
+  .msg .del{display:none;position:absolute;top:2px;right:-26px;background:#fff;border:1px solid #fca5a5;color:var(--red);border-radius:6px;font-size:12px;cursor:pointer;padding:1px 5px}
+  .msg.cliente .del{right:-26px}.msg.vendedor .del{right:auto;left:-26px}
+  .msg:hover .del{display:block}
   .msg img{max-width:100%;border-radius:6px;display:block}
   .msg audio{width:260px;max-width:100%}
   .day{text-align:center;margin:10px 0}.day span{background:#fff;border-radius:8px;padding:3px 10px;font-size:11.5px;color:var(--mut)}
@@ -139,6 +143,7 @@
       <option value="perdida">Perdida</option><option value="sem_resposta">Sem resposta</option><option value="nao_comercial">Não comercial</option>
     </select>
     <button class="btn" id="d-reanalisar">↻ Reanalisar</button>
+    <button class="btn" id="d-apagar" style="display:none;color:var(--red);border-color:#fca5a5" title="Apagar a conversa inteira, com mídias">🗑 Apagar conversa</button>
     <button class="x" id="d-close">✕</button>
   </div>
   <div class="db" id="d-body"></div>
@@ -151,7 +156,7 @@ var TOKEN = sessionStorage.getItem('dash_token');
 var ST = { em_negociacao:'Em negociação', venda_fechada:'Venda fechada', perdida:'Perdida', sem_resposta:'Sem resposta', nao_comercial:'Não comercial', pessoal:'Pessoal' };
 var F = { de:null, ate:null, vend:'', status:'', busca:'', obj:'' };
 var OBJ_TIT = {};
-var lastUpd = null, refreshTimer = null, openId = null;
+var lastUpd = null, refreshTimer = null, openId = null, PODE_APAGAR = false;
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function n0(v){return v==null?'–':Number(v).toLocaleString('pt-BR',{maximumFractionDigits:0});}
@@ -346,12 +351,30 @@ async function abrir(id){
       if(m.texto && m.texto!=='[imagem]') cont+='<div>'+esc(m.texto)+'</div>'; }
     else if(m.tipo==='audio'){ cont = m.midia_path&&urls[m.midia_path] ? '<audio controls preload="none" src="'+esc(urls[m.midia_path])+'"></audio>' : '<span class="mut">🎤 áudio (arquivo não capturado)</span>'; }
     else cont=esc(m.texto||'');
-    h+='<div class="msg '+(m.de==='vendedor'?'vendedor':'cliente')+'">'+cont+'<div class="h">'+t.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</div></div>';
+    h+='<div class="msg '+(m.de==='vendedor'?'vendedor':'cliente')+'">'+(PODE_APAGAR?'<button class="del" data-del="'+m.id+'" title="Apagar esta mensagem">🗑</button>':'')+cont+'<div class="h">'+t.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</div></div>';
   });
   sugs.forEach(function(s){ h+='<div class="sug">🤖 <b>Sugestão da IA</b> · '+esc(s.sugestao||'')+'</div>'; });
   if(!msgs.length) h+='<div class="empty">Sem mensagens gravadas.</div>';
   body.innerHTML=h; body.scrollTop=body.scrollHeight;
+  body.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=async function(e){
+    e.stopPropagation();
+    if(!confirm('Apagar esta mensagem de forma definitiva?\nSe tiver foto ou áudio, o arquivo também será apagado.')) return;
+    var r=await edge('trr-midia',{token:TOKEN,acao:'apagar',conversa_id:id,ids:[Number(b.getAttribute('data-del'))]});
+    if(r.error){ alert(r.error); return; }
+    var top=body.scrollTop; await abrir(id); body.scrollTop=top; carregar();
+  }; });
 }
+
+async function apagarConversa(){
+  if(!openId) return;
+  var nome=document.getElementById('d-tit').textContent;
+  if(!confirm('Apagar a conversa inteira com "'+nome+'"?\n\nTodas as mensagens, fotos, áudios e sugestões da IA desta conversa serão apagados de forma definitiva.')) return;
+  if(!confirm('Confirma a exclusão definitiva? Esta ação não pode ser desfeita.')) return;
+  var r=await edge('trr-midia',{token:TOKEN,acao:'apagar',conversa_id:openId,tudo:true});
+  if(r.error){ alert(r.error); return; }
+  fechar(); carregar();
+}
+document.getElementById('d-apagar').onclick=apagarConversa;
 
 // ---------- início ----------
 async function iniciar(sess){
@@ -362,6 +385,8 @@ async function iniciar(sess){
     var vs=await rpc('trr_gestao_vendedores',{p_token:TOKEN});
     document.getElementById('f-vend').innerHTML='<option value="">Todos os vendedores</option>'+vs.map(function(v){return '<option value="'+esc(v.id)+'">'+esc(v.nome)+'</option>';}).join('');
   }catch(e){ return; }
+  try{ var pm=await edge('trr-midia',{token:TOKEN,acao:'permissoes'}); PODE_APAGAR=!!(pm&&pm.apagar); }catch(e){ PODE_APAGAR=false; }
+  document.getElementById('d-apagar').style.display=PODE_APAGAR?'':'none';
   setPeriodo('hoje'); renderTabs(); await carregar();
   clearInterval(refreshTimer);
   refreshTimer=setInterval(function(){ if(document.hidden) return; carregar(); if(openId) {/* mantém a conversa aberta sem recarregar para não perder a posição */} }, 20000);

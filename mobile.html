@@ -165,7 +165,17 @@ input,button,select{font-family:inherit;}
 .prospec-radius-row{position:absolute;top:60px;left:12px;z-index:400;display:flex;gap:4px;}
 .prospec-km-btn{padding:6px 11px;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.92);color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,.12);}
 .prospec-km-btn.active{background:var(--acc);color:#fff;}
-.prospec-legend{position:absolute;top:70px;right:12px;z-index:400;background:rgba(255,255,255,.92);border-radius:10px;padding:6px 10px;font-size:11px;box-shadow:0 1px 4px rgba(0,0,0,.12);}
+.prospec-legend-btn{position:absolute;top:60px;right:12px;z-index:401;background:rgba(255,255,255,.95);border:none;border-radius:20px;padding:6px 11px;font-size:12px;font-weight:700;color:#10243e;box-shadow:0 1px 4px rgba(0,0,0,.15);cursor:pointer;}
+.prospec-legend{position:absolute;top:96px;right:12px;z-index:400;background:rgba(255,255,255,.95);border-radius:10px;padding:6px 10px;font-size:11.5px;line-height:1.6;box-shadow:0 1px 6px rgba(0,0,0,.15);display:none;}
+.prospec-legend.open{display:block;}
+.pdl-sec{padding:12px 16px 2px;font-size:11px;font-weight:800;letter-spacing:.5px;color:#16a34a;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
+.pdl-sec small{margin-left:auto;font-weight:600;color:#9ca3af;text-transform:none;letter-spacing:0;font-size:10.5px;}
+.pdl-note{font-size:10.5px;color:#9ca3af;padding:4px 16px 10px;line-height:1.4;}
+.pdl-sub{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;}
+.nav-ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:3000;display:flex;align-items:flex-end;}
+.nav-box{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));}
+.nav-btn{display:flex;align-items:center;gap:12px;width:100%;border:1px solid #e5e7eb;background:#fff;border-radius:12px;padding:13px 14px;margin-top:8px;font-size:15px;font-weight:700;color:#111827;cursor:pointer;text-align:left;}
+.nav-btn span{font-size:21px;}
 .prospec-leg-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
 .prospec-nearby-sheet{position:absolute;bottom:0;left:0;right:0;z-index:500;background:var(--card);border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.18);max-height:45%;display:flex;flex-direction:column;}
 .prospec-sheet-hdr{padding:10px 16px 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0f2f5;flex-shrink:0;}
@@ -392,13 +402,14 @@ input,button,select{font-family:inherit;}
         <button class="prospec-km-btn" onclick="setProspecKm(50,this)">50km</button>
       </div>
       <!-- Legenda -->
-      <div class="prospec-legend">
-        <div><span class="prospec-leg-dot" style="background:#7c3aed"></span> Ativo</div>
-        <div><span class="prospec-leg-dot" style="background:#dc2626"></span> Inat.A</div>
-        <div><span class="prospec-leg-dot" style="background:#ea580c"></span> Inat.B</div>
-        <div><span class="prospec-leg-dot" style="background:#d97706"></span> Inat.C</div>
-        <div><span class="prospec-leg-dot" style="background:#16a34a"></span> CAR AT</div>
-        <div><span class="prospec-leg-dot" style="background:#a4243b"></span> CAR CA</div>
+      <button class="prospec-legend-btn" id="prospec-legend-btn" onclick="toggleLegenda()">🎨 Legenda ▾</button>
+      <div class="prospec-legend" id="prospec-legend">
+        <div><span class="prospec-leg-dot" style="background:#7c3aed"></span> Cliente ativo</div>
+        <div><span class="prospec-leg-dot" style="background:#dc2626"></span> Inativo curva A</div>
+        <div><span class="prospec-leg-dot" style="background:#ea580c"></span> Inativo curva B</div>
+        <div><span class="prospec-leg-dot" style="background:#d97706"></span> Inativo curva C</div>
+        <div><span class="prospec-leg-dot" style="background:#16a34a"></span> CAR ativo</div>
+        <div><span class="prospec-leg-dot" style="background:#a4243b"></span> CAR cancelado</div>
       </div>
       <!-- Painel de detalhe da propriedade -->
       <div class="prospec-detail-sheet" id="prospec-detail-sheet" style="display:none">
@@ -1098,19 +1109,24 @@ function showCarDetail(p) {
   var stBg     = p.status === 'AT' ? '#d1fae5' : p.status === 'PE' ? '#fef3c7' : '#fee2e2';
   var diesel   = area > 0 ? Math.round(area*3)+' – '+Math.round(area*5)+' L/mês (estimado)' : '–';
 
-  document.getElementById('pdl-title').textContent = p.nom || p.cod || 'Imóvel CAR';
+  var tituloPadrao = p.nom || ('Imóvel rural · ' + (p.mun || '–') + (p.uf ? ' - ' + p.uf : ''));
+  setPdlTitulo(tituloPadrao, (area ? fmtNum(area) + ' ha' : '') + (p.nom ? '' : ''));
   document.getElementById('pdl-body').innerHTML =
     pdlRow('📍','Município / UF', esc(p.mun || '–') + (p.uf ? ' / '+p.uf : '')) +
-    pdlRow('📐','Área', area ? area.toFixed(0)+' ha' : '–') +
-    pdlRow('📋','Status CAR', '<span class="pdl-badge" style="background:'+stBg+';color:'+stColor+'">'+stLabel+'</span>') +
-    pdlRow('🎯','Potencial de Compra', '<span class="pdl-badge" style="background:'+potBg+';color:'+potColor+'">'+potLabel+'</span>') +
-    pdlRow('⛽','Consumo Diesel Est.', diesel) +
+    pdlRow('📐','Área', area ? fmtNum(area)+' ha' : '–') +
+    pdlRow('🎯','Potencial de Compra', '<span class="pdl-badge" style="background:'+potBg+';color:'+potColor+'">'+potLabel+'</span> <span style="font-size:12px;color:var(--muted)">'+diesel+'</span>') +
+    '<div id="pdl-oficial">' +
+      pdlRow('📋','Status CAR', '<span class="pdl-badge" style="background:'+stBg+';color:'+stColor+'">'+stLabel+'</span>') +
+      '<div class="pdl-note">Carregando dados oficiais (SICAR + INCRA)…</div>' +
+    '</div>' +
     (p.cod ? pdlRow('🗂','Código CAR', '<span style="font-family:monospace;font-size:12px">'+esc(p.cod)+'</span>') : '') +
     '<div class="pdl-actions">' +
       '<button class="pdl-action" style="background:#e3f2fd;color:#0d47a1" onclick="if(_currentDetailProp){prospecFlyTo(_currentDetailProp.lat,_currentDetailProp.lon);closeProspecDetail();}">🗺<br>Centralizar</button>' +
       '<button class="pdl-action" style="background:#f3f0ff;color:#5b21b6" onclick="if(_currentDetailProp){showProspecNearbyCar(_currentDetailProp);}">🔭<br>CAR próx.</button>' +
+      '<button class="pdl-action" style="background:#fff7ed;color:#c2410c" onclick="abrirNavegarAtual()">🧭<br>Navegar</button>' +
       '<button class="pdl-action" style="background:var(--grn);color:#fff" onclick="if(_currentDetailProp){openVisitaFromCar(_currentDetailProp);}">📸<br>Visita</button>' +
     '</div>';
+  if (p.cod) carregarDadosOficiais(p, tituloPadrao);
 
   _currentDetailProp = p; _currentDetailTipo = 'car';
   document.getElementById('pdl-ia-btn').style.display = 'flex';
@@ -1143,9 +1159,128 @@ function pdlActionsCliHtml() {
   return '<div class="pdl-actions">' +
     '<button class="pdl-action" style="background:#e3f2fd;color:#0d47a1" onclick="if(_currentDetailProp){prospecFlyTo(_currentDetailProp.lat,_currentDetailProp.lon);closeProspecDetail();}">🗺<br>Centralizar</button>' +
     '<button class="pdl-action" style="background:#f3f0ff;color:#5b21b6" onclick="if(_currentDetailProp){closeProspecDetail();showProspecNearby(_currentDetailProp);}">🔭<br>CAR próx.</button>' +
+    '<button class="pdl-action" style="background:#fff7ed;color:#c2410c" onclick="abrirNavegarAtual()">🧭<br>Navegar</button>' +
     '<button class="pdl-action" style="background:var(--grn);color:#fff" onclick="if(_currentDetailProp){openVisitaFromCar(_currentDetailProp);}">📸<br>Visita</button>' +
   '</div>';
 }
+
+/* ── Legenda recolhível ── */
+function toggleLegenda() {
+  var box = document.getElementById('prospec-legend'), btn = document.getElementById('prospec-legend-btn');
+  var aberta = box.classList.toggle('open');
+  btn.textContent = '🎨 Legenda ' + (aberta ? '▴' : '▾');
+}
+
+function fmtNum(v, dec) {
+  return Number(v).toLocaleString('pt-BR', { maximumFractionDigits: dec == null ? 0 : dec });
+}
+function fmtData(s) {
+  if (!s) return '';
+  var m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? m[3] + '/' + m[2] + '/' + m[1] : esc(s);
+}
+function setPdlTitulo(titulo, sub) {
+  var el = document.getElementById('pdl-title');
+  el.innerHTML = esc(titulo) + (sub ? '<div class="pdl-sub">' + esc(sub) + '</div>' : '');
+}
+
+/* ── Dados oficiais gratuitos: SICAR (situação do CAR) + INCRA/SIGEF (nome e certificação) ── */
+async function carregarDadosOficiais(p, tituloPadrao) {
+  var cod = p.cod;
+  var box = function () { return document.getElementById('pdl-oficial'); };
+  try {
+    var r = await SB.rpc('car_enriq_get', { p_cod: cod });
+    if (!_currentDetailProp || _currentDetailProp.cod !== cod || !box()) return; // usuário já fechou ou trocou
+    var e = (!r.error && r.data) ? r.data : null;
+    var sicar = (e && e.sicar) || {};
+    var area = Number(sicar.area_ha || p.area || 0);
+    var mf = sicar.modulos_fiscais != null ? Number(sicar.modulos_fiscais) : null;
+    var nome = (e && e.nome_fazenda) || p.nom || null;
+    p.nom_oficial = nome;
+
+    // título
+    var sub = [ (sicar.municipio || p.mun || '') + ((sicar.uf || p.uf) ? ' - ' + (sicar.uf || p.uf) : ''),
+                area ? fmtNum(area) + ' ha' : '',
+                mf != null ? fmtNum(mf, 1) + ' módulos fiscais' : '' ].filter(Boolean).join(' · ');
+    if (nome) setPdlTitulo(nome, sub);
+    else setPdlTitulo(tituloPadrao, (area ? fmtNum(area) + ' ha · ' : '') + 'nome não informado nas bases públicas');
+
+    if (!e) {
+      box().innerHTML = pdlRow('📋','Status CAR', document.querySelector('#pdl-oficial .pdl-badge') ? document.querySelector('#pdl-oficial .pdl-badge').outerHTML : '–') +
+        '<div class="pdl-note">Dados oficiais deste imóvel ainda não foram coletados.</div>';
+      return;
+    }
+    var st = sicar.status;
+    var stTxt = st === 'AT' ? 'Ativo' : st === 'PE' ? 'Pendente' : st === 'CA' ? 'Cancelado' : st === 'SU' ? 'Suspenso' : (st || '–');
+    var stCor = st === 'AT' ? ['#d1fae5','#065f46'] : st === 'PE' ? ['#fef3c7','#92400e'] : ['#fee2e2','#991b1b'];
+    var carHtml = '<span class="pdl-badge" style="background:'+stCor[0]+';color:'+stCor[1]+'">'+esc(stTxt)+'</span> ' +
+      (sicar.condicao ? '<span class="pdl-badge" style="background:#fef3c7;color:#92400e">'+esc(sicar.condicao)+'</span>' : '') +
+      (sicar.data_cadastro ? '<div style="font-size:12px;color:var(--muted);margin-top:3px">cadastrado em '+fmtData(sicar.data_cadastro)+(sicar.data_atualizacao && sicar.data_atualizacao !== sicar.data_cadastro ? ' · atualizado em '+fmtData(sicar.data_atualizacao) : '')+'</div>' : '');
+    var porte = mf == null ? null : mf < 4 ? 'Pequena propriedade' : mf <= 15 ? 'Média propriedade' : 'Grande propriedade';
+
+    var parc = (e.sigef_parcelas || [])[0];
+    var certHtml;
+    if (parc) {
+      var cobre = (e.sigef_parcelas || []).reduce(function (s, x) { return s + (Number(x.pct_car) || 0); }, 0);
+      certHtml = esc((parc.status || 'Certificada').toLowerCase().replace(/^./, function (c) { return c.toUpperCase(); })) +
+        (parc.certificacao ? ' em ' + fmtData(parc.certificacao) : '') +
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px">' +
+        (parc.matricula ? 'matrícula ' + esc(String(parc.matricula).slice(0, 60)) + '<br>' : '') +
+        'área certificada cobre ' + Math.min(100, Math.round(cobre)) + '% do CAR · fonte ' + esc(parc.fonte || 'SIGEF') + '</div>';
+    } else {
+      certHtml = '<span style="color:var(--muted)">Não certificado no INCRA</span>';
+    }
+
+    var amb = e.ambiental || null, ambHtml = '';
+    if (amb) {
+      var it = function (lbl, v) { return v == null ? '' : '<div>' + lbl + ': <b>' + fmtNum(v, 2) + ' ha</b></div>'; };
+      ambHtml = pdlRow('🌳','Ambiental (SICAR)', it('APP', amb.app_ha) + it('Reserva legal', amb.reserva_legal_ha) +
+        it('Vegetação nativa', amb.vegetacao_nativa_ha) + it('Área consolidada', amb.area_consolidada_ha));
+    }
+
+    box().innerHTML =
+      '<div class="pdl-sec">🏛 Dados oficiais <small>SICAR + INCRA · gratuito</small></div>' +
+      pdlRow('📋','CAR', carHtml) +
+      (porte ? pdlRow('📐','Porte', porte + ' <span style="font-size:12px;color:var(--muted)">· ' + fmtNum(mf, 1) + ' módulos fiscais</span>') : '') +
+      pdlRow('✅','Certificação INCRA', certHtml) +
+      ambHtml +
+      (!nome ? pdlRow('🔎','Nome da fazenda', '<a href="https://www.registrorural.com.br/car/item/' + encodeURIComponent(cod) + '/" target="_blank" rel="noopener" style="color:#2563eb;font-weight:700;text-decoration:none">Ver no Registro Rural ↗</a><div style="font-size:12px;color:var(--muted)">abre o site com o seu login, sem custo</div>') : '') +
+      '<div class="pdl-note">Fontes: SICAR (car.gov.br) e INCRA Acervo Fundiário · atualizado em ' + fmtData(String(e.atualizado_em || '').slice(0, 10)) + '</div>';
+  } catch (err) {
+    if (box()) box().innerHTML = '<div class="pdl-note">Não foi possível carregar os dados oficiais agora.</div>';
+  }
+}
+
+/* ── Navegar até a propriedade ── */
+function abrirNavegarAtual() {
+  var p = _currentDetailProp;
+  if (!p || p.lat == null || p.lon == null) { alert('Este imóvel não tem coordenadas.'); return; }
+  var nome = p.nom_oficial || p.nom || p.cli || p.razao || p.nome || 'propriedade';
+  abrirNavegar(+p.lat, +p.lon, nome, (p.mun || '') + (p.uf ? ' - ' + p.uf : ''));
+}
+function abrirNavegar(lat, lon, nome, local) {
+  fecharNavegar();
+  var c = lat.toFixed(6) + ',' + lon.toFixed(6);
+  var ov = document.createElement('div');
+  ov.className = 'nav-ov'; ov.id = 'nav-ov';
+  ov.onclick = function (ev) { if (ev.target === ov) fecharNavegar(); };
+  ov.innerHTML = '<div class="nav-box">' +
+    '<div style="font-size:16px;font-weight:800;color:#10243e">Navegar até ' + esc(nome) + '</div>' +
+    '<div style="font-size:12.5px;color:#6b7280;margin-top:2px">' + esc(local || '') + (local ? ' · ' : '') + lat.toFixed(5) + ', ' + lon.toFixed(5) + '</div>' +
+    '<a class="nav-btn" href="https://www.google.com/maps/dir/?api=1&destination=' + c + '" target="_blank" rel="noopener" style="text-decoration:none"><span>🗺</span>Google Maps</a>' +
+    '<a class="nav-btn" href="https://waze.com/ul?ll=' + c + '&navigate=yes" target="_blank" rel="noopener" style="text-decoration:none"><span>🚙</span>Waze</a>' +
+    '<button class="nav-btn" id="nav-copiar" style="color:#6b7280"><span>📋</span>Copiar coordenadas</button>' +
+    '<button class="nav-btn" onclick="fecharNavegar()" style="justify-content:center;color:#6b7280;border:none">Cancelar</button>' +
+  '</div>';
+  document.body.appendChild(ov);
+  document.getElementById('nav-copiar').onclick = function () {
+    var b = this;
+    var ok = function () { b.innerHTML = '<span>✅</span>Coordenadas copiadas'; };
+    if (navigator.clipboard) navigator.clipboard.writeText(c).then(ok, function () { prompt('Copie as coordenadas:', c); });
+    else prompt('Copie as coordenadas:', c);
+  };
+}
+function fecharNavegar() { var o = document.getElementById('nav-ov'); if (o) o.remove(); }
 
 async function loadCliDetailData(p) {
   try {

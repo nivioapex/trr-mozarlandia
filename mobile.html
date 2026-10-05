@@ -252,6 +252,19 @@ input,button,select{font-family:inherit;}
 .visita-rec-btn.recording{background:#ef4444;color:#fff;}
 .visita-notas{width:100%;padding:12px 14px;border:1.5px solid #dde2e8;border-radius:10px;font-size:14px;font-family:inherit;outline:none;resize:none;height:90px;}
 .visita-notas:focus{border-color:var(--acc);}
+.visita-field select,.vis-sel{width:100%;padding:12px 10px;border:1.5px solid #dde2e8;border-radius:10px;font-size:14px;outline:none;background:#fff;font-family:inherit;}
+.vis-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.vis-sec-hdr{font-size:12px;font-weight:900;color:#10243e;border-bottom:2px solid #eef1f4;padding-bottom:4px;margin-top:6px;}
+.vis-clima{display:flex;align-items:center;gap:8px;background:#eef6ff;border-radius:8px;padding:8px 12px;font-size:12.5px;color:#1e5687;font-weight:600;}
+.vis-resp-bar{background:#f0f6ff;border-radius:7px;padding:8px 12px;font-size:13px;color:#10243e;border-left:3px solid #1d6ef5;}
+.vis-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.vis-chip{border:1.5px solid #d8dee5;background:#fff;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);user-select:none;}
+.vis-chip.on{background:#10243e;color:#fff;border-color:#10243e;}
+.vis-add-faz{background:none;border:1px dashed #ccc;border-radius:8px;padding:9px 12px;font-size:13px;cursor:pointer;color:var(--muted);width:100%;text-align:left;}
+.vis-faz-row{display:flex;gap:6px;align-items:center;margin-top:-6px;}
+.vis-faz-row input{flex:1;padding:12px 14px;border:1.5px solid #dde2e8;border-radius:10px;font-size:14px;}
+.vis-faz-rm{background:none;border:none;color:#c53030;font-size:22px;cursor:pointer;padding:0 6px;line-height:1;}
+.vis-prevenda{display:flex;align-items:center;gap:9px;background:#fff8f2;border:1.5px dashed #e0762c;border-radius:9px;padding:12px;font-size:14px;font-weight:800;color:#9a4c0e;cursor:pointer;user-select:none;}
 .visita-save-btn{width:100%;padding:15px;background:var(--grn);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;}
 .visita-save-btn:active{opacity:.85;}
 
@@ -476,14 +489,53 @@ input,button,select{font-family:inherit;}
     </div>
     <div class="visita-body">
       <div class="visita-gps" id="visit-gps-info">📍 Localização não capturada</div>
-      <div class="visita-field">
-        <label>🏡 Fazenda / Propriedade</label>
-        <input id="visit-nome" type="text" placeholder="Nome da fazenda…" autocomplete="off">
+      <div class="vis-clima" id="vis-clima">🌤 Clima: aguardando localização…</div>
+      <div class="vis-resp-bar" id="vis-resp">👤 Responsável: –</div>
+
+      <div class="vis-sec-hdr">CLIENTE</div>
+      <div class="visita-field"><label>Nome do cliente</label><input id="visit-cli" type="text" placeholder="Nome do cliente…" autocomplete="off"></div>
+      <div class="visita-field"><label>Nome da fazenda</label><input id="visit-nome" type="text" placeholder="Nome da fazenda…" autocomplete="off"></div>
+      <div id="v-fazendas-extra"></div>
+      <button class="vis-add-faz" type="button" onclick="visAddFazenda()">+ Adicionar outra fazenda do mesmo cliente</button>
+      <div class="visita-field"><label>Responsável / contato na fazenda</label><input id="visit-contato" type="text" placeholder="Nome do proprietário ou gerente…"></div>
+
+      <div class="vis-sec-hdr">COMBUSTÍVEL E TANQUES</div>
+      <div class="visita-field"><label>Última compra de combustível</label><input id="v-ult" type="text" placeholder="ex: há 2 meses / posto X"></div>
+      <div class="vis-row">
+        <div class="visita-field"><label>Tancagem (L)</label><input id="v-tanc" type="number" inputmode="numeric"></div>
+        <div class="visita-field"><label>Conservação tanques</label><select class="vis-sel" id="v-cons"><option value="">—</option><option value="pessimo">Péssimo</option><option value="ruim">Ruim</option><option value="medio">Médio</option><option value="bom">Bom</option><option value="otimo">Ótimo</option></select></div>
       </div>
-      <div class="visita-field">
-        <label>👤 Responsável / Contato</label>
-        <input id="visit-contato" type="text" placeholder="Nome do proprietário ou gerente…">
+      <div class="visita-field"><label>Precisa manutenção?</label><select class="vis-sel v-sn" id="v-manu"></select></div>
+      <div class="visita-field"><label>Principais maquinários <span style="text-transform:none;font-weight:600">(gatilho: aditivos/lubrificantes)</span></label><textarea class="visita-notas" id="v-maq" style="height:70px" placeholder="ex: 2 tratores JD 6110, 1 colheitadeira, caminhão..."></textarea></div>
+
+      <div class="vis-sec-hdr">PECUÁRIA</div>
+      <div class="visita-field"><label>Tipo de criação (múltiplo)</label>
+        <div class="vis-chips" id="v-cria"><span class="vis-chip" data-v="cria">cria</span><span class="vis-chip" data-v="recria">recria</span><span class="vis-chip" data-v="engorda">engorda</span><span class="vis-chip" data-v="confinamento">confinamento</span></div></div>
+      <div class="vis-row">
+        <div class="visita-field"><label>Quantas cabeças?</label><input id="v-cab" type="number" inputmode="numeric"></div>
+        <div class="visita-field"><label>Estado do curral</label><select class="vis-sel" id="v-curral"><option value="">—</option><option>Péssimo</option><option>Ruim</option><option>Médio</option><option>Bom</option><option>Ótimo</option></select></div>
       </div>
+      <div class="vis-row">
+        <div class="visita-field"><label>Treinamento no manejo?</label><select class="vis-sel v-sn" id="v-trein"></select></div>
+        <div class="visita-field"><label>Faz TIP?</label><select class="vis-sel v-sn" id="v-tip"></select></div>
+      </div>
+      <div class="vis-row">
+        <div class="visita-field"><label>Ração</label><select class="vis-sel" id="v-racao"><option value="">—</option><option value="compra">Compra</option><option value="fabrica">Tem fábrica</option><option value="nao">Não usa</option></select></div>
+        <div class="visita-field"><label>Faz ILP?</label><select class="vis-sel v-sn" id="v-ilp"></select></div>
+      </div>
+
+      <div class="vis-sec-hdr">AGRICULTURA E ESTRUTURA</div>
+      <div class="vis-row">
+        <div class="visita-field"><label>Agricultura (ha)</label><input id="v-agri" type="number" inputmode="numeric"></div>
+        <div class="visita-field"><label>Tem pivô?</label><select class="vis-sel v-sn" id="v-pivo"></select></div>
+      </div>
+      <div class="vis-row">
+        <div class="visita-field"><label>Energia elétrica</label><select class="vis-sel" id="v-ener"><option value="">—</option><option>Monofásica</option><option>Trifásica</option><option>Gerador diesel</option><option>Solar</option><option>Baterias</option></select></div>
+        <div class="visita-field"><label>Aguardando proc. ambiental?</label><select class="vis-sel v-sn" id="v-amb"></select></div>
+      </div>
+      <div class="visita-field"><label>Situação dos pulverizadores</label><input id="v-pulv" type="text" placeholder="ex: 1 autopropelido ok, barra precisa rever bicos"></div>
+
+      <div class="vis-sec-hdr">FECHAMENTO</div>
       <div class="visita-section-title">📷 Fotos (máx. 3)</div>
       <div class="visita-fotos-row" id="visit-fotos-row">
         <label class="visita-add-foto" id="visit-add-foto-btn">
@@ -497,9 +549,11 @@ input,button,select{font-family:inherit;}
         <span id="visit-rec-timer" style="font-size:12px;color:var(--muted);font-family:monospace;"></span>
       </div>
       <audio id="visit-audio-player" controls style="display:none;width:100%;border-radius:8px;"></audio>
-      <div class="visita-section-title">📝 Observações</div>
-      <textarea id="visit-notas" class="visita-notas" placeholder="Interesse, volumes consumidos, melhor época de contato, concorrência…"></textarea>
-      <button class="visita-save-btn" onclick="saveVisita()">💾 Salvar Visita</button>
+      <div class="visita-field"><label>Resumo da visita</label><textarea id="visit-notas" class="visita-notas" placeholder="Interesse, volumes consumidos, melhor época de contato, concorrência…"></textarea></div>
+      <div class="visita-field"><label>Próximos passos</label><textarea id="v-prox" class="visita-notas" style="height:70px"></textarea></div>
+      <label class="vis-prevenda"><input type="checkbox" id="v-pv" style="width:19px;height:19px"> 🤝 Pré-venda realizada nesta visita</label>
+      <button class="visita-save-btn" id="visit-save-btn" onclick="saveVisita()">💾 Salvar Visita</button>
+      <div id="visit-msg"></div>
     </div>
   </div>
 </div>
@@ -1505,8 +1559,12 @@ async function showProspecNearbyCar(p) {
 }
 
 function openVisitaFromCar(p) {
+  var ehCliente = _currentDetailTipo === 'cli';
+  var ctx = ehCliente
+    ? { nome_cliente: p.cli || p.razao || p.nome || '', nome_fazenda: p.prop || p.propriedade || '', cliente_id: p.id || p.cli_id || p.cliente_id || null, lat: p.lat, lon: p.lon }
+    : { nome_cliente: '', nome_fazenda: p.nom_oficial || p.nom || '', car_id: p.id || null, lat: p.lat, lon: p.lon };
   closeProspecDetail();
-  openVisitaModal({ cli: p.nom || p.cod || p.cli || '', razao: p.nom || '' });
+  openVisitaModal(ctx);
 }
 
 function prospecSearch(val) {
@@ -1581,11 +1639,53 @@ function prospecFlyTo(lat, lon) {
 /* ─── VISITAS ─── */
 var visitPhotos = [], audioBlob = null, mediaRecorder = null, audioChunks = [], recInterval = null, recSeconds = 0;
 
+var _visCtx = {}, _visClima = null;
+var _VIS_SN = '<option value="">—</option><option value="true">Sim</option><option value="false">Não</option>';
+
+function visAddFazenda() {
+  var cont = document.getElementById('v-fazendas-extra');
+  var div = document.createElement('div');
+  div.className = 'vis-faz-row';
+  div.innerHTML = '<input class="v-faz-extra" placeholder="Fazenda ' + (cont.children.length + 2) + '"><button type="button" class="vis-faz-rm" onclick="this.parentNode.remove()">×</button>';
+  cont.appendChild(div);
+}
+
+async function visBuscaClima(lat, lon) {
+  var el = document.getElementById('vis-clima');
+  if (lat == null || lon == null) { el.textContent = '🌤 Clima: sem coordenada'; return; }
+  try {
+    var r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m');
+    var c = (await r.json()).current || {};
+    _visClima = { temp_c: c.temperature_2m, umidade_pct: c.relative_humidity_2m, chuva_mm: c.precipitation, vento_kmh: c.wind_speed_10m, quando: new Date().toISOString() };
+    el.textContent = '🌤 ' + c.temperature_2m + '°C · umidade ' + c.relative_humidity_2m + '% · chuva ' + c.precipitation + ' mm · vento ' + Math.round(c.wind_speed_10m) + ' km/h';
+  } catch (e) { el.textContent = '🌤 Clima indisponível'; }
+}
+
 function openVisitaModal(cli) {
+  // compatível com chamadas antigas ({cli, razao}) e novas (ctx completo)
+  var ctx = cli || {};
+  if (ctx.cli !== undefined && ctx.nome_fazenda === undefined) ctx = { nome_fazenda: ctx.cli || ctx.razao || '' };
+  _visCtx = ctx; _visClima = null;
   visitPhotos = []; audioBlob = null; mediaRecorder = null; audioChunks = [];
-  document.getElementById('visit-nome').value = cli ? (cli.cli || cli.razao || '') : '';
+  document.getElementById('visit-cli').value = ctx.nome_cliente || '';
+  document.getElementById('visit-nome').value = ctx.nome_fazenda || '';
+  document.getElementById('v-fazendas-extra').innerHTML = '';
   document.getElementById('visit-contato').value = '';
   document.getElementById('visit-notas').value = '';
+  ['v-ult','v-tanc','v-maq','v-cab','v-agri','v-pulv','v-prox'].forEach(function (id) { document.getElementById(id).value = ''; });
+  ['v-cons','v-curral','v-racao','v-ener'].forEach(function (id) { document.getElementById(id).value = ''; });
+  document.querySelectorAll('#visita-modal .v-sn').forEach(function (s) { s.innerHTML = _VIS_SN; });
+  document.querySelectorAll('#v-cria .vis-chip').forEach(function (c) {
+    c.classList.remove('on');
+    c.onclick = function () { c.classList.toggle('on'); };
+  });
+  document.getElementById('v-pv').checked = false;
+  document.getElementById('visit-msg').innerHTML = '';
+  var sb = document.getElementById('visit-save-btn'); sb.disabled = false; sb.textContent = '💾 Salvar Visita';
+  document.getElementById('vis-resp').innerHTML = '👤 Responsável: <b>' + esc((SESSION && (SESSION.nome || SESSION.email)) || 'Desconhecido') + '</b>';
+  var cLat = ctx.lat != null && ctx.lat !== '' ? +ctx.lat : (lastGpsPos ? lastGpsPos.lat : null);
+  var cLon = ctx.lon != null && ctx.lon !== '' ? +ctx.lon : (lastGpsPos ? lastGpsPos.lon : null);
+  visBuscaClima(cLat, cLon);
   document.getElementById('visit-audio-player').style.display = 'none';
   document.getElementById('visit-audio-player').src = '';
   document.getElementById('visit-rec-btn').textContent = '🎙 Gravar';
@@ -1700,13 +1800,78 @@ function stopAudioRec() {
   document.getElementById('visit-rec-btn').classList.remove('recording');
 }
 
+function _vv(id) { var e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; }
+function _vbool(id) { var v = _vv(id); return v === '' ? null : v; }
+function _dataUrlToBlob(d) {
+  var p = d.split(','), mime = (p[0].match(/:(.*?);/) || [])[1] || 'image/jpeg', bin = atob(p[1]), u = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], { type: mime });
+}
+
 async function saveVisita() {
-  var nome = document.getElementById('visit-nome').value.trim() || 'Sem nome';
-  var contato = document.getElementById('visit-contato').value.trim();
-  var notas = document.getElementById('visit-notas').value.trim();
+  var btn = document.getElementById('visit-save-btn');
+  var msg = document.getElementById('visit-msg');
+  var ctx = _visCtx || {};
+  var fazendas = [_vv('visit-nome') || 'Sem nome'];
+  document.querySelectorAll('.v-faz-extra').forEach(function (i) { if (i.value.trim()) fazendas.push(i.value.trim()); });
+  var lat = ctx.lat != null && ctx.lat !== '' ? +ctx.lat : (lastGpsPos ? lastGpsPos.lat : null);
+  var lon = ctx.lon != null && ctx.lon !== '' ? +ctx.lon : (lastGpsPos ? lastGpsPos.lon : null);
+  btn.disabled = true; btn.textContent = '⏳ Salvando…';
+  try {
+    if (!SESSION || !SESSION.token) throw new Error('Sessão expirada. Entre novamente.');
+    var stamp = Date.now();
+    var fotoUrls = [];
+    for (var i = 0; i < visitPhotos.length; i++) {
+      var path = 'v' + stamp + '_' + i + '.jpg';
+      var up = await SB.storage.from('visitas').upload(path, _dataUrlToBlob(visitPhotos[i]), { contentType: 'image/jpeg' });
+      if (!up.error) fotoUrls.push(SB.storage.from('visitas').getPublicUrl(path).data.publicUrl);
+    }
+    var audioUrl = '';
+    if (audioBlob) {
+      var ap = 'v' + stamp + '_audio.webm';
+      var ua = await SB.storage.from('visitas').upload(ap, audioBlob, { contentType: audioBlob.type || 'audio/webm' });
+      if (!ua.error) audioUrl = SB.storage.from('visitas').getPublicUrl(ap).data.publicUrl;
+    }
+    var criacao = [];
+    document.querySelectorAll('#v-cria .vis-chip.on').forEach(function (c) { criacao.push(c.getAttribute('data-v')); });
+    var base = {
+      car_id: ctx.car_id || '', cliente_id: ctx.cliente_id || '',
+      nome_cliente: _vv('visit-cli'), contato: _vv('visit-contato'),
+      lat: lat != null ? String(lat) : '', lon: lon != null ? String(lon) : '',
+      clima: _visClima,
+      ultima_compra_combustivel: _vv('v-ult'), tancagem_l: _vv('v-tanc'),
+      conservacao_tanques: _vv('v-cons'), manutencao_tanques: _vbool('v-manu'),
+      maquinarios: _vv('v-maq'), tipo_criacao: criacao.length ? criacao : undefined,
+      qtd_cabecas: _vv('v-cab'), agricultura_ha: _vv('v-agri'),
+      tem_pivo: _vbool('v-pivo'), estado_curral: _vv('v-curral'), energia: _vv('v-ener'),
+      treinamento_manejo: _vbool('v-trein'), faz_tip: _vbool('v-tip'), racao: _vv('v-racao'),
+      faz_ilp: _vbool('v-ilp'), situacao_pulverizadores: _vv('v-pulv'),
+      aguardando_ambiental: _vbool('v-amb'), fotos: fotoUrls, audio_url: audioUrl,
+      resumo: _vv('visit-notas'), proximos_passos: _vv('v-prox'),
+      pre_venda: document.getElementById('v-pv').checked
+    };
+    for (var f = 0; f < fazendas.length; f++) {
+      var res = await SB.rpc('trr_visita_salvar', { p_token: SESSION.token, p: Object.assign({}, base, { nome_fazenda: fazendas[f] }) });
+      if (res.error || (res.data && res.data.error)) throw new Error((res.data && res.data.error) || res.error.message);
+    }
+    closeVisitaModal();
+    if (lat && lon && prospecMap) {
+      L.circleMarker([lat, lon], { radius: 10, color: '#10b981', fillColor: '#10b981', fillOpacity: .9, weight: 2 })
+        .addTo(prospecMap).bindPopup('📸 Visita: ' + esc(fazendas[0])).openPopup();
+    }
+    var extra = base.maquinarios ? '\n\n💡 Maquinário anotado: ofereça aditivos e lubrificantes/ARLA.' : '';
+    alert('✅ ' + (fazendas.length > 1 ? fazendas.length + ' visitas salvas!' : 'Visita salva!') + '\n' + fazendas.join(', ') + extra);
+    if (typeof renderVisitasList === 'function') renderVisitasList();
+    return;
+  } catch (e) {
+    // Sem internet ou erro no servidor: guarda no aparelho para não perder o registro
+    btn.disabled = false; btn.textContent = '💾 Salvar Visita';
+    if (!confirm('Não foi possível salvar no sistema (' + (e.message || e) + ').\n\nSalvar no aparelho para não perder?')) return;
+  }
+  var nome = fazendas[0];
+  var contato = _vv('visit-contato');
+  var notas = _vv('visit-notas');
   var ts = new Date().toISOString();
-  var lat = lastGpsPos ? lastGpsPos.lat : null;
-  var lon = lastGpsPos ? lastGpsPos.lon : null;
 
   var audioB64 = null;
   if (audioBlob) {

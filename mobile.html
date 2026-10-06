@@ -174,8 +174,43 @@ input,button,select{font-family:inherit;}
 .pdl-sub{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;}
 .nav-ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:3000;display:flex;align-items:flex-end;}
 .nav-box{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));}
-.nav-btn{display:flex;align-items:center;gap:12px;width:100%;border:1px solid #e5e7eb;background:#fff;border-radius:12px;padding:13px 14px;margin-top:8px;font-size:15px;font-weight:700;color:#111827;cursor:pointer;text-align:left;}
-.nav-btn span{font-size:21px;}
+.nvo-btn{display:flex;align-items:center;gap:12px;width:100%;border:1px solid #e5e7eb;background:#fff;border-radius:12px;padding:13px 14px;margin-top:8px;font-size:15px;font-weight:700;color:#111827;cursor:pointer;text-align:left;box-sizing:border-box;}
+.nvo-btn span{font-size:21px;}
+/* ── PROSPECTAR ── */
+.pq-top{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.pq-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}
+.pq-kpi{background:var(--card);border-radius:10px;padding:8px 6px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+.pq-kpi b{display:block;font-size:18px;color:#10243e;}
+.pq-kpi span{font-size:10.5px;color:var(--muted);font-weight:600;}
+.pq-sec{font-size:12px;font-weight:900;color:#10243e;text-transform:uppercase;letter-spacing:.4px;margin:14px 2px 6px;display:flex;align-items:center;gap:6px;}
+.pq-sec small{font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0;}
+.pq-item{background:var(--card);border-radius:12px;padding:11px 13px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;gap:10px;align-items:center;cursor:pointer;}
+.pq-item:active{background:#f6f7f9;}
+.pq-score{flex-shrink:0;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;}
+.pq-s-a{background:#dcfce7;color:#166534;}.pq-s-b{background:#fef3c7;color:#92400e;}.pq-s-c{background:#f1f5f9;color:#475569;}
+.pq-nome{font-size:13.5px;font-weight:800;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pq-meta{font-size:11.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pq-st{font-size:10.5px;font-weight:800;border-radius:20px;padding:2px 8px;white-space:nowrap;}
+.pq-btn{border:none;border-radius:20px;padding:8px 14px;font-size:12.5px;font-weight:800;cursor:pointer;background:#10243e;color:#fff;}
+.pq-btn.sec{background:#eef2f7;color:#10243e;}
+#pq-sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:720;display:none;align-items:flex-end;}
+#pq-sheet.open{display:flex;}
+.pq-box{background:var(--card);width:100%;max-height:94dvh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden;}
+.pq-hdr{padding:14px 16px 10px;border-bottom:1px solid #f0f2f5;display:flex;gap:8px;align-items:flex-start;}
+.pq-body{overflow-y:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom,0px));}
+.pq-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
+.pq-chip{font-size:11px;background:#f1f5f9;color:#334155;border-radius:12px;padding:3px 8px;}
+.pq-chip.warn{background:#fee2e2;color:#991b1b;}
+.pq-acts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0;}
+.pq-act{border:none;border-radius:12px;padding:11px 4px;font-size:12.5px;font-weight:800;cursor:pointer;text-align:center;line-height:1.35;text-decoration:none;display:block;}
+.pq-card{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:11px 12px;margin-top:10px;}
+.pq-card h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#64748b;}
+.pq-msg{white-space:pre-wrap;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:13.5px;line-height:1.45;}
+.pq-res{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.pq-res button{border:1.5px solid #dde2e8;background:#fff;border-radius:10px;padding:9px 4px;font-size:12px;font-weight:700;cursor:pointer;line-height:1.3;}
+.pq-res button.on{border-color:#10243e;background:#10243e;color:#fff;}
+.pq-emp{font-size:12.5px;padding:7px 0;border-top:1px solid #eef1f4;}
+.pq-emp:first-child{border-top:none;}
 .prospec-leg-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
 .prospec-nearby-sheet{position:absolute;bottom:0;left:0;right:0;z-index:500;background:var(--card);border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.18);max-height:45%;display:flex;flex-direction:column;}
 .prospec-sheet-hdr{padding:10px 16px 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0f2f5;flex-shrink:0;}
@@ -459,10 +494,29 @@ input,button,select{font-family:inherit;}
     </div>
   </div>
 
+  <!-- ── TAB: PROSPECTAR ── -->
+  <div class="tab-body" id="tab-prospectar">
+    <div class="pq-top">
+      <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:900;color:#10243e">🎯 Prospecção</div><div style="font-size:12px;color:var(--muted)" id="pq-quem">–</div></div>
+      <select id="pq-vend" style="display:none;padding:8px;border:1.5px solid #dde2e8;border-radius:10px;font-size:13px" onchange="carregarFila()">
+        <option value="6b37510c-e63c-43c4-b716-82998bd1c7e4">Alyne</option>
+        <option value="6a684fbe-eef7-48c6-9643-728c8f10debb">Vieira</option>
+      </select>
+      <button class="pq-btn sec" onclick="carregarFila()">↻</button>
+    </div>
+    <div class="pq-kpis" id="pq-kpis"></div>
+    <div id="pq-mercado"></div>
+    <button class="pq-btn" id="pq-rota-btn" style="width:100%;margin-bottom:4px;display:none" onclick="abrirRota()">🚚 Montar rota de campo</button>
+    <div id="pq-lista"><div class="empty"><div class="spin"></div></div></div>
+  </div>
+
   <!-- Bottom nav -->
   <nav class="bottom-nav" style="font-size:10px;">
     <button class="nav-btn active" id="nav-resumo" onclick="switchTab('resumo')">
       <span class="nav-ico">📊</span><span>Resumo</span>
+    </button>
+    <button class="nav-btn" id="nav-prospectar" onclick="switchTab('prospectar')">
+      <span class="nav-ico">🎯</span><span>Prospectar</span>
     </button>
     <button class="nav-btn" id="nav-clientes" onclick="switchTab('clientes')">
       <span class="nav-ico">👥</span><span>Clientes</span>
@@ -477,6 +531,14 @@ input,button,select{font-family:inherit;}
       <span class="nav-ico">📋</span><span>Visitas</span>
     </button>
   </nav>
+</div>
+
+<!-- Ficha do prospect -->
+<div id="pq-sheet" onclick="if(event.target===this)fecharFicha()">
+  <div class="pq-box">
+    <div class="pq-hdr"><div style="flex:1;min-width:0" id="pq-h"></div><button class="visita-close" onclick="fecharFicha()">✕</button></div>
+    <div class="pq-body" id="pq-b"></div>
+  </div>
 </div>
 
 <!-- Modal Registrar Visita -->
@@ -665,6 +727,7 @@ function switchTab(tab) {
   document.getElementById('nav-' + tab).classList.add('active');
   if (tab === 'prospec') initProspecMap();
   if (tab === 'visitas') renderVisitasList();
+  if (tab === 'prospectar') carregarFila();
 }
 
 /* ─── RESUMO ─── */
@@ -1335,10 +1398,10 @@ function abrirNavegar(lat, lon, nome, local) {
   ov.innerHTML = '<div class="nav-box">' +
     '<div style="font-size:16px;font-weight:800;color:#10243e">Navegar até ' + esc(nome) + '</div>' +
     '<div style="font-size:12.5px;color:#6b7280;margin-top:2px">' + esc(local || '') + (local ? ' · ' : '') + lat.toFixed(5) + ', ' + lon.toFixed(5) + '</div>' +
-    '<a class="nav-btn" href="https://www.google.com/maps/dir/?api=1&destination=' + c + '" target="_blank" rel="noopener" style="text-decoration:none"><span>🗺</span>Google Maps</a>' +
-    '<a class="nav-btn" href="https://waze.com/ul?ll=' + c + '&navigate=yes" target="_blank" rel="noopener" style="text-decoration:none"><span>🚙</span>Waze</a>' +
-    '<button class="nav-btn" id="nav-copiar" style="color:#6b7280"><span>📋</span>Copiar coordenadas</button>' +
-    '<button class="nav-btn" onclick="fecharNavegar()" style="justify-content:center;color:#6b7280;border:none">Cancelar</button>' +
+    '<a class="nvo-btn" href="https://www.google.com/maps/dir/?api=1&destination=' + c + '" target="_blank" rel="noopener" style="text-decoration:none"><span>🗺</span>Google Maps</a>' +
+    '<a class="nvo-btn" href="https://waze.com/ul?ll=' + c + '&navigate=yes" target="_blank" rel="noopener" style="text-decoration:none"><span>🚙</span>Waze</a>' +
+    '<button class="nvo-btn" id="nav-copiar" style="color:#6b7280"><span>📋</span>Copiar coordenadas</button>' +
+    '<button class="nvo-btn" onclick="fecharNavegar()" style="justify-content:center;color:#6b7280;border:none">Cancelar</button>' +
   '</div>';
   document.body.appendChild(ov);
   document.getElementById('nav-copiar').onclick = function () {
@@ -1648,6 +1711,337 @@ function closeProspecSheet() {
 
 function prospecFlyTo(lat, lon) {
   if (prospecMap) { prospecMap.setView([+lat, +lon], 15); closeProspecSheet(); }
+}
+
+/* ─── PROSPECTAR: fila do dia, ficha com IA, resultado e rota ─── */
+var _pq = { fila: null, grupo: null, det: null, ia: null, res: null };
+var PQ_ST = {
+  novo: ['Novo', '#e0f2fe', '#075985'], contatado: ['Tentando contato', '#f1f5f9', '#475569'],
+  conversou: ['Conversou', '#ede9fe', '#5b21b6'], interesse: ['Interesse', '#dcfce7', '#166534'],
+  visita_agendada: ['Visita agendada', '#fef3c7', '#92400e'], negociacao: ['Negociação', '#dbeafe', '#1e40af'],
+  pedido: ['Pedido', '#bbf7d0', '#14532d'], sem_interesse: ['Sem interesse', '#fee2e2', '#991b1b'],
+  sem_resposta: ['Sem resposta', '#f1f5f9', '#64748b'], numero_errado: ['Nº errado', '#f1f5f9', '#64748b'],
+  nao_contatar: ['Não contatar', '#fee2e2', '#991b1b']
+};
+var PQ_RES = [
+  ['nao_atendeu', '📵 Não atendeu'], ['conversou', '💬 Conversou'], ['interesse', '👍 Tem interesse'],
+  ['visita_agendada', '📅 Agendar visita'], ['visitou', '🚜 Visitei'], ['negociacao', '🤝 Negociando'],
+  ['pedido', '✅ Pedido!'], ['sem_interesse', '👎 Sem interesse'], ['numero_errado', '☎️ Nº errado'],
+  ['nao_contatar', '🚫 Não contatar']
+];
+
+function pqStatus(s) {
+  var x = PQ_ST[s] || [s, '#f1f5f9', '#475569'];
+  return '<span class="pq-st" style="background:' + x[1] + ';color:' + x[2] + '">' + x[0] + '</span>';
+}
+function pqScore(n) {
+  var c = n >= 70 ? 'pq-s-a' : n >= 55 ? 'pq-s-b' : 'pq-s-c';
+  return '<div class="pq-score ' + c + '">' + (n == null ? '–' : n) + '</div>';
+}
+function pqNome(g) { return g.nome_fantasia && g.nome_fantasia.length < 40 ? g.nome_fantasia : g.razao_social; }
+function pqFone(t) {
+  var d = String(t || '').replace(/\D/g, '');
+  if (d.length >= 12 && d.startsWith('55')) return d;
+  return d.length >= 10 ? '55' + d : '';
+}
+
+function pqRS(v, dec) {
+  return v == null ? '–' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 });
+}
+function pqL(v) { return v == null ? '–' : Number(v).toLocaleString('pt-BR') + ' L'; }
+function pqComprasLinha(c) {
+  if (!c || !c.total_rs) return '';
+  return '<div class="pq-meta" style="color:#166534;font-weight:700">🧾 ' + pqRS(c.total_rs) + ' · ' + pqL(c.litros) +
+    (c.preco_medio ? ' · ' + pqRS(c.preco_medio, 2) + '/L' : '') + (c.ultima_compra ? ' · últ. ' + esc(c.ultima_compra) : '') + '</div>';
+}
+function pqComprasCard(c) {
+  if (!c) return '';
+  var lin = function (k, v) { return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-top:1px solid #eef1f4"><span style="color:#64748b">' + k + '</span><b>' + v + '</b></div>'; };
+  return '<div class="pq-card" style="background:#f0fdf4;border-color:#bbf7d0"><h4 style="color:#166534">🧾 Compras anteriores' + (c.curva ? ' · curva ' + esc(c.curva) : '') + '</h4>' +
+    '<div style="font-size:12px;color:#475569;margin-bottom:4px">Cadastro: ' + esc((c.clientes || []).join(', ')) + '</div>' +
+    lin('Última compra', c.ultima_compra ? esc(c.ultima_compra) : c.vendas_2026 ? 'em 2026 (mês não informado)' : c.vendas_2025 ? 'em 2025 (mês não informado)' : 'antes de 2025') +
+    lin('Preço médio pago', c.preco_medio ? pqRS(c.preco_medio, 2) + ' / litro' : '–') +
+    lin('Total já comprado', pqRS(c.total_rs) + ' · ' + pqL(c.litros)) +
+    lin('Compras em 2025', pqRS(c.vendas_2025)) +
+    lin('Compras em 2026', pqRS(c.vendas_2026)) +
+    '<div style="font-size:10.5px;color:#94a3b8;margin-top:6px">Preço médio = total ÷ litros do histórico. O valor exato da última nota entra quando ligarmos as vendas do EMSys.</div></div>';
+}
+
+function pqContextoHtml(ia) {
+  var c = ia.contexto, cl = ia.clima_dados;
+  if (!c && !cl) return '';
+  var row = function (ico, tit, txt) { return txt ? '<div style="display:flex;gap:8px;font-size:12.5px;line-height:1.45;padding:6px 0;border-top:1px solid #e2e8f0"><span>' + ico + '</span><div><b>' + tit + ':</b> ' + esc(txt) + '</div></div>' : ''; };
+  var h = '<h4 style="margin-top:12px">🌎 Contexto para a venda</h4><div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:4px 10px">';
+  if (cl) h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 0;text-align:center">' +
+    '<div><b style="font-size:15px;color:#0369a1">' + cl.chuva_30d_mm + ' mm</b><div style="font-size:10.5px;color:#64748b">chuva 30 dias</div></div>' +
+    '<div><b style="font-size:15px;color:#0369a1">' + cl.previsao_14d_mm + ' mm</b><div style="font-size:10.5px;color:#64748b">previsão 14 dias</div></div>' +
+    '<div><b style="font-size:15px;color:#0369a1">' + (cl.proxima_chuva_forte ? fmtData(cl.proxima_chuva_forte) : '—') + '</b><div style="font-size:10.5px;color:#64748b">próx. chuva forte</div></div></div>';
+  if (c) h += row('🌧', 'Clima', c.clima) + row('📈', 'Mercado', c.mercado) + row('📰', 'Notícias do grupo', c.noticias) +
+    (c.riscos ? '<div style="font-size:12.5px;background:#fef2f2;color:#991b1b;border-radius:8px;padding:6px 8px;margin:6px 0">⚠ ' + esc(c.riscos) + '</div>' : '');
+  return h + '</div>';
+}
+function pqFechamentoHtml(ia) {
+  var h = '';
+  if ((ia.argumentos || []).length) h += '<h4 style="margin-top:12px">🎯 Argumentos para fechar</h4><ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.5">' + ia.argumentos.map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('') + '</ul>';
+  if ((ia.objecoes || []).length) h += '<h4 style="margin-top:12px">🛡 Objeções prováveis</h4>' + ia.objecoes.map(function (o) {
+    return '<div style="font-size:12.5px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;margin-bottom:6px"><b>“' + esc(o.objecao) + '”</b><br><span style="color:#166534">→ ' + esc(o.resposta) + '</span></div>';
+  }).join('');
+  if ((ia.fontes || []).length) h += '<details style="margin-top:8px;font-size:11.5px;color:#64748b"><summary>Fontes pesquisadas (' + ia.fontes.length + ')' + (ia.boletim_dia ? ' · boletim de ' + fmtData(ia.boletim_dia) : '') + '</summary>' +
+    ia.fontes.map(function (f) { return '<div style="padding:3px 0"><a target="_blank" rel="noopener" href="' + esc(f.url) + '">' + esc(f.titulo || f.url) + '</a></div>'; }).join('') + '</details>';
+  return h;
+}
+
+async function carregarMercado() {
+  var el = document.getElementById('pq-mercado');
+  var r = await SB.rpc('trr_mercado_hoje', { p_token: SESSION.token });
+  var b = r.data;
+  if (!b || !b.dados) { el.innerHTML = ''; return; }
+  var d = b.dados, o = d.oficiais || {};
+  var chip = function (t, v) { return v ? '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:6px 8px"><div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase">' + t + '</div><div style="font-size:12px;line-height:1.35">' + esc(v) + '</div></div>' : ''; };
+  var seta = { alta: '<span style="color:#16a34a">▲ alta</span>', baixa: '<span style="color:#dc2626">▼ baixa</span>', 'estável': '<span style="color:#64748b">● estável</span>' };
+  var cot = function (t, x) {
+    if (!x || !(x.valor || x.preco)) return '';
+    return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:6px 8px"><div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase">' + t + '</div>' +
+      '<div style="font-size:15px;font-weight:900;color:#10243e">' + esc(x.valor || x.preco) + '</div>' +
+      '<div style="font-size:11px;font-weight:700">' + (seta[(x.tendencia || '').split(/[ -]/)[0]] || esc(x.tendencia || '')) + '</div>' +
+      '<div style="font-size:10.5px;color:#64748b;line-height:1.3">' + esc([x.praca, x.data].filter(Boolean).join(' · ')) + (x.motivo ? '<br>' + esc(x.motivo) : '') + '</div></div>';
+  };
+  var cl = o.clima_trr || {};
+  var climaTxt = Object.keys(cl).map(function (k) { var c = cl[k]; return c ? k.replace(' do Araguaia', '') + ' ' + c.chuva_7d_mm + ' mm/7d → ' + c.previsao_14d_mm + ' mm prev. 14d' : ''; }).filter(Boolean).join(' · ');
+  el.innerHTML = '<details class="pq-card" style="margin:0 0 6px;background:#eff6ff;border-color:#bfdbfe;overflow-wrap:anywhere;min-width:0"><summary style="cursor:pointer;list-style:none">' +
+    '<div style="font-size:11px;font-weight:900;color:#1d4ed8;text-transform:uppercase;letter-spacing:.4px">📈 Mercado do dia · ' + fmtData(b.dia) + ' <span style="float:right;font-weight:600;text-transform:none">ver mais ▾</span></div>' +
+    '<div style="font-size:13px;line-height:1.4;margin-top:4px;color:#10243e"><b>' + esc(d.manchete || '') + '</b></div></summary>' +
+    '<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin-top:8px;overflow-wrap:anywhere">' +
+      cot('🌱 Soja', d.soja) + cot('🌽 Milho', d.milho) + cot('🐂 Boi gordo', d.boi_gordo) + cot('⛽ Diesel S10', d.diesel) +
+      chip('💵 Dólar PTAX', o.dolar_ptax ? 'R$ ' + o.dolar_ptax.valor.toFixed(2).replace('.', ',') + ' (' + o.dolar_ptax.data + ')' : '') +
+      chip('🏦 Selic', o.selic_meta ? o.selic_meta.valor.toString().replace('.', ',') + '% a.a.' : '') +
+    '</div>' +
+    (climaTxt ? '<div style="font-size:12.5px;margin-top:8px"><b>🌧 Chuva nos TRRs:</b> ' + esc(climaTxt) + '</div>' : '') +
+    (d.clima ? '<div style="font-size:12.5px;margin-top:4px">' + esc(d.clima) + '</div>' : '') +
+    (d.diesel && d.diesel.petrobras ? '<div style="font-size:12.5px;margin-top:6px"><b>🛢 Petrobras:</b> ' + esc(d.diesel.petrobras) + (d.petroleo ? ' · ' + esc(d.petroleo) : '') + '</div>' : '') +
+    (d.safra_go ? '<div style="font-size:12.5px;margin-top:6px"><b>🚜 Safra GO:</b> ' + esc(d.safra_go) + '</div>' : '') +
+    (d.credito ? '<div style="font-size:12.5px;margin-top:6px"><b>🏦 Crédito:</b> ' + esc(d.credito) + '</div>' : '') +
+    ((d.crises_alertas || []).length ? '<div style="font-size:12.5px;margin-top:8px;background:#fef2f2;color:#991b1b;border-radius:8px;padding:6px 8px"><b>⚠ Alertas</b><ul style="margin:4px 0 0;padding-left:18px">' + d.crises_alertas.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '') +
+    ((d.gatilhos_venda || []).length ? '<div style="font-size:12.5px;margin-top:8px;background:#f0fdf4;color:#14532d;border-radius:8px;padding:6px 8px"><b>🎯 Use hoje na conversa</b><ul style="margin:4px 0 0;padding-left:18px">' + d.gatilhos_venda.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '') +
+    ((b.fontes || []).length ? '<details style="margin-top:8px;font-size:11.5px;color:#64748b"><summary>Fontes (' + b.fontes.length + ')</summary>' + b.fontes.map(function (f) { return '<div style="padding:2px 0"><a target="_blank" rel="noopener" href="' + esc(f.url) + '">' + esc(f.titulo || f.url) + '</a></div>'; }).join('') + '</details>' : '') +
+    '<div style="font-size:10.5px;color:#94a3b8;margin-top:6px">Pesquisado pela IA na web + Banco Central + Open-Meteo. Confira o preço antes de citar ao cliente.</div></details>';
+}
+
+async function carregarFila() {
+  carregarMercado();
+  var el = document.getElementById('pq-lista');
+  if (!SESSION || !SESSION.token) { el.innerHTML = '<div class="empty">Entre para ver sua fila.</div>'; return; }
+  var sel = document.getElementById('pq-vend');
+  var admin = SESSION.role === 'admin';
+  sel.style.display = admin ? '' : 'none';
+  el.innerHTML = '<div class="empty"><div class="spin"></div></div>';
+  var r = await SB.rpc('trr_prosp_fila', { p_token: SESSION.token, p_vendedor: admin ? sel.value : null, p_novos: null });
+  if (r.error || (r.data && r.data.error)) { el.innerHTML = '<div class="empty">❌ ' + esc((r.data && r.data.error) || r.error.message) + '</div>'; return; }
+  var f = _pq.fila = r.data;
+  var vieira = f.vendedor === '6a684fbe-eef7-48c6-9643-728c8f10debb';
+  document.getElementById('pq-quem').textContent = (admin ? (sel.options[sel.selectedIndex].text + ' · visão da gestão') : (SESSION.nome || SESSION.email)) + ' · ' + new Date().toLocaleDateString('pt-BR');
+  document.getElementById('pq-rota-btn').style.display = (vieira || admin) ? '' : 'none';
+  var t = f.totais || {};
+  document.getElementById('pq-kpis').innerHTML =
+    '<div class="pq-kpi"><b>' + (t.contatos_hoje || 0) + '</b><span>contatos hoje</span></div>' +
+    '<div class="pq-kpi"><b>' + (t.em_andamento || 0) + '</b><span>em andamento</span></div>' +
+    '<div class="pq-kpi"><b>' + (t.pedidos || 0) + '</b><span>pedidos</span></div>' +
+    '<div class="pq-kpi"><b>' + (t.novos || 0) + '</b><span>a contatar</span></div>';
+  var bloco = function (titulo, sub, lista) {
+    if (!lista || !lista.length) return '';
+    return '<div class="pq-sec">' + titulo + ' <small>' + sub + '</small></div>' + lista.map(function (g) {
+      var extra = g.status_prospeccao === 'visita_agendada' && g.visita_data ? ' · 📅 ' + fmtData(g.visita_data) : '';
+      return '<div class="pq-item" onclick="abrirFicha(\'' + esc(g.grupo_id) + '\')">' + pqScore(g.score) +
+        '<div style="flex:1;min-width:0"><div class="pq-nome">' + esc(pqNome(g)) + '</div>' +
+        '<div class="pq-meta">' + esc(g.municipio || '') + ' · ' + esc((g.ramo || '').replace('Criação de bovinos para corte', 'Pecuária de corte')) +
+        (g.grupo_qtd > 1 ? ' · ' + g.grupo_qtd + ' empresas' : '') + extra + '</div>' + pqComprasLinha(g.compras) + '</div>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">' + pqStatus(g.status_prospeccao) +
+        (g.celular ? '<span style="font-size:11px">💬</span>' : '') + (g.tem_ia ? '<span style="font-size:11px">✨</span>' : '') + '</div></div>';
+    }).join('');
+  };
+  var h = bloco('📅 Retornos de hoje', 'contatos que voltam para a fila', f.retornos) +
+          bloco('♻️ Reativar clientes', 'já compraram e pararam', f.reativar) +
+          bloco('🆕 Novos contatos', 'maior nota primeiro', f.novos) +
+          bloco('🗓 Visitas agendadas', 'próximos dias', f.agenda);
+  el.innerHTML = h || '<div class="empty"><div class="empty-ico">🎉</div>Fila do dia concluída!</div>';
+}
+
+function fecharFicha() { document.getElementById('pq-sheet').classList.remove('open'); _pq.grupo = null; }
+
+async function abrirFicha(grupo) {
+  _pq.grupo = grupo; _pq.res = null; _pq.ia = null;
+  var all = [].concat(_pq.fila.retornos || [], _pq.fila.reativar || [], _pq.fila.novos || [], _pq.fila.agenda || []);
+  var g = all.find(function (x) { return x.grupo_id === grupo; }) || {};
+  document.getElementById('pq-sheet').classList.add('open');
+  document.getElementById('pq-h').innerHTML = '<div style="font-size:16px;font-weight:900;color:#10243e;line-height:1.25">' + esc(pqNome(g)) + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + esc((g.municipios || [g.municipio]).join(', ')) + ' · nota ' + (g.score || '–') + ' · ' + pqStatus(g.status_prospeccao) + '</div>' +
+    '<div class="pq-chips">' + (g.score_motivos || []).map(function (m) { return '<span class="pq-chip' + (/⚠|Holding/.test(m) ? ' warn' : '') + '">' + esc(m) + '</span>'; }).join('') + '</div>';
+  var b = document.getElementById('pq-b');
+  b.innerHTML = '<div class="empty"><div class="spin"></div></div>';
+  var r = await SB.rpc('trr_prosp_grupo', { p_token: SESSION.token, p_grupo: grupo });
+  if (r.error || (r.data && r.data.error)) { b.innerHTML = '<div class="empty">❌ ' + esc((r.data && r.data.error) || r.error.message) + '</div>'; return; }
+  _pq.det = r.data; _pq.ia = r.data.ia || null;
+  renderFicha(g);
+}
+
+function renderFicha(g) {
+  var d = _pq.det, emp = d.empresas || [], ia = _pq.ia;
+  var fone = g.telefone || (emp[0] && emp[0].telefone1) || '';
+  var wa = pqFone(fone);
+  var msg = ia && ia.whatsapp ? ia.whatsapp : '';
+  var h = '<div class="pq-acts">' +
+    (fone ? '<a class="pq-act" style="background:#e0f2fe;color:#075985" href="tel:+' + pqFone(fone) + '">📞<br>Ligar</a>' : '<div class="pq-act" style="background:#f1f5f9;color:#94a3b8">📞<br>Sem fone</div>') +
+    (wa && g.celular ? '<a class="pq-act" style="background:#dcfce7;color:#166534" target="_blank" rel="noopener" href="https://wa.me/' + wa + (msg ? '?text=' + encodeURIComponent(msg) : '') + '">💬<br>WhatsApp</a>' : '<div class="pq-act" style="background:#f1f5f9;color:#94a3b8">💬<br>Sem celular</div>') +
+    (g.lat ? '<button class="pq-act" style="background:#fff7ed;color:#c2410c" onclick="abrirNavegar(' + (+g.lat) + ',' + (+g.lon) + ',\'' + esc(pqNome(g)).replace(/'/g, '') + '\',\'centro de ' + esc(g.municipio || '').replace(/'/g, '') + ' (aprox.)\')">🧭<br>Município</button>' : '<div></div>') +
+  '</div>';
+
+  h += pqComprasCard(d.compras);
+
+  // IA
+  h += '<div class="pq-card"><h4>✨ Abordagem sugerida pela IA</h4>';
+  if (!ia) {
+    h += '<div style="font-size:12.5px;color:#475569;margin-bottom:8px">A IA monta o resumo do grupo, o potencial, o motivo para ligar agora, a primeira mensagem de WhatsApp e o roteiro da ligação.</div>' +
+         '<button class="pq-btn" id="pq-ia-btn" style="width:100%" onclick="gerarIA(false)">✨ Preparar abordagem</button>';
+  } else {
+    var pot = ia.potencial || {};
+    h += '<div style="font-size:13px;line-height:1.45">' + esc(ia.resumo || '') + '</div>' +
+      '<div style="font-size:12.5px;margin-top:8px"><b>Potencial:</b> ' + esc(pot.nivel || '–') + ' · ' + esc(pot.consumo_estimado || '') + '<br><span style="color:#64748b">' + esc(pot.justificativa || '') + '</span></div>' +
+      (ia.por_que_agora ? '<div style="font-size:12.5px;margin-top:6px"><b>Por que agora:</b> ' + esc(ia.por_que_agora) + '</div>' : '') +
+      (ia.quem_procurar ? '<div style="font-size:12.5px;margin-top:6px"><b>Quem procurar:</b> ' + esc(ia.quem_procurar) + '</div>' : '') +
+      pqContextoHtml(ia) +
+      '<h4 style="margin-top:12px">💬 Primeira mensagem (WhatsApp)</h4><div class="pq-msg" id="pq-wa-txt">' + esc(ia.whatsapp || '') + '</div>' +
+      '<div style="display:flex;gap:6px;margin-top:6px"><button class="pq-btn sec" onclick="copiarTxt(\'pq-wa-txt\',this)">📋 Copiar</button>' +
+      (wa && g.celular ? '<a class="pq-btn" style="text-decoration:none;background:#16a34a" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent(ia.whatsapp || '') + '">Abrir no WhatsApp</a>' : '') + '</div>' +
+      '<h4 style="margin-top:12px">📞 Roteiro da ligação (30s)</h4><div class="pq-msg" id="pq-lig-txt">' + esc(ia.ligacao || '') + '</div>' +
+      ((ia.perguntas || []).length ? '<h4 style="margin-top:12px">❓ Perguntas para qualificar</h4><ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.5">' + ia.perguntas.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '') +
+      pqFechamentoHtml(ia) +
+      (ia.cuidado ? '<div style="margin-top:10px;background:#fef2f2;color:#991b1b;border-radius:8px;padding:8px 10px;font-size:12.5px">⚠ ' + esc(ia.cuidado) + '</div>' : '') +
+      '<button class="pq-btn sec" id="pq-ia-btn" style="width:100%;margin-top:10px" onclick="gerarIA(true)">↻ Gerar outra versão</button>';
+  }
+  h += '</div>';
+
+  // registrar resultado
+  h += '<div class="pq-card"><h4>📝 Registrar resultado do contato</h4><div class="pq-res">' +
+    PQ_RES.map(function (x) { return '<button data-r="' + x[0] + '" onclick="pqEscolher(this)">' + x[1] + '</button>'; }).join('') + '</div>' +
+    '<div id="pq-data-box" style="display:none;margin-top:8px"><label style="font-size:11px;font-weight:700;color:#64748b">DATA</label><input type="date" id="pq-data" style="width:100%;padding:10px;border:1.5px solid #dde2e8;border-radius:10px;font-size:14px;box-sizing:border-box"></div>' +
+    '<textarea id="pq-nota" class="visita-notas" style="height:64px;margin-top:8px" placeholder="Anotação (opcional): o que ele disse, consumo, fornecedor atual…"></textarea>' +
+    '<button class="visita-save-btn" id="pq-salvar" style="margin-top:8px" onclick="pqSalvar()">Salvar resultado</button><div id="pq-msg-res"></div></div>';
+
+  // empresas do grupo
+  h += '<div class="pq-card"><h4>🏢 Empresas do grupo (' + emp.length + ')</h4>' + emp.map(function (e) {
+    var tels = [e.telefone1, e.telefone2].filter(function (t) { return t && String(t).replace(/\D/g, '').replace(/0/g, '').length; });
+    return '<div class="pq-emp"><b>' + esc(e.razao_social) + '</b> <span style="color:#64748b">· ' + esc(e.matriz_filial || '') + '</span><br>' +
+      '<span style="color:#475569">' + esc(e.municipio || '') + ' · ' + esc(e.ramo || '') + '</span>' +
+      (tels.length ? '<br>📞 ' + tels.map(function (t) { return '<a href="tel:+' + pqFone(t) + '">' + esc(t) + '</a>'; }).join(' · ') : '') +
+      (e.email ? '<br>✉️ ' + esc(e.email) : '') +
+      ((e.socios || []).length ? '<br><span style="color:#64748b">Sócios: ' + esc(e.socios.join(', ')) + '</span>' : '') +
+      '<br><span style="color:#94a3b8;font-size:11px">CNPJ ' + esc(e.cnpj) + '</span></div>';
+  }).join('') + '</div>';
+
+  // histórico
+  var ev = d.eventos || [];
+  h += '<div class="pq-card"><h4>🕘 Histórico (' + ev.length + ')</h4>' + (ev.length ? ev.map(function (e) {
+    var lbl = (PQ_RES.find(function (x) { return x[0] === e.resultado; }) || [0, e.resultado])[1];
+    return '<div class="pq-emp">' + new Date(e.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' · <b>' + esc(lbl) + '</b> · ' + esc(e.vendedor_nome || '') +
+      (e.nota ? '<br><span style="color:#475569">' + esc(e.nota) + '</span>' : '') + '</div>';
+  }).join('') : '<div style="font-size:12.5px;color:#94a3b8">Nenhum contato registrado ainda.</div>') + '</div>';
+
+  document.getElementById('pq-b').innerHTML = h;
+}
+
+function copiarTxt(id, btn) {
+  var t = document.getElementById(id).innerText;
+  var ok = function () { btn.textContent = '✅ Copiado'; };
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, function () { prompt('Copie:', t); });
+  else prompt('Copie:', t);
+}
+
+async function gerarIA(refazer) {
+  var btn = document.getElementById('pq-ia-btn');
+  btn.disabled = true; btn.textContent = '⏳ A IA está pesquisando clima, mercado e notícias (30–60s)…';
+  try {
+    var r = await fetch(SB_URL + '/functions/v1/prosp-ia', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY },
+      body: JSON.stringify({ token: SESSION.token, grupo_id: _pq.grupo, refazer: !!refazer }) });
+    var d = await r.json();
+    if (d.error) throw new Error(d.error);
+    _pq.ia = JSON.parse(JSON.stringify(d).replace(/<\/?cite[^>]*>/g, ''));
+    var all = [].concat(_pq.fila.retornos || [], _pq.fila.reativar || [], _pq.fila.novos || [], _pq.fila.agenda || []);
+    var g = all.find(function (x) { return x.grupo_id === _pq.grupo; }) || {};
+    g.tem_ia = true;
+    renderFicha(g);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '✨ Tentar de novo';
+    alert('Não foi possível gerar a abordagem: ' + (e.message || e));
+  }
+}
+
+function pqEscolher(btn) {
+  document.querySelectorAll('.pq-res button').forEach(function (b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  _pq.res = btn.getAttribute('data-r');
+  var box = document.getElementById('pq-data-box');
+  var precisaData = ['visita_agendada', 'interesse', 'conversou', 'negociacao'].indexOf(_pq.res) >= 0;
+  box.style.display = precisaData ? '' : 'none';
+  var inp = document.getElementById('pq-data');
+  if (_pq.res === 'visita_agendada') { var dt = new Date(); dt.setDate(dt.getDate() + 1); inp.value = dt.toISOString().slice(0, 10); }
+  else inp.value = '';
+  box.querySelector('label').textContent = _pq.res === 'visita_agendada' ? 'DATA DA VISITA' : 'RETORNAR EM (opcional, senão a IA define)';
+}
+
+async function pqSalvar() {
+  if (!_pq.res) { alert('Escolha o resultado do contato.'); return; }
+  if (_pq.res === 'nao_contatar' && !confirm('Marcar como NÃO CONTATAR? O grupo sai da fila definitivamente (pedido do cliente).')) return;
+  var btn = document.getElementById('pq-salvar');
+  btn.disabled = true; btn.textContent = '⏳ Salvando…';
+  var data = document.getElementById('pq-data').value || null;
+  var r = await SB.rpc('trr_prosp_registrar', { p_token: SESSION.token, p_grupo: _pq.grupo, p_resultado: _pq.res,
+    p_nota: document.getElementById('pq-nota').value, p_data: data });
+  if (r.error || (r.data && r.data.error)) {
+    btn.disabled = false; btn.textContent = 'Salvar resultado';
+    alert('Erro: ' + ((r.data && r.data.error) || r.error.message)); return;
+  }
+  var p = r.data;
+  document.getElementById('pq-msg-res').innerHTML = '<div style="background:#dcfce7;color:#166534;border-radius:8px;padding:9px 11px;font-size:13px;margin-top:8px;font-weight:700">✅ Salvo · ' +
+    (PQ_ST[p.status] || [p.status])[0] + (p.proximo_contato ? ' · volta para a fila em ' + fmtData(p.proximo_contato) : '') + '</div>';
+  btn.textContent = '✅ Salvo';
+  setTimeout(function () { fecharFicha(); carregarFila(); }, 1200);
+}
+
+async function abrirRota() {
+  var dt = new Date(); dt.setDate(dt.getDate() + 1);
+  var dia = prompt('Montar a rota de qual dia? (AAAA-MM-DD)', dt.toISOString().slice(0, 10));
+  if (!dia) return;
+  var admin = SESSION.role === 'admin';
+  var r = await SB.rpc('trr_prosp_rota', { p_token: SESSION.token, p_data: dia, p_vendedor: admin ? document.getElementById('pq-vend').value : null });
+  if (r.error || (r.data && r.data.error)) { alert('Erro: ' + ((r.data && r.data.error) || r.error.message)); return; }
+  var v = r.data.visitas || [], s = r.data.sugestoes || [];
+  document.getElementById('pq-sheet').classList.add('open');
+  document.getElementById('pq-h').innerHTML = '<div style="font-size:16px;font-weight:900;color:#10243e">🚚 Rota de campo · ' + fmtData(dia) + '</div><div style="font-size:12px;color:var(--muted)">' + v.length + ' visita(s) agendada(s) + ' + s.length + ' sugestão(ões) no caminho</div>';
+  var pontos = v.concat(s).filter(function (x) { return x.lat; });
+  var item = function (g, tipo) {
+    return '<div class="pq-item" onclick="fecharFicha();setTimeout(function(){abrirFichaRota(\'' + esc(g.grupo_id) + '\')},200)">' + pqScore(g.score) +
+      '<div style="flex:1;min-width:0"><div class="pq-nome">' + esc(pqNome(g)) + '</div><div class="pq-meta">' + esc(g.municipio || '') + ' · ' + tipo + '</div></div></div>';
+  };
+  var h = (v.length ? '<div class="pq-sec">📅 Visitas agendadas</div>' + v.map(function (g) { return item(g, 'agendada'); }).join('') : '<div class="empty" style="padding:14px">Nenhuma visita agendada para esse dia. Agende pela ficha do prospect (📅 Agendar visita).</div>') +
+          (s.length ? '<div class="pq-sec">💡 Aproveite o caminho <small>prospects bons a até 40 km</small></div>' + s.map(function (g) { return item(g, 'sugestão · nota ' + g.score); }).join('') : '');
+  if (pontos.length) {
+    var dest = pontos[pontos.length - 1], meio = pontos.slice(0, -1).slice(0, 8);
+    var url = 'https://www.google.com/maps/dir/?api=1&destination=' + (+dest.lat).toFixed(5) + ',' + (+dest.lon).toFixed(5) +
+      (meio.length ? '&waypoints=' + meio.map(function (p) { return (+p.lat).toFixed(5) + ',' + (+p.lon).toFixed(5); }).join('|') : '');
+    h += '<a class="visita-save-btn" style="display:block;text-align:center;text-decoration:none;margin-top:12px" target="_blank" rel="noopener" href="' + url + '">🗺 Abrir rota no Google Maps</a>' +
+         '<div style="font-size:11px;color:#94a3b8;margin-top:6px;text-align:center">Pontos pelo centro de cada município (a lista não traz a coordenada da fazenda). Confirme o endereço na ligação.</div>';
+  }
+  document.getElementById('pq-b').innerHTML = h;
+  window._pqRota = v.concat(s);
+}
+
+function abrirFichaRota(grupo) {
+  _pq.fila = _pq.fila || {};
+  _pq.fila.agenda = (_pq.fila.agenda || []).concat((window._pqRota || []).filter(function (x) {
+    return !(_pq.fila.agenda || []).some(function (y) { return y.grupo_id === x.grupo_id; });
+  }));
+  abrirFicha(grupo);
 }
 
 /* ─── VISITAS ─── */

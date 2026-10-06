@@ -118,6 +118,7 @@
     <div class="card"><h2>Fechadas x perdidas por dia</h2><div id="chart"></div></div>
   </div>
   <div class="card" style="margin-bottom:14px"><h2>Vendedores</h2><div id="vendedores"></div></div>
+  <div class="card" style="margin-bottom:14px"><h2>🎯 Prospecção da lista (funil por vendedor)</h2><div id="prospeccao"></div></div>
 
   <div class="card">
     <h2>Conversas</h2>
@@ -224,7 +225,27 @@ document.getElementById('btn-analisar').onclick=async function(){
 };
 
 // ---------- painel ----------
-async function carregar(){ await Promise.all([carregarPainel(), carregarConversas()]); lastUpd=new Date(); tickUpd(); }
+async function carregar(){ await Promise.all([carregarPainel(), carregarConversas(), carregarProspeccao()]); lastUpd=new Date(); tickUpd(); }
+
+var PQ_LBL={nao_atendeu:'📵 Não atendeu',conversou:'💬 Conversou',interesse:'👍 Interesse',visita_agendada:'📅 Visita agendada',visitou:'🚜 Visitou',negociacao:'🤝 Negociando',pedido:'✅ Pedido',sem_interesse:'👎 Sem interesse',numero_errado:'☎️ Nº errado',nao_contatar:'🚫 Não contatar'};
+async function carregarProspeccao(){
+  var d; try{ d=await rpc('trr_gestao_prospeccao',{p_token:TOKEN,p_de:F.de,p_ate:F.ate}); }catch(e){ return; }
+  var vs=d.vendedores||[];
+  var pct=function(a,b){return b?Math.round(100*a/b)+'%':'–';};
+  var h = vs.length ? '<table><tr><th>Vendedor</th><th>Grupos na lista</th><th>Trabalhados</th><th>Conversaram</th><th>Interesse</th><th>Visitas (agend. / feitas)</th><th>Negociando</th><th>Pedidos</th><th>Contatos no período</th><th>Média/dia</th></tr>'+vs.map(function(v){
+    return '<tr><td><b>'+esc(v.nome||'–')+'</b></td><td>'+v.grupos+'</td><td>'+v.trabalhados+' <span class="mut">('+pct(v.trabalhados,v.grupos)+')</span></td>'+
+      '<td>'+v.conversaram+' <span class="mut">('+pct(v.conversaram,v.trabalhados)+')</span></td><td style="color:var(--green);font-weight:700">'+v.interesse+'</td>'+
+      '<td>'+v.visitas_agendadas+' / '+v.visitas_feitas+'</td><td>'+v.negociacao+'</td><td style="color:var(--green);font-weight:800">'+v.pedidos+'</td>'+
+      '<td>'+v.contatos_periodo+'</td><td>'+(v.dias_ativos?Math.round(v.contatos_periodo/v.dias_ativos):'–')+'</td></tr>';
+  }).join('')+'</table>' : '<div class="empty">Nenhum vendedor com lista de prospecção.</div>';
+  var ult=d.ultimos||[];
+  if(ult.length){
+    h+='<div style="margin-top:12px;font-size:12px;font-weight:700;color:var(--mut)">ÚLTIMOS CONTATOS REGISTRADOS</div><table>'+ult.map(function(e){
+      return '<tr><td>'+dt(e.created_at)+'</td><td>'+esc(e.vendedor_nome||'')+'</td><td>'+esc(e.empresa||'')+'</td><td>'+(PQ_LBL[e.resultado]||esc(e.resultado))+'</td><td class="mut">'+esc(e.nota||'')+'</td></tr>';
+    }).join('')+'</table>';
+  }
+  document.getElementById('prospeccao').innerHTML=h;
+}
 function tickUpd(){ if(!lastUpd)return; var s=Math.round((Date.now()-lastUpd)/1000); document.getElementById('upd').textContent='atualizado há '+(s<5?'instantes':s+'s'); }
 
 async function carregarPainel(){

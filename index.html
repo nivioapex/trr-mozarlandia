@@ -662,6 +662,7 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
   <button class="tab-btn" id="tab-btn-prospeccao" style="display:none" onclick="switchTab('prospeccao')">🔭 Prospecção</button>
   <button class="tab-btn" id="tab-btn-prosp-avancada" onclick="switchTab('prosp-avancada')">🏔 Prosp Avançada</button>
   <button class="tab-btn" id="tab-btn-campo" onclick="switchTab('campo')">📍 Modo Campo</button>
+  <button class="tab-btn" id="tab-btn-ia" onclick="switchTab('ia')">✨ IA</button>
 </div>
 
 <!-- ===== PAINEL SECTION ===== -->
@@ -876,6 +877,55 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 
 
 <!-- ===== MODO CAMPO SECTION ===== -->
+<div id="ia-section" style="display:none">
+<style>
+#ia-wrap{background:#fff;border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.08);padding:18px;display:flex;flex-direction:column;min-height:560px}
+#ia-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+#ia-chips button{border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer;color:#10243e}
+#ia-chips button:hover{border-color:#f97316;color:#c2410c}
+#ia-log{flex:1;overflow-y:auto;max-height:62vh;padding:4px 2px}
+.ia-msg{margin:10px 0;display:flex}
+.ia-msg.eu{justify-content:flex-end}
+.ia-bal{max-width:82%;border-radius:14px;padding:10px 14px;font-size:14.5px;line-height:1.55}
+.ia-msg.eu .ia-bal{background:#10243e;color:#fff;border-bottom-right-radius:4px}
+.ia-msg.ia .ia-bal{background:#f8fafc;border:1px solid #e5e7eb;color:#111827;border-bottom-left-radius:4px;max-width:92%}
+.ia-bal table{border-collapse:collapse;margin:8px 0;font-size:13px;width:100%}
+.ia-bal th,.ia-bal td{border-bottom:1px solid #e5e7eb;padding:5px 8px;text-align:left}
+.ia-bal th{background:#eef2f7;font-weight:700}
+.ia-bal ul{margin:6px 0;padding-left:20px}
+.ia-acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ia-acts button{border:1.5px solid #dde2e8;background:#fff;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
+#ia-bar{display:flex;gap:8px;margin-top:12px;align-items:center}
+#ia-input{flex:1;padding:12px 14px;border:1.5px solid #dde2e8;border-radius:12px;font-size:15px}
+#ia-input:focus{outline:none;border-color:#f97316}
+.ia-btn{border:none;border-radius:12px;padding:12px 16px;font-size:16px;cursor:pointer;background:#10243e;color:#fff}
+#ia-mic.rec{background:#dc2626;animation:iaPulse 1s infinite}
+@keyframes iaPulse{50%{opacity:.6}}
+#ia-mapa{height:380px;border-radius:10px;margin-top:10px;display:none}
+.ia-dots span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#94a3b8;margin-right:4px;animation:iaPulse 1s infinite}
+.ia-dots span:nth-child(2){animation-delay:.2s}.ia-dots span:nth-child(3){animation-delay:.4s}
+</style>
+<div id="ia-wrap">
+  <div style="font-size:17px;font-weight:800;color:#10243e;margin-bottom:4px">✨ Assistente de IA</div>
+  <div style="font-size:13px;color:#64748b;margin-bottom:12px">Pergunte por escrito ou pelo 🎤 sobre clientes, propriedades, prospecção, visitas, conversas, mercado e clima. A IA consulta os dados na hora (somente leitura).</div>
+  <div id="ia-chips">
+    <button onclick="iaPerguntar(this.textContent)">Quais clientes inativos mais compravam?</button>
+    <button onclick="iaPerguntar(this.textContent)">Melhores prospects de soja perto de São Miguel</button>
+    <button onclick="iaPerguntar(this.textContent)">Como está o funil da Alyne e do Vieira?</button>
+    <button onclick="iaPerguntar(this.textContent)">Monte uma rota de visitas para o Vieira amanhã</button>
+    <button onclick="iaPerguntar(this.textContent)">Resumo do mercado e da chuva hoje</button>
+    <button onclick="iaPerguntar(this.textContent)">Quais municípios têm mais clientes e qual o volume?</button>
+  </div>
+  <div id="ia-log"></div>
+  <div id="ia-bar">
+    <input id="ia-input" placeholder="Ex.: quantos clientes temos em Crixás e quanto compraram em 2025?" onkeydown="if(event.key==='Enter')iaEnviar()">
+    <button class="ia-btn" id="ia-mic" title="Falar" onclick="iaMic()">🎤</button>
+    <button class="ia-btn" style="background:#f97316" title="Enviar" onclick="iaEnviar()">➤</button>
+  </div>
+  <div id="ia-mic-st" style="font-size:12px;color:#64748b;margin-top:6px;min-height:16px"></div>
+</div>
+</div>
+
 <div id="campo-section" style="display:none">
   <div class="campo-toolbar">
     <button id="campo-gps-btn" class="campo-gps-btn" onclick="campoToggleGps()">📍 Ativar GPS</button>
@@ -1324,11 +1374,195 @@ function switchTab(tab) {
     initAdvMap();
     setTimeout(function() { if (advMap) advMap.invalidateSize(); }, 150);
   }
+  document.getElementById('ia-section').style.display = tab === 'ia' ? '' : 'none';
+  if (tab === 'ia') setTimeout(function () { document.getElementById('ia-input').focus(); }, 50);
   document.getElementById('campo-section').style.display = tab === 'campo' ? '' : 'none';
   if (tab === 'campo') {
     initCampoMap();
     setTimeout(function() { if (campoMap) campoMap.invalidateSize(); }, 150);
   }
+}
+
+/* ===== ASSISTENTE DE IA ===== */
+var iaHist = [], iaDados = {}, iaSeq = 0, iaRec = null, iaOcupado = false;
+function iaEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function iaMd(t) {
+  var linhas = String(t || '').split('\n'), out = [], i = 0;
+  var inl = function (s) { return iaEsc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*]+)\*/g, '$1<i>$2</i>').replace(/`([^`]+)`/g, '<code>$1</code>'); };
+  while (i < linhas.length) {
+    var l = linhas[i];
+    if (/^\s*\|.*\|\s*$/.test(l) && i + 1 < linhas.length && /^\s*\|[\s:\-|]+\|\s*$/.test(linhas[i + 1])) {
+      var cel = function (x) { return x.trim().replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); }); };
+      var h = '<table><tr>' + cel(l).map(function (c) { return '<th>' + inl(c) + '</th>'; }).join('') + '</tr>';
+      i += 2;
+      while (i < linhas.length && /^\s*\|.*\|\s*$/.test(linhas[i])) { h += '<tr>' + cel(linhas[i]).map(function (c) { return '<td>' + inl(c) + '</td>'; }).join('') + '</tr>'; i++; }
+      out.push(h + '</table>'); continue;
+    }
+    if (/^\s*[-*•]\s+/.test(l)) {
+      var ul = '<ul>';
+      while (i < linhas.length && /^\s*[-*•]\s+/.test(linhas[i])) { ul += '<li>' + inl(linhas[i].replace(/^\s*[-*•]\s+/, '')) + '</li>'; i++; }
+      out.push(ul + '</ul>'); continue;
+    }
+    if (/^#{1,4}\s/.test(l)) { out.push('<div style="font-weight:800;margin:8px 0 4px">' + inl(l.replace(/^#+\s/, '')) + '</div>'); i++; continue; }
+    out.push(l.trim() ? '<div>' + inl(l) + '</div>' : '<div style="height:6px"></div>'); i++;
+  }
+  return out.join('');
+}
+function iaAdd(de, html) {
+  var log = document.getElementById('ia-log');
+  var d = document.createElement('div'); d.className = 'ia-msg ' + de;
+  d.innerHTML = '<div class="ia-bal">' + html + '</div>';
+  log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
+}
+function iaPerguntar(t) { document.getElementById('ia-input').value = t; iaEnviar(); }
+async function iaEnviar() {
+  var inp = document.getElementById('ia-input'), q = inp.value.trim();
+  if (!q || iaOcupado) return;
+  iaOcupado = true; inp.value = '';
+  iaAdd('eu', iaEsc(q));
+  var esp = iaAdd('ia', '<span class="ia-dots"><span></span><span></span><span></span></span> <span style="color:#64748b;font-size:13px">consultando os dados…</span>');
+  try {
+    var r = await fetch(_ADV_URL + '/functions/v1/trr-agente', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: _ADV_KEY, Authorization: 'Bearer ' + _ADV_KEY },
+      body: JSON.stringify({ token: getToken(), pergunta: q, historico: iaHist }) });
+    var d = await r.json();
+    if (d.loggedOut) { esp.querySelector('.ia-bal').innerHTML = '❌ Sua sessão expirou. Saia e entre de novo.'; return; }
+    if (d.error) throw new Error(d.error);
+    iaHist.push({ de: 'eu', texto: q }, { de: 'ia', texto: d.resposta });
+    var id = 'iar' + (++iaSeq); iaDados[id] = { dados: d.dados || (d.rota ? d.rota.paradas : null), texto: d.resposta, rota: d.rota || null, admin: d.admin };
+    if (d.rota) {
+      esp.querySelector('.ia-bal').innerHTML = iaMd(d.resposta) + iaRotaHtml(id, d.rota, d.admin) +
+        '<div class="ia-acts">' + ('speechSynthesis' in window ? '<button onclick="iaOuvir(\'' + id + '\',this)">🔊 Ouvir</button>' : '') +
+        '<span style="font-size:11px;color:#94a3b8;align-self:center">' + Math.round((d.ms || 0) / 100) / 10 + 's</span></div>';
+      setTimeout(function () { iaRotaMapa(id); }, 50);
+      document.getElementById('ia-log').scrollTop = 1e9;
+      return;
+    }
+    var temGeo = (d.dados || []).some(function (x) { return x.lat != null && x.lon != null; });
+    var h = iaMd(d.resposta) + '<div class="ia-acts">' +
+      (temGeo ? '<button onclick="iaMapa(\'' + id + '\')">🗺 Ver no mapa</button>' : '') +
+      (d.dados && d.dados.length ? '<button onclick="iaCsv(\'' + id + '\')">⬇ Baixar planilha (' + d.dados.length + ')</button>' : '') +
+      ('speechSynthesis' in window ? '<button onclick="iaOuvir(\'' + id + '\',this)">🔊 Ouvir</button>' : '') +
+      '<span style="font-size:11px;color:#94a3b8;align-self:center">' + Math.round((d.ms || 0) / 100) / 10 + 's</span></div>' +
+      '<div id="' + id + '-mapa" class="ia-mapa" style="height:360px;border-radius:10px;margin-top:10px;display:none"></div>';
+    esp.querySelector('.ia-bal').innerHTML = h;
+    document.getElementById('ia-log').scrollTop = 1e9;
+  } catch (e) {
+    esp.querySelector('.ia-bal').innerHTML = '❌ ' + iaEsc(e.message || e);
+  } finally { iaOcupado = false; }
+}
+function iaRotaHtml(id, r, admin) {
+  var amanha = new Date(Date.now() + 86400000 - 3 * 3600000).toISOString().slice(0, 10);
+  var cor = { prospect: '#f97316', cliente: '#16a34a', imovel: '#7c3aed' };
+  var h = '<div style="border:1.5px solid #fed7aa;background:#fff7ed;border-radius:12px;padding:12px 14px;margin-top:10px">' +
+    '<div style="font-weight:800;color:#10243e;font-size:15px">🚙 ' + iaEsc(r.titulo) + '</div>' +
+    '<div style="font-size:12.5px;color:#475569;margin:4px 0 8px">Saída ' + iaEsc(r.hora_saida) + ' do TRR ' + iaEsc(r.origem) + ' · <b>' + r.paradas.length + ' paradas</b> · <b>' + r.km_total + ' km</b> · ~' + String(r.horas_total).replace('.', ',') + ' h' +
+    (r.retorno ? ' · volta ~' + iaEsc(r.retorno.chegada) : '') + '<br><span style="color:#94a3b8">Distâncias: ' + iaEsc(r.fonte_distancias) + ' · ' + r.minutos_por_visita + ' min por visita</span></div>';
+  h += r.paradas.map(function (p) {
+    return '<div style="display:flex;gap:10px;padding:7px 0;border-top:1px solid #fde7d3">' +
+      '<div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:' + (cor[p.tipo] || '#f97316') + ';color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center">' + p.ordem + '</div>' +
+      '<div style="flex:1;font-size:13px;line-height:1.4"><b>' + iaEsc(p.nome) + '</b> <span style="color:#64748b">· ' + iaEsc(p.municipio || '') + ' · ' + iaEsc(p.tipo) + '</span>' +
+      '<br><span style="color:#475569">🕒 ' + iaEsc(p.chegada) + '–' + iaEsc(p.saida) + ' · ' + p.km_trecho + ' km do ponto anterior' + (p.telefone ? ' · 📞 ' + iaEsc(p.telefone) : '') + '</span>' +
+      (p.motivo ? '<br><span style="color:#166534">' + iaEsc(p.motivo) + '</span>' : '') + '</div></div>';
+  }).join('');
+  if (r.retorno) h += '<div style="font-size:12.5px;color:#475569;padding:7px 0;border-top:1px solid #fde7d3">🏁 Volta ao TRR ' + iaEsc(r.origem) + ' · ' + r.retorno.km + ' km · chegada ~' + iaEsc(r.retorno.chegada) + '</div>';
+  if (r.aviso) h += '<div style="font-size:12px;color:#92400e;background:#fef3c7;border-radius:8px;padding:6px 8px;margin-top:6px">⚠ ' + iaEsc(r.aviso) + '</div>';
+  h += '<div id="' + id + '-mapa" style="height:340px;border-radius:10px;margin-top:10px"></div>';
+  h += '<div class="ia-acts">' + (r.links_maps || []).map(function (u, i) {
+    return '<button onclick="window.open(\'' + u + '\',\'_blank\')">🧭 Google Maps' + (r.links_maps.length > 1 ? ' (parte ' + (i + 1) + ')' : '') + '</button>';
+  }).join('') + '<button onclick="iaCsv(\'' + id + '\')">⬇ Planilha</button></div>';
+  h += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed #fdba74">' +
+    '<span style="font-size:12.5px;font-weight:700;color:#10243e">📅 Agendar:</span>' +
+    '<input type="date" id="' + id + '-data" value="' + iaEsc(r.data && r.data >= amanha.slice(0, 10) ? r.data : amanha) + '" style="padding:6px 8px;border:1.5px solid #dde2e8;border-radius:8px">' +
+    (admin ? '<select id="' + id + '-vend" style="padding:6px 8px;border:1.5px solid #dde2e8;border-radius:8px"><option value="6a684fbe-eef7-48c6-9643-728c8f10debb"' + (r.origem !== 'Mozarlândia' ? ' selected' : '') + '>Vieira</option><option value="6b37510c-e63c-43c4-b716-82998bd1c7e4"' + (r.origem === 'Mozarlândia' ? ' selected' : '') + '>Alyne</option></select>' : '') +
+    '<button id="' + id + '-salvar" onclick="iaRotaSalvar(\'' + id + '\')" style="border:none;background:#16a34a;color:#fff;border-radius:8px;padding:8px 14px;font-weight:800;cursor:pointer">Salvar e agendar</button>' +
+    '<span id="' + id + '-st" style="font-size:12.5px"></span></div>' +
+    '<div style="font-size:11px;color:#94a3b8;margin-top:4px">Os prospects da rota entram na agenda de visitas do vendedor e aparecem na Rota de campo do app.</div></div>';
+  return h;
+}
+function iaRotaMapa(id) {
+  var r = (iaDados[id] || {}).rota, el = document.getElementById(id + '-mapa'); if (!r || !el || el._map) return;
+  var m = L.map(el); el._map = m;
+  L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, attribution: '© Google' }).addTo(m);
+  var cor = { prospect: '#f97316', cliente: '#16a34a', imovel: '#7c3aed' };
+  var pts = [[r.base.lat, r.base.lon]];
+  if (r.geometria && r.geometria.length) L.polyline(r.geometria, { color: '#2563eb', weight: 4, opacity: .85 }).addTo(m);
+  r.paradas.forEach(function (p) {
+    pts.push([+p.lat, +p.lon]);
+    L.marker([+p.lat, +p.lon], { icon: L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13],
+      html: '<div style="width:26px;height:26px;border-radius:50%;background:' + (cor[p.tipo] || '#f97316') + ';border:2px solid #fff;color:#fff;font:800 12px system-ui;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.4)">' + p.ordem + '</div>' }) })
+      .addTo(m).bindPopup('<b>' + p.ordem + '. ' + iaEsc(p.nome) + '</b><br>' + iaEsc(p.municipio || '') + '<br>🕒 ' + iaEsc(p.chegada) + (p.motivo ? '<br>' + iaEsc(p.motivo) : ''));
+  });
+  L.circleMarker([r.base.lat, r.base.lon], { radius: 10, color: '#facc15', weight: 3, fillColor: '#10243e', fillOpacity: 1 }).addTo(m).bindTooltip('TRR ' + r.origem);
+  m.fitBounds(pts, { padding: [30, 30] });
+  setTimeout(function () { m.invalidateSize(); }, 150);
+}
+async function iaRotaSalvar(id) {
+  var r = (iaDados[id] || {}).rota, st = document.getElementById(id + '-st'), bt = document.getElementById(id + '-salvar');
+  var data = document.getElementById(id + '-data').value, sv = document.getElementById(id + '-vend');
+  if (!data) { st.textContent = 'Escolha a data.'; return; }
+  bt.disabled = true; st.textContent = 'Salvando…';
+  var rota = { titulo: r.titulo, origem: r.origem, km_total: r.km_total, horas_total: r.horas_total, paradas: r.paradas.map(function (p) {
+    return { ordem: p.ordem, nome: p.nome, tipo: p.tipo, grupo_id: p.grupo_id || null, id_cliente: p.id_cliente || null, municipio: p.municipio || null,
+      telefone: p.telefone || null, motivo: p.motivo || null, lat: p.lat, lon: p.lon, chegada: p.chegada, km_trecho: p.km_trecho };
+  }) };
+  var res = await SB.rpc('trr_rota_salvar', { p_token: getToken(), p_rota: rota, p_vendedor: sv ? sv.value : null, p_data: data });
+  var d = res.data || {};
+  if (res.error || d.error) { bt.disabled = false; st.innerHTML = '<span style="color:#dc2626">❌ ' + iaEsc((d.error) || res.error.message) + '</span>'; return; }
+  st.innerHTML = '<span style="color:#166534;font-weight:700">✅ Rota #' + d.id + ' salva para ' + iaEsc(d.vendedor || '') + ' em ' + data.split('-').reverse().join('/') + (d.prospects_agendados ? ' · ' + d.prospects_agendados + ' prospect(s) agendado(s)' : '') + '</span>';
+  bt.textContent = 'Salva';
+}
+function iaCsv(id) {
+  var rows = (iaDados[id] || {}).dados || []; if (!rows.length) return;
+  var cols = Object.keys(rows[0]);
+  var val = function (v) { if (v == null) return ''; if (typeof v === 'object') v = JSON.stringify(v); v = String(v); return /[";\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  var csv = '\ufeff' + cols.join(';') + '\n' + rows.map(function (r) { return cols.map(function (c) { return val(r[c]); }).join(';'); }).join('\n');
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'consulta_ia_' + new Date().toISOString().slice(0, 10) + '.csv'; a.click();
+}
+function iaMapa(id) {
+  var el = document.getElementById(id + '-mapa'), rows = ((iaDados[id] || {}).dados || []).filter(function (x) { return x.lat != null && x.lon != null; });
+  if (el.style.display === 'block') { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  if (el._map) { el._map.invalidateSize(); return; }
+  var m = L.map(el); el._map = m;
+  L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, attribution: '© Google' }).addTo(m);
+  var nome = function (r) { return r.nome_fantasia || r.razao_social || r.cliente || r.propriedade || r.nome_imovel || r.nome_fazenda || r.nome_cliente || ''; };
+  var pts = rows.map(function (r) {
+    var info = Object.keys(r).filter(function (k) { return k !== 'lat' && k !== 'lon' && r[k] != null && typeof r[k] !== 'object'; }).slice(0, 7)
+      .map(function (k) { return '<b>' + iaEsc(k.replace(/_/g, ' ')) + ':</b> ' + iaEsc(r[k]); }).join('<br>');
+    L.circleMarker([+r.lat, +r.lon], { radius: 7, color: '#fff', weight: 2, fillColor: '#f97316', fillOpacity: .95 }).addTo(m)
+      .bindPopup('<div style="font-weight:800;margin-bottom:4px">' + iaEsc(nome(r)) + '</div>' + info);
+    return [+r.lat, +r.lon];
+  });
+  [[-14.74469, -50.54306, 'TRR Mozarlândia'], [-13.2715, -50.1631, 'TRR São Miguel']].forEach(function (t) {
+    L.circleMarker([t[0], t[1]], { radius: 9, color: '#facc15', weight: 3, fillColor: '#10243e', fillOpacity: 1 }).addTo(m).bindTooltip(t[2]);
+  });
+  if (pts.length) m.fitBounds(pts, { padding: [30, 30], maxZoom: 11 }); else m.setView([-14.2, -50.2], 7);
+  setTimeout(function () { m.invalidateSize(); }, 120);
+}
+function iaOuvir(id, btn) {
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); btn.textContent = '🔊 Ouvir'; return; }
+  var t = ((iaDados[id] || {}).texto || '').replace(/\|[^\n]*\|/g, ' ').replace(/[*#`>-]/g, ' ').replace(/R\$\s?/g, ' reais ');
+  var u = new SpeechSynthesisUtterance(t); u.lang = 'pt-BR'; u.rate = 1.05;
+  var v = speechSynthesis.getVoices().find(function (x) { return /pt(-|_)BR/i.test(x.lang); }); if (v) u.voice = v;
+  u.onend = function () { btn.textContent = '🔊 Ouvir'; };
+  btn.textContent = '⏹ Parar'; speechSynthesis.speak(u);
+}
+function iaMic() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition, st = document.getElementById('ia-mic-st'), bt = document.getElementById('ia-mic');
+  if (!SR) { st.textContent = 'Seu navegador não tem reconhecimento de voz. Use o Chrome ou o Edge.'; return; }
+  if (iaRec) { iaRec.stop(); return; }
+  var r = new SR(); iaRec = r; r.lang = 'pt-BR'; r.interimResults = true; r.continuous = false;
+  var inp = document.getElementById('ia-input'), final = '';
+  r.onstart = function () { bt.classList.add('rec'); st.textContent = '🎙 Ouvindo… fale sua pergunta (clique no microfone para parar)'; };
+  r.onresult = function (e) {
+    var tmp = ''; for (var i = e.resultIndex; i < e.results.length; i++) { if (e.results[i].isFinal) final += e.results[i][0].transcript; else tmp += e.results[i][0].transcript; }
+    inp.value = (final + tmp).trim();
+  };
+  r.onerror = function (e) { st.textContent = e.error === 'not-allowed' ? 'Permita o uso do microfone no navegador.' : 'Não entendi o áudio (' + e.error + '). Tente de novo.'; };
+  r.onend = function () { bt.classList.remove('rec'); iaRec = null; if (inp.value.trim()) { st.textContent = ''; iaEnviar(); } else if (!/Permita|Não entendi/.test(st.textContent)) st.textContent = ''; };
+  r.start();
 }
 
 /* ===== LEAFLET MAP ===== */

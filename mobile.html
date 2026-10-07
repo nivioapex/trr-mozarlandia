@@ -1237,6 +1237,7 @@ function showCarDetail(p) {
       '<div class="pdl-note">Carregando dados oficiais (SICAR + INCRA)…</div>' +
     '</div>' +
     (p.cod ? pdlRow('🗂','Código CAR', '<span style="font-family:monospace;font-size:12px">'+esc(p.cod)+'</span>') : '') +
+    '<div id="dabra-box"></div>' +
     '<div class="pdl-actions">' +
       '<button class="pdl-action" style="background:#e3f2fd;color:#0d47a1" onclick="if(_currentDetailProp){prospecFlyTo(_currentDetailProp.lat,_currentDetailProp.lon);closeProspecDetail();}">🗺<br>Centralizar</button>' +
       '<button class="pdl-action" style="background:#f3f0ff;color:#5b21b6" onclick="if(_currentDetailProp){showProspecNearbyCar(_currentDetailProp);}">🔭<br>CAR próx.</button>' +
@@ -1244,6 +1245,7 @@ function showCarDetail(p) {
       '<button class="pdl-action" style="background:var(--grn);color:#fff" onclick="if(_currentDetailProp){openVisitaFromCar(_currentDetailProp);}">📸<br>Visita</button>' +
     '</div>';
   if (p.cod) carregarDadosOficiais(p, tituloPadrao);
+  if (p.cod) dabraPainel('dabra-box', { tipo: 'car', id: p.cod, nome: tituloPadrao, car: p.cod });
 
   _currentDetailProp = p; _currentDetailTipo = 'car';
   document.getElementById('pdl-ia-btn').style.display = 'flex';
@@ -1463,8 +1465,10 @@ function renderCliDetailBody(c) {
   if (c.dist) html += pdlRow('📏','Dist. ao TRR', Number(c.dist).toFixed(1)+' km');
   if (c.observacao || c.obs) html += pdlRow('📝','Observação', esc(c.observacao || c.obs));
 
+  html += '<div id="dabra-box"></div>';
   html += pdlActionsCliHtml();
   document.getElementById('pdl-body').innerHTML = html;
+  dabraPainel('dabra-box', { tipo: 'cliente', id: c.id_cliente || c.id || c.cli_id, nome: nome, docs: [c.cnpj, c.cpf_cnpj, c.cpf] });
 }
 
 /* ── ANÁLISE IA DE PROPRIEDADE ── */
@@ -1946,7 +1950,9 @@ function renderFicha(g) {
       (e.nota ? '<br><span style="color:#475569">' + esc(e.nota) + '</span>' : '') + '</div>';
   }).join('') : '<div style="font-size:12.5px;color:#94a3b8">Nenhum contato registrado ainda.</div>') + '</div>';
 
+  h += '<div id="dabra-pq" style="margin:10px -12px 0"></div>';
   document.getElementById('pq-b').innerHTML = h;
+  dabraPainel('dabra-pq', { tipo: 'prospect', id: _pq.grupo, nome: pqNome(g), docs: emp.map(function (e) { return e.cnpj; }) });
 }
 
 function copiarTxt(id, btn) {
@@ -2583,6 +2589,166 @@ function shortA(s) {
     document.getElementById('login-screen').style.display = 'flex';
   }
 })();
+</script>
+<style>
+.db-wrap{margin:10px 12px;border:1.5px solid #c7d2fe;background:#f5f7ff;border-radius:12px;padding:10px 12px;font-family:inherit}
+.db-tit{font-size:13px;font-weight:900;color:#3730a3;text-transform:uppercase;letter-spacing:.3px}
+.db-tit small{font-weight:600;color:#6b7280;text-transform:none;letter-spacing:0;margin-left:4px}
+.db-sub{font-size:11px;font-weight:800;color:#475569;text-transform:uppercase;margin:10px 0 5px}
+.db-g{font-size:11px;font-weight:700;color:#64748b;margin:7px 0 4px}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.db-btn{border:1.5px solid #c7d2fe;background:#fff;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:700;color:#1e1b4b;text-align:left;cursor:pointer;line-height:1.3}
+.db-btn span{display:block;font-size:11px;font-weight:600;color:#4f46e5;margin-top:2px}
+.db-btn.feito{border-color:#86efac;background:#f0fdf4}.db-btn.feito span{color:#15803d}
+.db-btn:disabled{cursor:default;opacity:.75}
+.db-pac{width:100%;margin-top:9px;border:none;background:#4f46e5;color:#fff;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;text-align:left}
+.db-pac span{display:block;font-size:11px;font-weight:600;opacity:.9;margin-top:2px}
+.db-doc input{width:100%;box-sizing:border-box;padding:9px 11px;border:1.5px solid #c7d2fe;border-radius:9px;font-size:14px;font-family:monospace}
+.db-note{font-size:11.5px;color:#64748b;margin-top:6px}
+.db-res{background:#fff;border:1px solid #e0e7ff;border-radius:10px;padding:6px 10px;margin-top:8px}
+.db-res summary{font-size:12.5px;font-weight:800;color:#1e1b4b;cursor:pointer}
+.db-res summary small{font-weight:500;color:#94a3b8}
+.db-l{display:flex;gap:10px;justify-content:space-between;font-size:12.5px;padding:5px 0;border-top:1px solid #f1f5f9}
+.db-l span{color:#64748b;flex-shrink:0;max-width:45%}.db-l b{text-align:right;font-weight:600;color:#111827;overflow-wrap:anywhere}
+.db-l b small{color:#64748b;font-weight:500}.db-l hr{border:none;border-top:1px dashed #e5e7eb;margin:4px 0}
+.db-bom{color:#15803d !important}.db-ruim{color:#b91c1c !important}
+</style>
+<script>
+/* ===== CONSULTAS OFICIAIS (DABRA) — CAR ou cliente selecionado ===== */
+var DB_URL = 'https://keeqkmguljsddfmrqlld.supabase.co/functions/v1/dabra-consulta';
+var DB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtlZXFrbWd1bGpzZGRmbXJxbGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODUxNzIsImV4cCI6MjA5ODE2MTE3Mn0.wv5sBdx0qqRFSk7_bip9dgCq06_WZeGvVXiEBMR27QQ';
+var _db = {};
+function dbTok() { try { if (typeof getToken === 'function' && getToken()) return getToken(); } catch (e) {} return (window.SESSION && SESSION.token) || null; }
+function dbEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function dbRS(v) { return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+async function dbCall(body) {
+  body.token = dbTok();
+  var r = await fetch(DB_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: DB_KEY, Authorization: 'Bearer ' + DB_KEY }, body: JSON.stringify(body) });
+  return r.json();
+}
+/* alvo = { tipo: 'car'|'cliente'|'prospect', id, nome, car (código CAR, opcional), docs: [cnpj/cpf sugeridos] } */
+async function dabraPainel(boxId, alvo) {
+  var box = document.getElementById(boxId); if (!box) return;
+  _db[boxId] = { alvo: alvo };
+  box.innerHTML = '<div class="db-wrap"><div class="db-tit">🔎 Consultas oficiais <small>Dabra · pago por consulta</small></div><div class="db-note">Carregando…</div></div>';
+  var d = await dbCall({ acao: 'historico', alvo_tipo: alvo.tipo, alvo_id: String(alvo.id || '') });
+  if (d.error) { box.innerHTML = '<div class="db-wrap"><div class="db-tit">🔎 Consultas oficiais</div><div class="db-note">' + dbEsc(d.error) + '</div></div>'; return; }
+  _db[boxId].cat = d.catalogo; _db[boxId].pacote = d.pacote_credito; _db[boxId].pode = d.pode_consultar;
+  var docs = (alvo.docs || []).concat(d.docs_sugeridos || []).map(function (x) { return String(x || '').replace(/\D/g, ''); })
+    .filter(function (x, i, a) { return (x.length === 11 || x.length === 14) && a.indexOf(x) === i; });
+  _db[boxId].res = {}; (d.resultados || []).forEach(function (r) { _db[boxId].res[r.endpoint] = r; });
+  dbRender(boxId, docs[0] || '');
+}
+function dbFmtDoc(d) {
+  d = String(d || '').replace(/\D/g, '');
+  if (d.length === 14) return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  if (d.length === 11) return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+  return d;
+}
+function dbRender(boxId, doc) {
+  var st = _db[boxId], a = st.alvo, cat = st.cat || [], pode = st.pode;
+  var h = '<div class="db-wrap"><div class="db-tit">🔎 Consultas oficiais <small>Dabra · pago por consulta</small></div>';
+  var btn = function (it, extra) {
+    var feito = st.res[it.id];
+    return '<button class="db-btn' + (feito ? ' feito' : '') + '" ' + (pode ? '' : 'disabled ') + 'onclick="dbConsultar(\'' + boxId + '\',[\'' + it.id + '\']' + (extra || '') + ')">' +
+      dbEsc(it.nome) + '<span>' + (feito ? '✓ consultado' : dbRS(it.preco)) + '</span></button>';
+  };
+  if (a.car) {
+    var it = cat.find(function (x) { return x.id === 'car-ambiental'; });
+    if (it) h += '<div class="db-sub">Imóvel · CAR</div><div class="db-grid">' + btn(it) + '</div>';
+  }
+  h += '<div class="db-sub">Proprietário · CPF/CNPJ</div>' +
+    '<div class="db-doc"><input id="' + boxId + '-doc" inputmode="numeric" placeholder="CPF ou CNPJ do proprietário" value="' + dbEsc(dbFmtDoc(doc)) + '"></div>';
+  var grupos = {};
+  cat.filter(function (x) { return x.tipo !== 'car'; }).forEach(function (x) { (grupos[x.grupo] = grupos[x.grupo] || []).push(x); });
+  Object.keys(grupos).forEach(function (g) { h += '<div class="db-g">' + dbEsc(g) + '</div><div class="db-grid">' + grupos[g].map(function (x) { return btn(x); }).join('') + '</div>'; });
+  var tot = (st.pacote || []).reduce(function (s, id) { var x = cat.find(function (c) { return c.id === id; }); return s + (x ? x.preco : 0); }, 0);
+  if (pode && st.pacote) h += '<button class="db-pac" onclick="dbConsultar(\'' + boxId + '\',' + JSON.stringify(st.pacote).replace(/"/g, '&quot;') + ')">💳 Pacote análise de crédito <span>PGFN + CADIN GO + Score + Protestos + IBAMA · ' + dbRS(tot) + '</span></button>';
+  if (!pode) h += '<div class="db-note">Só a gestão pode fazer consultas pagas. Resultados já consultados aparecem abaixo.</div>';
+  h += '<div id="' + boxId + '-st" class="db-note"></div><div id="' + boxId + '-res">' + dbResultados(boxId) + '</div></div>';
+  document.getElementById(boxId).innerHTML = h;
+}
+async function dbConsultar(boxId, itens) {
+  var st = _db[boxId], a = st.alvo, cat = st.cat || [];
+  var docEl = document.getElementById(boxId + '-doc');
+  var doc = docEl ? docEl.value.replace(/\D/g, '') : '';
+  var precisaDoc = itens.some(function (id) { return id !== 'car-ambiental'; });
+  if (precisaDoc && doc.length !== 11 && doc.length !== 14) { document.getElementById(boxId + '-st').innerHTML = '⚠️ Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).'; if (docEl) docEl.focus(); return; }
+  var novos = itens.filter(function (id) { return !st.res[id] || (id !== 'car-ambiental' && st.res[id].parametro !== doc); });
+  var custo = novos.reduce(function (s, id) { var x = cat.find(function (c) { return c.id === id; }); return s + (x ? x.preco : 0); }, 0);
+  var nomes = itens.map(function (id) { var x = cat.find(function (c) { return c.id === id; }); return x ? x.nome : id; }).join(', ');
+  var refazer = novos.length === 0;
+  if (!confirm((refazer ? 'Consultar de novo (atualizar)?\n\n' : '') + nomes + '\n\n' + (refazer ? 'Se houver resultado de até 30 dias ele é reaproveitado sem custo.' : 'Custo estimado: até ' + dbRS(custo) + ' (resultados de até 30 dias são reaproveitados sem custo).') + '\n\nConfirmar?')) return;
+  var stEl = document.getElementById(boxId + '-st'); stEl.innerHTML = '⏳ Consultando ' + itens.length + ' fonte(s)…';
+  var grupos = { car: [], doc: [] };
+  itens.forEach(function (id) { (id === 'car-ambiental' ? grupos.car : grupos.doc).push(id); });
+  var total = 0, erros = [];
+  for (var k in grupos) {
+    if (!grupos[k].length) continue;
+    var r = await dbCall({ acao: 'consultar', itens: grupos[k], parametro: k === 'car' ? a.car : doc, alvo_tipo: a.tipo, alvo_id: String(a.id || ''), alvo_nome: a.nome || '' });
+    if (r.error) { erros.push(r.error); continue; }
+    total += r.total_cobrado || 0;
+    (r.resultados || []).forEach(function (x) { if (x.ok) st.res[x.endpoint] = x; else erros.push((cat.find(function (c) { return c.id === x.endpoint; }) || {}).nome + ': ' + (x.erro || 'falhou')); });
+  }
+  dbRender(boxId, doc);
+  document.getElementById(boxId + '-st').innerHTML = (erros.length ? '⚠️ ' + dbEsc(erros.join(' · ')) + '<br>' : '') + '✅ Concluído · cobrado ' + dbRS(total);
+}
+function dbResultados(boxId) {
+  var st = _db[boxId], cat = st.cat || [], res = st.res, ordem = cat.map(function (c) { return c.id; });
+  var ks = Object.keys(res).sort(function (a, b) { return ordem.indexOf(a) - ordem.indexOf(b); });
+  if (!ks.length) return '';
+  return ks.map(function (k) {
+    var r = res[k], it = cat.find(function (c) { return c.id === k; }) || { nome: k };
+    return '<details class="db-res" open><summary>' + dbEsc(it.nome) + ' <small>' + (r.parametro && k !== 'car-ambiental' ? dbFmtDoc(r.parametro) + ' · ' : '') +
+      new Date(r.created_at).toLocaleDateString('pt-BR') + (r.user_nome ? ' · ' + dbEsc(r.user_nome) : '') + '</small></summary>' + dbRenderResp(k, r.resposta || {}) + '</details>';
+  }).join('');
+}
+function dbLin(k, v, cls) { return v == null || v === '' ? '' : '<div class="db-l"><span>' + dbEsc(k) + '</span><b' + (cls ? ' class="' + cls + '"' : '') + '>' + v + '</b></div>'; }
+function dbRenderResp(k, x) {
+  if (k === 'car-ambiental') {
+    var di = x.dadosImovel || {}, cs = x.coberturaSolo || {}, rl = x.reservaLegal || {}, ap = x.app || {};
+    var passivo = parseFloat(String(rl.passivoExcedente || '').replace(',', '.'));
+    return dbLin('Situação', dbEsc(x.situacaoCadastro) + (x.condicaoExterna ? ' · ' + dbEsc(x.condicaoExterna) : '')) +
+      dbLin('Área', dbEsc(di.area) + ' ha · ' + dbEsc(di.modulosFiscais) + ' módulos fiscais') +
+      dbLin('Inscrição / retificação', dbEsc(String(di.dataInscricao || '').slice(0, 10)) + ' / ' + dbEsc(String(di.dataUltimaRetificacao || '').slice(0, 10))) +
+      dbLin('Área consolidada (uso)', dbEsc(cs.ruralConsolidada) + ' ha') + dbLin('Vegetação nativa', dbEsc(cs.vegetacaoNativa) + ' ha') +
+      dbLin('Reserva legal proposta', dbEsc(rl.proposta) + ' ha') +
+      dbLin('Passivo/excedente RL', dbEsc(rl.passivoExcedente) + ' ha', passivo < 0 ? 'db-ruim' : '') +
+      dbLin('RL a recompor', rl.recompor && rl.recompor !== '0,00' ? dbEsc(rl.recompor) + ' ha' : null, 'db-ruim') +
+      dbLin('APP / a recompor', dbEsc(ap.area) + ' ha / ' + dbEsc(ap.recompor) + ' ha') +
+      ((x.informacoesAdicionais || []).length ? '<div class="db-l"><span>Sobreposições / pendências</span><b>' + x.informacoesAdicionais.map(function (i) { return dbEsc(i.tema || i.descricao) + (i.percentualSobreposicao ? ' (' + dbEsc(i.percentualSobreposicao) + ')' : ''); }).join('<br>') + '</b></div>' : dbLin('Sobreposições / pendências', 'nenhuma', 'db-bom'));
+  }
+  if (k === 'cadastro' && x.razao_social) {
+    var end = [x.descricao_tipo_de_logradouro, x.logradouro, x.numero, x.complemento, x.bairro, x.municipio, x.uf, x.cep].filter(Boolean).join(', ');
+    return dbLin('Razão social', dbEsc(x.razao_social)) + dbLin('Situação', dbEsc(x.descricao_situacao_cadastral), x.descricao_situacao_cadastral === 'ATIVA' ? 'db-bom' : 'db-ruim') +
+      dbLin('Abertura', dbEsc(x.data_inicio_atividade)) + dbLin('Porte / capital', dbEsc(x.porte) + ' · ' + dbRS(x.capital_social)) +
+      dbLin('Atividade', dbEsc(x.cnae_fiscal_descricao) + ((x.cnaes_secundarios || []).length ? '<br><small>' + x.cnaes_secundarios.slice(0, 6).map(function (c) { return dbEsc(c.descricao); }).join(' · ') + '</small>' : '')) +
+      dbLin('Endereço', dbEsc(end)) + dbLin('Telefone', dbEsc([x.ddd_telefone_1, x.ddd_telefone_2].filter(Boolean).join(' · '))) + dbLin('E-mail', dbEsc(x.email)) +
+      dbLin('Sócios', (x.qsa || []).map(function (s) { return dbEsc(s.nome_socio) + ' <small>(' + dbEsc(s.qualificacao_socio) + ')</small>'; }).join('<br>'));
+  }
+  if (k === 'pgfn-devedores') {
+    return dbLin('Resultado', x.possuiDivida ? '⚠️ Possui dívida ativa' : '✅ ' + dbEsc(x.status || 'Sem dívidas'), x.possuiDivida ? 'db-ruim' : 'db-bom') +
+      dbLin('Total', x.totalDivida ? dbRS(x.totalDivida) : null, 'db-ruim') + dbLin('Nome', dbEsc(x.nome));
+  }
+  return dbGenerico(x, 0);
+}
+function dbGenerico(x, n) {
+  if (x == null) return '';
+  if (Array.isArray(x)) {
+    if (!x.length) return dbLin('Resultado', 'nada consta', 'db-bom');
+    return '<div class="db-l"><span>' + x.length + ' registro(s)</span><b>' + x.slice(0, 10).map(function (i) { return typeof i === 'object' ? Object.keys(i).filter(function (k) { return i[k] != null && i[k] !== '' && typeof i[k] !== 'object'; }).slice(0, 5).map(function (k) { return dbEsc(k) + ': ' + dbEsc(i[k]); }).join(' · ') : dbEsc(i); }).join('<hr>') + '</b></div>';
+  }
+  if (typeof x !== 'object') return dbLin('Valor', dbEsc(x));
+  var h = '';
+  Object.keys(x).slice(0, 40).forEach(function (k) {
+    var v = x[k]; if (v == null || v === '') return;
+    var nome = k.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ');
+    if (typeof v === 'boolean') h += dbLin(nome, v ? 'sim' : 'não');
+    else if (typeof v !== 'object') h += dbLin(nome, dbEsc(v));
+    else if (n < 1) h += '<div class="db-g">' + dbEsc(nome) + '</div>' + dbGenerico(v, n + 1);
+  });
+  return h || dbLin('Resultado', 'sem dados');
+}
 </script>
 </body>
 </html>

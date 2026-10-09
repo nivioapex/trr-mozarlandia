@@ -735,7 +735,7 @@ async function loadResumo() {
   document.getElementById('tb-badge').textContent = '⏳';
   try {
     var r1 = await SB.rpc('trr_init');
-    var r2 = await SB.rpc('trr_data', { p_page: 1 });
+    var r2 = await SB.rpc('trr_data_s', { p_token: SESSION.token, p_page: 1 });
     if (r1.error || r2.error) throw new Error('Erro ao carregar dados');
     var init = r1.data || {}, d = r2.data || {}, k = d.kpi || {};
     set$('kv-prop', fmtN(k.prop));
@@ -796,7 +796,7 @@ async function loadClientes(append) {
     document.getElementById('load-more-btn').style.display = 'none';
   }
   try {
-    var res = await SB.rpc('trr_data', {
+    var res = await SB.rpc('trr_data_s', { p_token: SESSION.token,
       p_srch: cliSearch || null, p_page: cliPage,
       p_uf: null, p_mun: null, p_ativ: null, p_faixa: null, p_ativa: null
     });
@@ -1133,7 +1133,7 @@ async function loadProspecData() {
   try {
     // Clientes: carrega uma vez só
     if (!prospecCliData.length) {
-      var rCli = await SB.rpc('trr_geo_all');
+      var rCli = await SB.rpc('trr_geo_all_s', { p_token: SESSION.token });
       if (rCli.error) throw new Error('Clientes: ' + rCli.error.message);
       prospecCliData = parseGeoData(rCli.data);
     }
@@ -1427,7 +1427,7 @@ async function loadCliDetailData(p) {
     }
     if (!rows && p.cnpj && SESSION && SESSION.token) {
       // Busca por CNPJ via trr_data (busca geral)
-      var r2 = await SB.rpc('trr_data', { p_srch: p.cnpj, p_page: 1, p_uf: null, p_mun: null, p_ativ: null, p_faixa: null, p_ativa: null });
+      var r2 = await SB.rpc('trr_data_s', { p_token: SESSION.token, p_srch: p.cnpj, p_page: 1, p_uf: null, p_mun: null, p_ativ: null, p_faixa: null, p_ativa: null });
       if (!r2.error && r2.data && r2.data.det && r2.data.det.length > 0) rows = r2.data.det[0];
     }
 

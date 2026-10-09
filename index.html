@@ -3081,6 +3081,7 @@ function advAnaliseIA(cod, lat, lon, area, municipio, tipo, nome, ctId) {
       'Authorization': 'Bearer ' + _ADV_KEY
     },
     body: JSON.stringify({
+      token: getToken(),
       lat: lat, lon: lon, area_ha: area,
       municipio: municipio, tipo: tipo, cod: cod, nome: nome
     })

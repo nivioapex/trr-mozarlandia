@@ -2174,8 +2174,7 @@ function renderPropMarkers() {
   var sortedProps = props.slice().sort(function(a,b){ return _inatPriority(a) - _inatPriority(b); });
 
   sortedProps.forEach(function(p) {
-    if (!p.lat || !p.lon) return;
-    if (p.geo_ok === false) return;                  // oculta imóveis sem georreferenciamento preciso
+    if (geoImpreciso(p)) return;                     // oculta sem GPS preciso ou coordenada genérica compartilhada
     var key = p.lat + '|' + p.lon;
     var grp = propGroups[key] || [p];
     var idx = grp.indexOf(p);
@@ -2538,16 +2537,33 @@ function _inatPriority(p) {
   return 3; // Curva A fica no topo
 }
 
+// Coordenadas genéricas: um mesmo ponto compartilhado por >=5 clientes = localização imprecisa
+// (centro de município / polígono genérico). Devem ser ocultadas do mapa.
+var _coordGenCache = null, _coordGenFonte = null;
+function coordsGenericas() {
+  var props = (geoData && geoData.props) || [];
+  if (_coordGenFonte === props && _coordGenCache) return _coordGenCache;
+  var cnt = {}, gen = {};
+  props.forEach(function(p){ if (p.lat && p.lon){ var k = p.lat+'|'+p.lon; cnt[k] = (cnt[k]||0)+1; } });
+  Object.keys(cnt).forEach(function(k){ if (cnt[k] >= 5) gen[k] = 1; });
+  _coordGenCache = gen; _coordGenFonte = props;
+  return gen;
+}
+function geoImpreciso(p){
+  if (!p || p.lat == null || p.lon == null) return true;
+  if (p.geo_ok === false) return true;
+  return !!coordsGenericas()[p.lat+'|'+p.lon];
+}
+
 function renderAdvClientes() {
   if (!advCliLayer || !geoData) return;
   advCliLayer.clearLayers();
   var props = geoData.props || [];
   var zoom = advMap ? advMap.getZoom() : 8;
 
-  // 1. Filtrar
+  // 1. Filtrar (oculta imóveis sem georreferenciamento preciso ou em coordenada genérica compartilhada)
   var filtered = props.filter(function(p) {
-    if (!p.lat || !p.lon) return false;
-    if (p.geo_ok === false) return false;            // oculta imóveis sem georreferenciamento preciso (ficam no centro do município)
+    if (geoImpreciso(p)) return false;
     if (_advValeFilter && !advIsVale(p.mun)) return false;
     if (!fMatchCli(p)) return false;
     return true;
@@ -2660,7 +2676,10 @@ function renderAdvClientes() {
   }
 
   var el = document.getElementById('adv-cli-count');
-  if (el) el.textContent = filtered.length+' clientes';
+  if (el) {
+    var ocultos = (props || []).filter(function(p){ return geoImpreciso(p); }).length;
+    el.textContent = filtered.length + ' no mapa' + (ocultos ? ' · ' + ocultos + ' sem GPS preciso' : '');
+  }
 }
 
 // Normaliza resposta do trr_car_geo — aceita {props:[]} OU array direto
@@ -4144,7 +4163,7 @@ async function campoRefresh(force) {
     clis.sort(function(a,b){ return _inatPriority(a.p) - _inatPriority(b.p); });
     clis.forEach(function(x){
       var p = x.p;
-      if (p.geo_ok === false) return;                // oculta imóveis sem georreferenciamento preciso
+      if (geoImpreciso(p)) return;                   // oculta sem GPS preciso ou coordenada genérica compartilhada
       var inativo = p.inativo_90d === true || p.inativo_90d === 'true';
       var curva   = p.curva_abc_inativo || '';
       var cor = '#7c3aed';

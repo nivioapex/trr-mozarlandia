@@ -907,7 +907,13 @@ footer{text-align:center;font-size:11.5px;color:var(--muted);padding:18px 0 6px;
 </style>
 <div id="ia-wrap">
   <div style="font-size:17px;font-weight:800;color:#10243e;margin-bottom:4px">✨ Assistente de IA</div>
-  <div style="font-size:13px;color:#64748b;margin-bottom:12px">Pergunte por escrito ou pelo 🎤 sobre clientes, propriedades, prospecção, visitas, conversas, mercado e clima. A IA consulta os dados na hora (somente leitura).</div>
+  <div style="font-size:13px;color:#64748b;margin-bottom:10px">Pergunte por escrito ou pelo 🎤 sobre clientes, propriedades, prospecção, visitas, conversas, mercado e clima. A IA consulta os dados na hora (somente leitura).</div>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <button onclick="iaNova()" style="border:1.5px solid #dde2e8;background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700;color:#10243e;cursor:pointer">✚ Nova conversa</button>
+    <button onclick="iaConversas()" style="border:1.5px solid #dde2e8;background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700;color:#10243e;cursor:pointer">🕑 Conversas</button>
+    <span id="ia-conv-tag" style="align-self:center;font-size:11.5px;color:#94a3b8"></span>
+  </div>
+  <div id="ia-hist-panel" style="display:none;border:1px solid #e3e7ec;border-radius:12px;background:#fff;margin-bottom:10px;max-height:300px;overflow-y:auto"></div>
   <div id="ia-chips">
     <button onclick="iaPerguntar(this.textContent)">Quais clientes inativos mais compravam?</button>
     <button onclick="iaPerguntar(this.textContent)">Melhores prospects de soja perto de São Miguel</button>
@@ -1384,7 +1390,45 @@ function switchTab(tab) {
 }
 
 /* ===== ASSISTENTE DE IA ===== */
-var iaHist = [], iaDados = {}, iaSeq = 0, iaRec = null, iaOcupado = false;
+var iaHist = [], iaDados = {}, iaSeq = 0, iaRec = null, iaOcupado = false, iaConv = null;
+function iaSetConvTag(txt){ var e=document.getElementById('ia-conv-tag'); if(e) e.textContent = txt||''; }
+function iaNova(){ iaHist=[]; iaConv=null; document.getElementById('ia-log').innerHTML=''; document.getElementById('ia-hist-panel').style.display='none'; iaSetConvTag('nova conversa'); }
+async function iaConversas(){
+  var p=document.getElementById('ia-hist-panel');
+  if(p.style.display!=='none'){ p.style.display='none'; return; }
+  p.style.display=''; p.innerHTML='<div style="padding:14px;color:#64748b;font-size:13px">Carregando…</div>';
+  try{
+    var res=await SB.rpc('trr_agente_conversas',{p_token:getToken(),p_limit:40});
+    var d=res.data;
+    if(res.error) throw res.error;
+    if(d&&d.error){ p.innerHTML='<div style="padding:14px;color:#dc2626;font-size:13px">'+iaEsc(d.error)+'</div>'; return; }
+    if(!Array.isArray(d)||!d.length){ p.innerHTML='<div style="padding:14px;color:#94a3b8;font-size:13px">Nenhuma conversa salva ainda.</div>'; return; }
+    p.innerHTML=d.map(function(c){
+      var dt=new Date(c.ultima).toLocaleDateString('pt-BR')+' '+new Date(c.ultima).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      var tit=iaEsc((c.titulo||'(sem título)')).slice(0,70);
+      return '<div onclick="iaAbrirConversa(\''+c.conversa_id+'\')" style="padding:10px 14px;border-bottom:1px solid #f1f3f6;cursor:pointer">'
+        +'<div style="font-size:13px;font-weight:600;color:#10243e">'+tit+'</div>'
+        +'<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+dt+' · '+c.msgs+' msg'+(c.msgs>1?'s':'')+(c.vendedor?' · '+iaEsc(c.vendedor):'')+'</div></div>';
+    }).join('');
+  }catch(e){ p.innerHTML='<div style="padding:14px;color:#dc2626;font-size:13px">Erro ao carregar.</div>'; }
+}
+async function iaAbrirConversa(id){
+  try{
+    var res=await SB.rpc('trr_agente_conversa',{p_token:getToken(),p_conversa_id:id});
+    if(res.error) throw res.error;
+    var d=res.data;
+    if(d.error){ alert(d.error); return; }
+    iaHist=[]; iaConv=id; var log=document.getElementById('ia-log'); log.innerHTML='';
+    (d.mensagens||[]).forEach(function(m){
+      iaAdd('eu', iaEsc(m.pergunta));
+      iaAdd('ia', iaMd(m.resposta));
+      iaHist.push({de:'eu',texto:m.pergunta},{de:'ia',texto:m.resposta});
+    });
+    document.getElementById('ia-hist-panel').style.display='none';
+    iaSetConvTag('continuando conversa · '+(d.mensagens||[]).length+' msgs');
+    log.scrollTop=1e9;
+  }catch(e){ alert('Erro ao abrir a conversa.'); }
+}
 function iaEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function iaMd(t) {
   var linhas = String(t || '').split('\n'), out = [], i = 0;
@@ -1424,10 +1468,11 @@ async function iaEnviar() {
   try {
     var r = await fetch(_ADV_URL + '/functions/v1/trr-agente', { method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: _ADV_KEY, Authorization: 'Bearer ' + _ADV_KEY },
-      body: JSON.stringify({ token: getToken(), pergunta: q, historico: iaHist }) });
+      body: JSON.stringify({ token: getToken(), pergunta: q, historico: iaHist, conversa_id: iaConv }) });
     var d = await r.json();
     if (d.loggedOut) { esp.querySelector('.ia-bal').innerHTML = '❌ Sua sessão expirou. Saia e entre de novo.'; return; }
     if (d.error) throw new Error(d.error);
+    if (d.conversa_id) { iaConv = d.conversa_id; iaSetConvTag('conversa salva'); }
     iaHist.push({ de: 'eu', texto: q }, { de: 'ia', texto: d.resposta });
     var id = 'iar' + (++iaSeq); iaDados[id] = { dados: d.dados || (d.rota ? d.rota.paradas : null), texto: d.resposta, rota: d.rota || null, admin: d.admin };
     if (d.rota) {

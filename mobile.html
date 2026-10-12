@@ -89,6 +89,44 @@ input,button,select{font-family:inherit;}
 .cli-action-btn:active{opacity:.75;}
 .btn-tel{background:#e8f5e9;color:#1b5e20;}
 .btn-maps{background:#e3f2fd;color:#0d47a1;}
+.btn-nav{background:#fff7ed;color:#c2410c;}
+.porte-bar{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;-webkit-overflow-scrolling:touch;}
+.porte-bar::-webkit-scrollbar{display:none;}
+.porte-chip{flex:0 0 auto;padding:7px 12px;border:1.5px solid #dde2e8;border-radius:20px;background:#fff;font-size:12.5px;font-weight:700;color:#475569;cursor:pointer;white-space:nowrap;}
+.porte-chip.on{background:#10243e;border-color:#10243e;color:#fff;}
+.porte-chip .n{opacity:.7;font-weight:600;margin-left:3px;}
+.porte-chip.on .n{opacity:.85;}
+.porte-chip.geo{border-color:#fcd34d;color:#92400e;}
+.porte-chip.geo.on{background:#b45309;border-color:#b45309;color:#fff;}
+.porte-map{position:absolute;left:8px;right:8px;bottom:118px;z-index:450;}
+/* Completar carga */
+#cc-sheet{position:fixed;inset:0;background:rgba(16,36,62,.5);z-index:400;display:none;align-items:flex-end;}
+#cc-sheet.open{display:flex;}
+.cc-box{background:#f4f6f8;width:100%;max-height:92dvh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;}
+.cc-hdr{padding:14px 16px;background:#0e7a3f;color:#fff;border-radius:18px 18px 0 0;display:flex;align-items:center;gap:8px;font-weight:800;}
+.cc-body{overflow-y:auto;padding:14px 14px calc(20px + env(safe-area-inset-bottom,0));}
+.cc-field{margin-bottom:10px;}
+.cc-field label{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px;}
+.cc-inp{width:100%;padding:11px 12px;border:1.5px solid #dde2e8;border-radius:11px;font-size:15px;background:#fff;}
+.cc-cap{display:flex;gap:8px;}
+.cc-cap button{flex:1;padding:11px;border:1.5px solid #dde2e8;border-radius:11px;background:#fff;font-weight:800;font-size:14px;color:#475569;cursor:pointer;}
+.cc-cap button.on{background:#0e7a3f;border-color:#0e7a3f;color:#fff;}
+.cc-go{width:100%;padding:13px;background:#e8781a;color:#fff;border:none;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;margin-top:4px;}
+.cc-bar-wrap{position:sticky;top:0;background:#f4f6f8;padding:8px 0 10px;z-index:2;}
+.cc-bar{height:22px;background:#e5e9ee;border-radius:11px;overflow:hidden;position:relative;}
+.cc-bar-fill{height:100%;background:linear-gradient(90deg,#0e7a3f,#16a34a);width:0;transition:width .25s;}
+.cc-bar-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#10243e;}
+.cc-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #eef1f4;border-radius:12px;padding:10px 12px;margin-bottom:7px;}
+.cc-item.sel{border-color:#16a34a;background:#f0fdf4;}
+.cc-ck{width:26px;height:26px;border-radius:7px;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:900;color:#16a34a;background:#fff;cursor:pointer;}
+.cc-item.sel .cc-ck{background:#16a34a;color:#fff;border-color:#16a34a;}
+.cc-nm{font-weight:700;font-size:13.5px;line-height:1.2;}
+.cc-mt{font-size:11.5px;color:#64748b;margin-top:2px;}
+.cc-vol{text-align:right;font-weight:800;font-size:13px;color:#0e7a3f;white-space:nowrap;}
+.cc-vol small{display:block;font-weight:600;color:#94a3b8;font-size:10px;}
+.cc-acts{display:flex;gap:6px;margin-top:7px;}
+.cc-acts a{flex:1;text-align:center;padding:7px;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;}
+.cc-tag{display:inline-block;font-size:9.5px;font-weight:700;border-radius:5px;padding:1px 5px;margin-left:4px;}
 .btn-wpp{background:#e8f5e9;color:#1b5e20;}
 .btn-more{background:#f3f0ff;color:#5b21b6;}
 .load-more{width:100%;padding:14px;background:transparent;border:1.5px solid #dde2e8;border-radius:12px;font-size:14px;font-weight:600;color:var(--acc);cursor:pointer;margin-top:8px;}
@@ -399,6 +437,7 @@ input,button,select{font-family:inherit;}
       <input id="cli-srch" type="search" placeholder="🔍 Fazenda, cidade, CNAE…" oninput="onCliSearch(this.value)">
       <button class="btn-clr" onclick="clearSearch()">✕</button>
     </div>
+    <div class="porte-bar" id="cli-porte-bar"></div>
     <div class="card" id="cli-list-card">
       <div id="cli-list"><div class="empty"><div class="spin"></div></div></div>
     </div>
@@ -442,6 +481,8 @@ input,button,select{font-family:inherit;}
       </div>
       <!-- Status carregamento -->
       <div class="prospec-status" id="prospec-status">⏳ Carregando…</div>
+      <!-- Filtro por tamanho da propriedade -->
+      <div class="porte-bar porte-map" id="map-porte-bar"></div>
       <!-- Botões de raio -->
       <div class="prospec-radius-row">
         <button class="prospec-km-btn" onclick="setProspecKm(5,this)">5km</button>
@@ -505,7 +546,9 @@ input,button,select{font-family:inherit;}
       <button class="pq-btn sec" onclick="carregarFila()">↻</button>
     </div>
     <div class="pq-kpis" id="pq-kpis"></div>
+    <div id="pq-clima"></div>
     <div id="pq-mercado"></div>
+    <button class="pq-btn" id="pq-carga-btn" style="width:100%;margin-bottom:6px;background:#0e7a3f" onclick="ccAbrir()">🚛 Completar carga de entrega</button>
     <button class="pq-btn" id="pq-rota-btn" style="width:100%;margin-bottom:4px;display:none" onclick="abrirRota()">🚚 Montar rota de campo</button>
     <div id="pq-lista"><div class="empty"><div class="spin"></div></div></div>
   </div>
@@ -524,9 +567,6 @@ input,button,select{font-family:inherit;}
     <button class="nav-btn" id="nav-prospec" onclick="switchTab('prospec')">
       <span class="nav-ico">🗺</span><span>Campo</span>
     </button>
-    <button class="nav-btn" id="nav-cnpj" onclick="switchTab('cnpj')">
-      <span class="nav-ico">🔍</span><span>CNPJ</span>
-    </button>
     <button class="nav-btn" id="nav-visitas" onclick="switchTab('visitas')">
       <span class="nav-ico">📋</span><span>Visitas</span>
     </button>
@@ -538,6 +578,34 @@ input,button,select{font-family:inherit;}
   <div class="pq-box">
     <div class="pq-hdr"><div style="flex:1;min-width:0" id="pq-h"></div><button class="visita-close" onclick="fecharFicha()">✕</button></div>
     <div class="pq-body" id="pq-b"></div>
+  </div>
+</div>
+
+<!-- Completar carga -->
+<div id="cc-sheet" onclick="if(event.target===this)ccFechar()">
+  <div class="cc-box">
+    <div class="cc-hdr"><span>🚛 Completar carga</span><button class="visita-close" style="margin-left:auto" onclick="ccFechar()">✕</button></div>
+    <div class="cc-body" id="cc-body">
+      <div id="cc-form">
+        <div class="cc-field">
+          <label>Destino da entrega (pedido já fechado)</label>
+          <input class="cc-inp" id="cc-dest" placeholder="🔍 buscar cliente / fazenda / município" oninput="ccBuscaDest(this.value)" autocomplete="off">
+          <div id="cc-dest-res"></div>
+          <div id="cc-dest-sel" style="font-size:12.5px;color:#0e7a3f;font-weight:700;margin-top:4px"></div>
+        </div>
+        <div class="cc-field"><label>Litros do pedido-âncora</label>
+          <input class="cc-inp" id="cc-ped" type="number" inputmode="numeric" placeholder="ex: 2000" value="2000"></div>
+        <div class="cc-field"><label>Caminhão</label>
+          <div class="cc-cap">
+            <button id="cc-cap10" onclick="ccCap(10000,this)">10.000 L</button>
+            <button id="cc-cap23" class="on" onclick="ccCap(23000,this)">23.000 L</button>
+          </div></div>
+        <div class="cc-field"><label>Desvio máximo da rota</label>
+          <input class="cc-inp" id="cc-desvio" type="number" inputmode="numeric" value="20"> </div>
+        <button class="cc-go" onclick="ccRodar()">Buscar quem completa a carga →</button>
+      </div>
+      <div id="cc-result"></div>
+    </div>
   </div>
 </div>
 
@@ -798,7 +866,8 @@ async function loadClientes(append) {
   try {
     var res = await SB.rpc('trr_data_s', { p_token: SESSION.token,
       p_srch: cliSearch || null, p_page: cliPage,
-      p_uf: null, p_mun: null, p_ativ: null, p_faixa: null, p_ativa: null
+      p_uf: null, p_mun: null, p_ativ: null, p_faixa: null, p_ativa: null,
+      p_porte: cliPorte || null, p_geo: cliGeo || null
     });
     if (res.error) throw res.error;
     var d = res.data || {};
@@ -806,6 +875,7 @@ async function loadClientes(append) {
     var rows = d.det || [];
     if (append) cliData = cliData.concat(rows);
     else cliData = rows;
+    if (d.porte) renderCliPorteBar(d.porte);
     renderClientes();
     document.getElementById('load-more-btn').style.display = cliData.length < cliTotal ? '' : 'none';
   } catch(e) {
@@ -814,6 +884,142 @@ async function loadClientes(append) {
 }
 
 function loadMoreClientes() { cliPage++; loadClientes(true); }
+
+/* ── Filtro por tamanho de propriedade (porte) ── */
+var cliPorte = '';
+var PORTE_DEFS = [
+  { k:'',    lbl:'Todos',  cnt:'tot' },
+  { k:'peq', lbl:'≤200 ha', cnt:'peq' },
+  { k:'med', lbl:'200–1000', cnt:'med' },
+  { k:'gra', lbl:'>1000 ha', cnt:'gra' },
+  { k:'sem', lbl:'Sem área', cnt:'sem' }
+];
+function porteClasse(area){ area = Number(area);
+  if (!area || isNaN(area) || area <= 0) return 'sem';
+  if (area <= 200) return 'peq';
+  if (area <= 1000) return 'med';
+  return 'gra';
+}
+var _porteCnt = null, cliGeo = '';
+function renderCliPorteBar(p){
+  if (p) _porteCnt = p;
+  var bar = document.getElementById('cli-porte-bar'); if(!bar) return;
+  var html = PORTE_DEFS.map(function(d){
+    var n = _porteCnt ? (_porteCnt[d.cnt]||0) : '';
+    return '<button class="porte-chip'+(cliPorte===d.k?' on':'')+'" onclick="setCliPorte(\''+d.k+'\')">'
+      + d.lbl + (n!==''?'<span class="n">'+n+'</span>':'') + '</button>';
+  }).join('');
+  var sg = _porteCnt ? (_porteCnt.semgeo||0) : '';
+  html += '<button class="porte-chip geo'+(cliGeo==='sem'?' on':'')+'" onclick="setCliGeo()" title="Imóveis sem georreferenciamento preciso">📍 Sem GPS'+(sg!==''?'<span class="n">'+sg+'</span>':'')+'</button>';
+  bar.innerHTML = html;
+}
+function setCliPorte(k){
+  cliPorte = k; cliPage = 1; cliData = [];
+  renderCliPorteBar();               // atualiza seleção, mantém contadores
+  loadClientes();
+}
+function setCliGeo(){
+  cliGeo = cliGeo === 'sem' ? '' : 'sem';
+  cliPage = 1; cliData = [];
+  renderCliPorteBar();
+  loadClientes();
+}
+
+/* ════════ COMPLETAR CARGA ════════ */
+var _ccDest=null, _ccCap=23000, _ccCand=[], _ccSel={}, _ccBuscaTimer=null;
+var CC_BASES=[{nome:'TRR Mozarlândia',lat:-14.7392,lon:-50.5744},{nome:'TRR São Miguel',lat:-13.2715,lon:-50.1631}];
+function ccAbrir(){ document.getElementById('cc-sheet').classList.add('open'); }
+function ccFechar(){ document.getElementById('cc-sheet').classList.remove('open'); }
+function ccCap(v,el){ _ccCap=v; document.getElementById('cc-cap10').classList.toggle('on',v===10000); document.getElementById('cc-cap23').classList.toggle('on',v===23000); }
+function ccBuscaDest(q){
+  clearTimeout(_ccBuscaTimer);
+  var box=document.getElementById('cc-dest-res');
+  if(!q||q.length<3){ box.innerHTML=''; return; }
+  _ccBuscaTimer=setTimeout(async function(){
+    var r=await SB.rpc('trr_data_s',{p_token:SESSION.token,p_srch:q,p_page:1,p_uf:null,p_mun:null,p_ativ:null,p_faixa:null,p_ativa:null,p_porte:null,p_geo:'ok'});
+    var det=(r.data&&r.data.det)||[];
+    box.innerHTML=det.filter(function(d){return d.lat&&d.lon&&d.geo_ok!==false;}).slice(0,6).map(function(d){
+      return '<div class="cc-item" style="cursor:pointer" onclick="ccPickDest('+d.lat+','+d.lon+',\''+esc((d.cliente||d.propriedade||'').replace(/\x27/g,'')).slice(0,40)+'\',\''+esc((d.municipio||'')).replace(/\x27/g,'')+'\')">'
+        +'<div class="cc-nm">'+esc(d.cliente||d.propriedade||'–')+'<div class="cc-mt">'+esc(d.municipio||'')+(d.uf?'/'+d.uf:'')+'</div></div></div>';
+    }).join('');
+  },300);
+}
+function ccPickDest(lat,lon,nome,mun){
+  _ccDest={lat:+lat,lon:+lon,nome:nome,mun:mun};
+  document.getElementById('cc-dest').value=nome;
+  document.getElementById('cc-dest-res').innerHTML='';
+  document.getElementById('cc-dest-sel').textContent='📍 Destino: '+nome+(mun?' · '+mun:'');
+}
+function ccBaseMaisProxima(lat,lon){
+  var best=CC_BASES[0],bd=1e9;
+  CC_BASES.forEach(function(b){var d=haversineKm(lat,lon,b.lat,b.lon); if(d<bd){bd=d;best=b;}});
+  return best;
+}
+async function ccRodar(){
+  if(!_ccDest){ alert('Escolha o destino da entrega primeiro.'); return; }
+  var ped=+(document.getElementById('cc-ped').value||0);
+  var desvio=+(document.getElementById('cc-desvio').value||20);
+  var base=ccBaseMaisProxima(_ccDest.lat,_ccDest.lon);
+  var res=document.getElementById('cc-result');
+  res.innerHTML='<div class="empty"><div class="spin"></div>Buscando quem está no caminho…</div>';
+  var r=await SB.rpc('trr_completar_carga_s',{p_token:SESSION.token,p_dest_lat:_ccDest.lat,p_dest_lon:_ccDest.lon,
+    p_litros_pedido:ped,p_cap:_ccCap,p_desvio_km:desvio,p_orig_lat:base.lat,p_orig_lon:base.lon});
+  if(r.error){ res.innerHTML='<div class="empty">❌ '+esc(r.error.message)+'</div>'; return; }
+  _ccCand=(r.data&&r.data.candidatos)||[]; _ccSel={};
+  // pré-seleciona de cima pra baixo até fechar a carga
+  var acc=ped;
+  for(var i=0;i<_ccCand.length && acc<_ccCap;i++){ _ccSel[i]=true; acc+=(+_ccCand[i].volume_l||0); }
+  ccRender(ped,base);
+}
+function ccRender(ped,base){
+  var res=document.getElementById('cc-result');
+  if(!_ccCand.length){ res.innerHTML='<div class="empty">Ninguém dentro do desvio nessa rota. Aumente o desvio ou troque o destino.</div>'; return; }
+  var head='<div class="cc-bar-wrap"><div style="font-size:11.5px;color:#64748b;margin-bottom:5px">Saindo de <b>'+esc(base.nome)+'</b> → <b>'+esc(_ccDest.nome)+'</b> · '+_ccCand.length+' no caminho</div>'
+    +'<div class="cc-bar"><div class="cc-bar-fill" id="cc-fill"></div><div class="cc-bar-txt" id="cc-fill-txt"></div></div></div>';
+  var list=_ccCand.map(function(c,i){
+    var sel=_ccSel[i]?' sel':'';
+    var tel=(c.celular||c.telefone||'').replace(/\D/g,'');
+    var wa=tel?(tel.length<=11?'55'+tel:tel):'';
+    var tag=c.tipo==='prospect'?'<span class="cc-tag" style="background:#ede9fe;color:#6d28d9">prospect</span>':(c.inativo?'<span class="cc-tag" style="background:#fee2e2;color:#991b1b">inativo</span>':'<span class="cc-tag" style="background:#dcfce7;color:#166534">cliente</span>');
+    var srcTag=c.vol_src==='manual'?'medido':(c.vol_src==='ramo'?'estim. ramo':'estim. área');
+    var msg=encodeURIComponent('Olá! Aqui é da Dinâmica Agro (TRR). Vou passar na sua região em breve com o caminhão de diesel e consigo um preço melhor aproveitando a rota. Quer que eu já reserve um volume pra você?');
+    var det='';
+    if(c.tipo==='cliente'){
+      var rs2=function(v){return (+v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+      var dataUlt = c.ult_data ? new Date(c.ult_data+'T12:00').toLocaleDateString('pt-BR') : c.ultima_compra;
+      var parts=[];
+      if(dataUlt) parts.push('🗓 últ. '+esc(dataUlt));
+      if(c.ult_litros) parts.push('🛢 últ. '+(+c.ult_litros).toLocaleString('pt-BR')+' L');
+      if(c.ultimo_preco_l) parts.push('💲 último R$ '+rs2(c.ultimo_preco_l)+'/L');
+      if(c.preco_medio_l) parts.push('💲 médio R$ '+rs2(c.preco_medio_l)+'/L');
+      if(c.qtd_hist_l) parts.push('🛢 '+(+c.qtd_hist_l).toLocaleString('pt-BR')+' L hist.');
+      if(c.val_hist) parts.push('💰 R$ '+(+c.val_hist).toLocaleString('pt-BR'));
+      if(parts.length) det+='<div class="cc-mt" style="color:#166534;font-weight:600">'+parts.join(' · ')+'</div>';
+      if(c.contato) det+='<div class="cc-mt">👤 '+esc(c.contato)+'</div>';
+    }
+    return '<div class="cc-item'+sel+'" id="cc-it-'+i+'">'
+      +'<div class="cc-ck" onclick="ccToggle('+i+')">'+(_ccSel[i]?'✓':'')+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="cc-nm">'+esc(c.nome||'–')+tag+'</div>'
+      +'<div class="cc-mt">'+esc(c.municipio||'')+(c.uf?'/'+c.uf:'')+' · desvio '+c.desvio_km+' km</div>'
+      +det
+      +(wa||tel?('<div class="cc-acts">'+(tel?'<a href="tel:+'+(wa||tel)+'" style="background:#e0f2fe;color:#075985">📞 Ligar</a>':'')+(wa?'<a target="_blank" rel="noopener" href="https://wa.me/'+wa+'?text='+msg+'" style="background:#dcfce7;color:#166534">💬 WhatsApp</a>':'')+'</div>'):'')
+      +'</div>'
+      +'<div class="cc-vol">'+(+c.volume_l).toLocaleString('pt-BR')+' L<small>'+srcTag+'</small></div></div>';
+  }).join('');
+  res.innerHTML=head+list;
+  ccAtualizaBar(ped);
+}
+function ccToggle(i){ _ccSel[i]=!_ccSel[i];
+  var el=document.getElementById('cc-it-'+i); if(el){ el.classList.toggle('sel',!!_ccSel[i]); el.querySelector('.cc-ck').textContent=_ccSel[i]?'✓':''; }
+  ccAtualizaBar(+(document.getElementById('cc-ped').value||0));
+}
+function ccAtualizaBar(ped){
+  var sum=ped; for(var i in _ccSel){ if(_ccSel[i]) sum+=(+_ccCand[i].volume_l||0); }
+  var pct=Math.min(100, Math.round(sum/_ccCap*100));
+  var falta=Math.max(0,_ccCap-sum);
+  document.getElementById('cc-fill').style.width=pct+'%';
+  document.getElementById('cc-fill-txt').textContent=sum.toLocaleString('pt-BR')+' / '+_ccCap.toLocaleString('pt-BR')+' L'+(falta>0?(' · faltam '+falta.toLocaleString('pt-BR')):' · carga cheia ✓');
+}
 
 function renderClientes() {
   if (!cliData.length) {
@@ -835,7 +1041,7 @@ function renderClientes() {
       + '<div class="cli-actions" id="cli-act-' + i + '">'
       + (tel ? '<button class="cli-action-btn btn-tel" onclick="callTel(\'' + tel + '\',event)">📞 Ligar</button>' : '')
       + (tel ? '<button class="cli-action-btn btn-wpp" onclick="openWpp(\'' + tel + '\',event)">💬 WhatsApp</button>' : '')
-      + '<button class="cli-action-btn btn-maps" onclick="openMaps(\'' + esc(r.propriedade||r.municipio) + '\',event)">🗺 Maps</button>'
+      + '<button class="cli-action-btn btn-nav" onclick="navCli(' + i + ',event)">🧭 Navegar</button>'
       + '<button class="cli-action-btn btn-more" onclick="openDetailIdx(' + i + ',event)">ℹ️ Detalhes</button>'
       + '</div>';
   }).join('');
@@ -870,6 +1076,23 @@ function openMaps(nome, e) {
   window.open('https://maps.google.com/?q=' + encodeURIComponent(nome + ' Mozarlândia GO'), '_blank');
 }
 
+// Navegar até a propriedade do cliente (rota por GPS; fallback p/ busca textual)
+function navCli(i, e) {
+  if (e) e.stopPropagation();
+  var r = cliData[i];
+  if (!r) return;
+  var nome = r.cliente || r.propriedade || 'propriedade';
+  var local = (r.municipio || '') + (r.uf ? ' - ' + r.uf : '');
+  if (r.lat != null && r.lon != null && !isNaN(+r.lat) && !isNaN(+r.lon)) {
+    if (r.precisao_geo && r.precisao_geo !== 'alta') {
+      local += ' · ⚠ localização aproximada';
+    }
+    abrirNavegar(+r.lat, +r.lon, nome, local);
+  } else {
+    openMaps(r.propriedade || r.municipio || nome, e || { stopPropagation: function(){} });
+  }
+}
+
 function openDetailIdx(i, e) {
   e.stopPropagation();
   var r = cliData[i];
@@ -902,7 +1125,7 @@ function openDetailObj(r) {
   document.getElementById('cm-fields').innerHTML = fields.map(function(f){
     return '<div class="cli-modal-field"><span class="cli-modal-ico">'+f[0]+'</span>'
       + '<div><div class="cli-modal-lbl">'+f[1]+'</div><div class="cli-modal-txt">'+f[2]+'</div></div></div>';
-  }).join('');
+  }).join('') + '<div style="padding:0 16px">' + cliVendaCard(r) + '</div>';
   document.getElementById('cli-modal').classList.add('open');
 }
 
@@ -1162,17 +1385,40 @@ async function loadProspecData() {
   }
 }
 
+var mapPorte = '', mapGeo = '';
+var _lastProspecFilterText = '';
+function renderMapPorteBar(){
+  var bar = document.getElementById('map-porte-bar'); if(!bar) return;
+  var all = (prospecCarData||[]).concat(prospecCliData||[]);
+  var c = {tot:all.length,peq:0,med:0,gra:0,sem:0};
+  all.forEach(function(p){ c[porteClasse(p.area)]++; });
+  var semgeo = (prospecCliData||[]).filter(function(p){ return p.geo_ok===false; }).length;
+  var html = PORTE_DEFS.map(function(d){
+    var n = d.cnt==='tot'?c.tot:c[d.cnt];
+    return '<button class="porte-chip'+(mapPorte===d.k?' on':'')+'" onclick="setMapPorte(\''+d.k+'\')">'
+      + d.lbl + '<span class="n">'+n+'</span></button>';
+  }).join('');
+  html += '<button class="porte-chip geo'+(mapGeo==='sem'?' on':'')+'" onclick="setMapGeo()" title="Imóveis sem georreferenciamento preciso">📍 Sem GPS<span class="n">'+semgeo+'</span></button>';
+  bar.innerHTML = html;
+}
+function setMapPorte(k){ mapPorte = k; renderMapPorteBar(); renderProspecMarkers(_lastProspecFilterText); }
+function setMapGeo(){ mapGeo = mapGeo==='sem'?'':'sem'; renderMapPorteBar(); renderProspecMarkers(_lastProspecFilterText); }
+function passaPorte(p){ return !mapPorte || porteClasse(p.area) === mapPorte; }
+function passaGeo(p){ return mapGeo!=='sem' || p.geo_ok===false; }
+
 function renderProspecMarkers(filterText) {
+  _lastProspecFilterText = filterText || '';
   prospecCliLayer.clearLayers();
   prospecCarLayer.clearLayers();
-  var carData = filterText ? prospecCarData.filter(function(p){
+  renderMapPorteBar();
+  var carData = (filterText ? prospecCarData.filter(function(p){
     var s = (p.nom || p.cod || '').toLowerCase();
     return s.indexOf(filterText.toLowerCase()) >= 0;
-  }) : prospecCarData;
-  var cliData2 = filterText ? prospecCliData.filter(function(p){
+  }) : prospecCarData).filter(passaPorte).filter(passaGeo);
+  var cliData2 = (filterText ? prospecCliData.filter(function(p){
     var s = (p.cli || p.razao || '').toLowerCase();
     return s.indexOf(filterText.toLowerCase()) >= 0;
-  }) : prospecCliData;
+  }) : prospecCliData).filter(passaPorte).filter(passaGeo);
   // Renderizar CAR (pontos coloridos por status)
   carData.forEach(function(p) {
     var c = p.status === 'AT' ? '#16a34a' : p.status === 'PE' ? '#d97706' : '#dc2626';
@@ -1445,8 +1691,11 @@ function renderCliDetailBody(c) {
   var nome = c.razao_social || c.razao || c.nome_fantasia || c.cli || c.nome || 'Cliente TRR';
   document.getElementById('pdl-title').textContent = nome;
 
+  var _inat = c.inativo_90d === true || c.inativo === true || c.sem_compra_2026 === true;
   var html = '';
-  html += pdlRow('✅','Status', '<span class="pdl-badge" style="background:#d1fae5;color:#065f46">Cliente TRR</span>');
+  html += pdlRow('✅','Status', _inat
+    ? '<span class="pdl-badge" style="background:#ffedd5;color:#9a3412">Cliente inativo (+90d)</span>'
+    : '<span class="pdl-badge" style="background:#d1fae5;color:#065f46">Cliente TRR</span>');
   if (c.cnpj) html += pdlRow('🪪','CNPJ', '<span style="font-family:monospace">'+esc(c.cnpj)+'</span>');
   if (c.nome_fantasia && c.razao_social) html += pdlRow('🏷','Nome Fantasia', esc(c.nome_fantasia));
   html += pdlRow('📍','Município', esc(c.mun || c.municipio || c.cidade || '–') + (c.uf ? ' / '+c.uf : ''));
@@ -1465,6 +1714,7 @@ function renderCliDetailBody(c) {
   if (c.dist) html += pdlRow('📏','Dist. ao TRR', Number(c.dist).toFixed(1)+' km');
   if (c.observacao || c.obs) html += pdlRow('📝','Observação', esc(c.observacao || c.obs));
 
+  html += cliVendaCard(c);
   html += '<div id="dabra-box"></div>';
   html += pdlActionsCliHtml();
   document.getElementById('pdl-body').innerHTML = html;
@@ -1771,6 +2021,37 @@ function pqComprasCard(c) {
     '<div style="font-size:10.5px;color:#94a3b8;margin-top:6px">Preço médio = total ÷ litros do histórico. O valor exato da última nota entra quando ligarmos as vendas do EMSys.</div></div>';
 }
 
+// Card de histórico de vendas para cliente INATIVO (ficha do mapa)
+function cliVendaCard(c) {
+  var cc = c.cliente || {};               // dados completos (trr_cliente_ficha), se houver
+  var g = function (k) { return c[k] != null ? c[k] : cc[k]; };
+  var inativo = g('inativo_90d') === true || c.inativo === true || g('sem_compra_2026') === true;
+  if (!inativo) return '';
+  var total = g('val_hist') != null ? Number(g('val_hist')) : null;
+  var litros = g('qtd_hist_l') != null ? Number(g('qtd_hist_l')) : null;
+  var v25 = g('vendas_2025') != null ? Number(g('vendas_2025')) : null;
+  var v26 = g('vendas_2026') != null ? Number(g('vendas_2026')) : null;
+  var curva = g('curva_abc_inativo') || c.curva || null;
+  var ultima = g('ultima_compra') || (v26 ? 'em 2026 (mês não informado)' : v25 ? 'em 2025 (mês não informado)' : 'antes de 2025');
+  var precoMed = (total && litros) ? total / litros : null;
+  // nada de histórico? ainda mostra o selo de inativo
+  var lin = function (k, v) { return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-top:1px solid #fde7d2"><span style="color:#9a3412">' + k + '</span><b style="color:#7c2d12">' + v + '</b></div>'; };
+  var curvaBadge = curva ? ' <span style="background:#fdba74;color:#7c2d12;border-radius:6px;padding:1px 7px;font-size:11px;font-weight:800">curva ' + esc(String(curva)) + '</span>' : '';
+  var h = '<div class="pq-card" style="background:#fff7ed;border:1px solid #fed7aa;margin-top:10px">' +
+    '<h4 style="color:#c2410c;margin:0 0 6px">⚠ Cliente inativo (+90 dias)' + curvaBadge + '</h4>';
+  if (total || litros || v25 || v26) {
+    h += lin('Última compra', esc(String(ultima)));
+    if (total || litros) h += lin('Total já comprado', (total ? pqRS(total) : '–') + (litros ? ' · ' + pqL(litros) : ''));
+    if (precoMed) h += lin('Preço médio pago', pqRS(precoMed, 2) + ' / litro');
+    h += lin('Compras em 2025', v25 != null ? pqRS(v25) : '–');
+    h += lin('Compras em 2026', v26 != null ? pqRS(v26) : '–');
+    h += '<div style="font-size:11px;color:#9a3412;margin-top:7px;font-weight:600">💡 Já foi cliente — gancho de reativação: ofereça completar a carga de uma entrega na região.</div>';
+  } else {
+    h += '<div style="font-size:12.5px;color:#9a3412">Sem histórico de compras registrado. (Entra quando ligarmos as vendas do EMSys.)</div>';
+  }
+  return h + '</div>';
+}
+
 function pqContextoHtml(ia) {
   var c = ia.contexto, cl = ia.clima_dados;
   if (!c && !cl) return '';
@@ -1793,6 +2074,46 @@ function pqFechamentoHtml(ia) {
   if ((ia.fontes || []).length) h += '<details style="margin-top:8px;font-size:11.5px;color:#64748b"><summary>Fontes pesquisadas (' + ia.fontes.length + ')' + (ia.boletim_dia ? ' · boletim de ' + fmtData(ia.boletim_dia) : '') + '</summary>' +
     ia.fontes.map(function (f) { return '<div style="padding:3px 0"><a target="_blank" rel="noopener" href="' + esc(f.url) + '">' + esc(f.titulo || f.url) + '</a></div>'; }).join('') + '</details>';
   return h;
+}
+
+var _climaTRR = { t: 0, html: '' };
+var CLIMA_BASES = [{ nome: 'Mozarlândia', lat: -14.7392, lon: -50.5744 }, { nome: 'São Miguel', lat: -13.2715, lon: -50.1631 }];
+async function carregarClimaTRR() {
+  var el = document.getElementById('pq-clima'); if (!el) return;
+  if (Date.now() - _climaTRR.t < 30 * 60000 && _climaTRR.html) { el.innerHTML = _climaTRR.html; return; }
+  if (!_climaTRR.html) el.innerHTML = '<div class="pq-card" style="margin:0 0 6px;background:#f0f9ff;border-color:#bae6fd"><div style="font-size:12px;color:#0369a1">🌧 Carregando chuva…</div></div>';
+  try {
+    var hoje = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+    var res = await Promise.all(CLIMA_BASES.map(function (b) {
+      return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + b.lat + '&longitude=' + b.lon + '&daily=precipitation_sum,temperature_2m_max&past_days=7&forecast_days=14&timezone=America%2FSao_Paulo').then(function (r) { return r.json(); });
+    }));
+    var cards = CLIMA_BASES.map(function (b, i) {
+      var d = res[i] && res[i].daily; if (!d) return '';
+      var i0 = Math.max(0, d.time.indexOf(hoje));
+      var soma = function (a) { return Math.round(a.reduce(function (s, x) { return s + (x || 0); }, 0)); };
+      var p7 = soma(d.precipitation_sum.slice(Math.max(0, i0 - 7), i0));
+      var fut = d.precipitation_sum.slice(i0);
+      var prev14 = soma(fut);
+      var proxI = fut.findIndex(function (x) { return (x || 0) >= 10; });
+      var proxTxt = proxI >= 0 ? new Date(d.time[i0 + proxI] + 'T12:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '—';
+      var tmax = Math.round(d.temperature_2m_max.slice(i0, i0 + 3).reduce(function (s, x) { return s + x; }, 0) / 3);
+      var cor = prev14 >= 40 ? '#2563eb' : prev14 >= 15 ? '#0891b2' : '#64748b';
+      return '<div style="flex:1;min-width:0;background:#fff;border:1px solid #bae6fd;border-radius:12px;padding:8px 10px">' +
+        '<div style="font-size:11px;font-weight:800;color:#155e75">📍 ' + b.nome + '</div>' +
+        '<div style="display:flex;gap:10px;align-items:baseline;margin-top:2px"><div><span style="font-size:20px;font-weight:900;color:' + cor + '">' + prev14 + '</span><span style="font-size:11px;color:#64748b"> mm/14d</span></div>' +
+        '<div style="font-size:11px;color:#64748b">7d: <b>' + p7 + '</b> mm</div></div>' +
+        '<div style="font-size:11.5px;color:#0f172a;margin-top:3px">☔ próx. chuva forte: <b style="color:' + (proxI >= 0 ? '#1d4ed8' : '#94a3b8') + '">' + proxTxt + '</b></div>' +
+        '<div style="font-size:10.5px;color:#94a3b8">máx ~' + tmax + '°C</div></div>';
+    }).join('');
+    var hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    _climaTRR.html = '<div class="pq-card" style="margin:0 0 6px;background:#f0f9ff;border-color:#bae6fd">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:12px;font-weight:900;color:#0369a1;text-transform:uppercase;letter-spacing:.3px">🌧 Chuva nos TRRs</div>' +
+      '<button onclick="_climaTRR.t=0;carregarClimaTRR()" style="border:none;background:#e0f2fe;color:#0369a1;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">↻ ' + hora + '</button></div>' +
+      '<div style="display:flex;gap:6px">' + cards + '</div>' +
+      '<div style="font-size:10.5px;color:#64748b;margin-top:5px">Acumulado 7 dias e previsão 14 dias · Open-Meteo (atualiza a cada abertura).</div></div>';
+    _climaTRR.t = Date.now();
+    el.innerHTML = _climaTRR.html;
+  } catch (e) { if (!_climaTRR.html) el.innerHTML = ''; }
 }
 
 async function carregarMercado() {
@@ -1832,6 +2153,7 @@ async function carregarMercado() {
 }
 
 async function carregarFila() {
+  carregarClimaTRR();
   carregarMercado();
   var el = document.getElementById('pq-lista');
   if (!SESSION || !SESSION.token) { el.innerHTML = '<div class="empty">Entre para ver sua fila.</div>'; return; }

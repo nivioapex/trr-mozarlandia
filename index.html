@@ -2175,6 +2175,7 @@ function renderPropMarkers() {
 
   sortedProps.forEach(function(p) {
     if (!p.lat || !p.lon) return;
+    if (p.geo_ok === false) return;                  // oculta imóveis sem georreferenciamento preciso
     var key = p.lat + '|' + p.lon;
     var grp = propGroups[key] || [p];
     var idx = grp.indexOf(p);
@@ -2546,6 +2547,7 @@ function renderAdvClientes() {
   // 1. Filtrar
   var filtered = props.filter(function(p) {
     if (!p.lat || !p.lon) return false;
+    if (p.geo_ok === false) return false;            // oculta imóveis sem georreferenciamento preciso (ficam no centro do município)
     if (_advValeFilter && !advIsVale(p.mun)) return false;
     if (!fMatchCli(p)) return false;
     return true;
@@ -4142,6 +4144,7 @@ async function campoRefresh(force) {
     clis.sort(function(a,b){ return _inatPriority(a.p) - _inatPriority(b.p); });
     clis.forEach(function(x){
       var p = x.p;
+      if (p.geo_ok === false) return;                // oculta imóveis sem georreferenciamento preciso
       var inativo = p.inativo_90d === true || p.inativo_90d === 'true';
       var curva   = p.curva_abc_inativo || '';
       var cor = '#7c3aed';

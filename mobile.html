@@ -2258,7 +2258,7 @@ function renderFicha(g) {
     var tels = [e.telefone1, e.telefone2].filter(function (t) { return t && String(t).replace(/\D/g, '').replace(/0/g, '').length; });
     return '<div class="pq-emp"><b>' + esc(e.razao_social) + '</b> <span style="color:#64748b">· ' + esc(e.matriz_filial || '') + '</span><br>' +
       '<span style="color:#475569">' + esc(e.municipio || '') + ' · ' + esc(e.ramo || '') + '</span>' +
-      (tels.length ? '<br>📞 ' + tels.map(function (t) { return '<a href="tel:+' + pqFone(t) + '">' + esc(t) + '</a>'; }).join(' · ') : '') +
+      (tels.length ? '<br>' + tels.map(function (t) { var w = pqFone(t); return w ? '<a target="_blank" rel="noopener" href="https://wa.me/' + w + '" style="color:#166534;font-weight:600">💬 ' + esc(t) + '</a>' : '<a href="tel:' + String(t).replace(/\D/g, '') + '">📞 ' + esc(t) + '</a>'; }).join(' · ') : '') +
       (e.email ? '<br>✉️ ' + esc(e.email) : '') +
       ((e.socios || []).length ? '<br><span style="color:#64748b">Sócios: ' + esc(e.socios.join(', ')) + '</span>' : '') +
       '<br><span style="color:#94a3b8;font-size:11px">CNPJ ' + esc(e.cnpj) + '</span></div>';
